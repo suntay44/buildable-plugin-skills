@@ -1,0 +1,556 @@
+{
+  "version": "0.1.0",
+  "loadingRule": "Use tags for classification. Do not load archetype markdown until an archetype is selected.",
+  "archetypes": [
+    {
+      "id": "task-manager",
+      "name": "TaskFlow",
+      "defaultTarget": "web",
+      "tags": ["todo", "todos", "task", "tasks", "kanban", "productivity", "project tasks", "checklist"],
+      "style": "modern productivity app",
+      "screens": ["dashboard"],
+      "entities": ["Task"],
+      "features": ["create task", "edit task", "delete task", "mark complete", "reopen task", "filter by status", "filter by priority", "search tasks", "show empty state"]
+    },
+    {
+      "id": "crm",
+      "name": "LeadDesk",
+      "defaultTarget": "web",
+      "tags": ["crm", "lead", "leads", "pipeline", "sales", "contacts", "deals", "opportunities"],
+      "style": "admin dashboard",
+      "screens": ["pipeline"],
+      "entities": ["Lead"],
+      "features": ["create lead", "edit lead", "move lead between stages", "filter by stage", "search leads", "record next action"]
+    },
+    {
+      "id": "dashboard",
+      "name": "MetricBoard",
+      "defaultTarget": "web",
+      "tags": ["dashboard", "analytics", "metrics", "kpi", "saas", "charts", "reporting", "insights"],
+      "style": "modern SaaS dashboard",
+      "screens": ["overview"],
+      "entities": ["Metric"],
+      "features": ["metric cards", "date range control", "trend region", "event table", "status filtering", "empty data state"]
+    },
+    {
+      "id": "habit-tracker",
+      "name": "Streakly",
+      "defaultTarget": "mobile",
+      "tags": ["habit", "habits", "streak", "routine", "daily", "check-in", "wellness"],
+      "style": "mobile utility",
+      "screens": ["today", "progress"],
+      "entities": ["Habit"],
+      "features": ["create habit", "complete habit", "reopen habit", "show streak", "weekly progress", "empty state"]
+    },
+    {
+      "id": "booking",
+      "name": "Slotwise",
+      "defaultTarget": "mobile",
+      "tags": ["booking", "appointment", "schedule", "availability", "calendar", "service", "reservation"],
+      "style": "mobile utility",
+      "screens": ["service selection", "availability", "confirmation"],
+      "entities": ["Booking"],
+      "features": ["select service", "select slot", "enter details", "validate required fields", "show confirmation"]
+    },
+    {
+      "id": "marketplace",
+      "name": "LocalList",
+      "defaultTarget": "web",
+      "tags": ["marketplace", "listing", "listings", "seller", "buyer", "services", "directory", "classifieds"],
+      "style": "modern marketplace",
+      "screens": ["browse", "detail", "inquiry"],
+      "entities": ["Listing"],
+      "features": ["browse listings", "search listings", "filter listings", "view detail", "save listing", "submit inquiry", "filtered empty state"]
+    },
+    {
+      "id": "notes",
+      "name": "NoteNest",
+      "defaultTarget": "web",
+      "tags": ["notes", "note", "knowledge", "wiki", "docs", "personal wiki", "second brain"],
+      "style": "productivity app",
+      "screens": ["notes list", "editor"],
+      "entities": ["Note"],
+      "features": ["create note", "edit note", "delete note", "search notes", "filter by tag", "empty state"]
+    },
+    {
+      "id": "ecommerce-admin",
+      "name": "CommerceDesk",
+      "defaultTarget": "web",
+      "tags": ["ecommerce admin", "inventory", "orders", "products", "catalog", "stock", "store admin"],
+      "style": "admin dashboard",
+      "screens": ["overview", "products", "orders"],
+      "entities": ["Product", "Order"],
+      "features": ["search products", "filter orders", "update status", "low stock state", "empty table state"]
+    },
+    {
+      "id": "landing-page",
+      "name": "LaunchPage",
+      "defaultTarget": "web",
+      "tags": ["landing page", "marketing page", "homepage", "startup website", "saas website", "waitlist"],
+      "style": "modern marketing website",
+      "screens": ["home"],
+      "entities": ["Section"],
+      "features": ["hero", "features", "social proof", "pricing or CTA", "responsive layout"]
+    },
+    {
+      "id": "portfolio",
+      "name": "Showcase",
+      "defaultTarget": "web",
+      "tags": ["portfolio", "personal website", "designer", "developer portfolio", "case study", "resume"],
+      "style": "editorial portfolio",
+      "screens": ["home", "work"],
+      "entities": ["Project"],
+      "features": ["project grid", "case study preview", "about section", "contact CTA", "responsive layout"]
+    },
+    {
+      "id": "blog-cms",
+      "name": "PostDesk",
+      "defaultTarget": "web",
+      "tags": ["blog", "cms", "articles", "posts", "publishing", "content"],
+      "style": "content product",
+      "screens": ["post list", "post editor"],
+      "entities": ["Post"],
+      "features": ["create post", "edit post", "filter drafts", "search posts", "empty state"]
+    },
+    {
+      "id": "restaurant",
+      "name": "TableSite",
+      "defaultTarget": "web",
+      "tags": ["restaurant", "menu", "cafe", "bar", "food", "reservations"],
+      "style": "hospitality website",
+      "screens": ["home", "menu"],
+      "entities": ["MenuItem"],
+      "features": ["menu sections", "featured items", "hours/location", "reservation CTA", "mobile layout"]
+    },
+    {
+      "id": "real-estate",
+      "name": "HomeList",
+      "defaultTarget": "web",
+      "tags": ["real estate", "property", "properties", "listing", "rental", "homes", "apartments"],
+      "style": "listing marketplace",
+      "screens": ["browse", "property detail"],
+      "entities": ["Property"],
+      "features": ["property cards", "filters", "detail view", "inquiry CTA", "saved state"]
+    },
+    {
+      "id": "job-board",
+      "name": "RoleBoard",
+      "defaultTarget": "web",
+      "tags": ["job board", "jobs", "recruiting", "careers", "roles", "candidates"],
+      "style": "marketplace dashboard",
+      "screens": ["jobs", "job detail"],
+      "entities": ["Job"],
+      "features": ["job list", "search", "filters", "detail view", "apply CTA", "empty state"]
+    },
+    {
+      "id": "learning-platform",
+      "name": "LearnStack",
+      "defaultTarget": "web",
+      "tags": ["course", "courses", "lms", "learning", "lessons", "education", "training"],
+      "style": "learning app",
+      "screens": ["course catalog", "lesson"],
+      "entities": ["Course", "Lesson"],
+      "features": ["course list", "progress", "lesson view", "module navigation", "empty state"]
+    },
+    {
+      "id": "expense-tracker",
+      "name": "SpendTrack",
+      "defaultTarget": "mobile",
+      "tags": ["expense", "expenses", "budget", "spending", "finance", "money", "receipt"],
+      "style": "mobile finance utility",
+      "screens": ["overview", "transactions"],
+      "entities": ["Transaction"],
+      "features": ["add expense", "categorize expense", "summary", "filter by category", "empty state"]
+    },
+    {
+      "id": "invoice-manager",
+      "name": "InvoiceFlow",
+      "defaultTarget": "web",
+      "tags": ["invoice", "invoices", "billing dashboard", "freelance billing", "payments tracker"],
+      "style": "admin dashboard",
+      "screens": ["invoice list", "invoice detail"],
+      "entities": ["Invoice"],
+      "features": ["create invoice", "status tracking", "search invoices", "summary totals", "empty state"]
+    },
+    {
+      "id": "time-tracker",
+      "name": "TimeDesk",
+      "defaultTarget": "web",
+      "tags": ["time tracker", "timesheet", "hours", "timer", "billable", "work log"],
+      "style": "productivity app",
+      "screens": ["timer", "entries"],
+      "entities": ["TimeEntry"],
+      "features": ["start timer", "stop timer", "manual entry", "project filter", "summary"]
+    },
+    {
+      "id": "project-management",
+      "name": "ProjectDesk",
+      "defaultTarget": "web",
+      "tags": ["project management", "projects", "milestones", "roadmap", "sprints", "team tasks"],
+      "style": "productivity dashboard",
+      "screens": ["projects", "project detail"],
+      "entities": ["Project", "Milestone"],
+      "features": ["project list", "milestones", "status summary", "task preview", "filters"]
+    },
+    {
+      "id": "support-helpdesk",
+      "name": "HelpQueue",
+      "defaultTarget": "web",
+      "tags": ["support", "helpdesk", "tickets", "customer support", "inbox", "queue"],
+      "style": "support dashboard",
+      "screens": ["ticket queue", "ticket detail"],
+      "entities": ["Ticket"],
+      "features": ["ticket list", "status filters", "priority", "reply draft", "empty state"]
+    },
+    {
+      "id": "survey-form",
+      "name": "FormPulse",
+      "defaultTarget": "web",
+      "tags": ["survey", "form", "forms", "questionnaire", "feedback", "intake"],
+      "style": "form builder",
+      "screens": ["form", "responses"],
+      "entities": ["Question", "Response"],
+      "features": ["form fields", "validation", "submit state", "response summary", "empty state"]
+    },
+    {
+      "id": "event-planner",
+      "name": "EventFlow",
+      "defaultTarget": "web",
+      "tags": ["event", "events", "conference", "meetup", "rsvp", "agenda"],
+      "style": "event website",
+      "screens": ["event home", "agenda"],
+      "entities": ["Event", "Session"],
+      "features": ["agenda", "speaker cards", "RSVP CTA", "schedule filters", "mobile layout"]
+    },
+    {
+      "id": "travel-planner",
+      "name": "TripPlan",
+      "defaultTarget": "mobile",
+      "tags": ["travel", "trip", "itinerary", "vacation", "planner", "places"],
+      "style": "mobile planning app",
+      "screens": ["itinerary", "place detail"],
+      "entities": ["Trip", "Place"],
+      "features": ["itinerary list", "day grouping", "saved places", "notes", "empty state"]
+    },
+    {
+      "id": "fitness-tracker",
+      "name": "FitLog",
+      "defaultTarget": "mobile",
+      "tags": ["fitness", "workout", "exercise", "training", "gym", "sets", "reps"],
+      "style": "mobile fitness utility",
+      "screens": ["today", "history"],
+      "entities": ["Workout"],
+      "features": ["log workout", "sets and reps", "history", "progress summary", "empty state"]
+    },
+    {
+      "id": "meal-planner",
+      "name": "MealBoard",
+      "defaultTarget": "mobile",
+      "tags": ["meal planner", "meals", "recipes", "grocery", "nutrition", "food planning"],
+      "style": "mobile utility",
+      "screens": ["week", "recipe"],
+      "entities": ["Meal", "Recipe"],
+      "features": ["weekly plan", "recipe cards", "grocery list", "filters", "empty state"]
+    },
+    {
+      "id": "recipe-app",
+      "name": "RecipeBox",
+      "defaultTarget": "web",
+      "tags": ["recipe", "recipes", "cookbook", "ingredients", "cooking"],
+      "style": "content app",
+      "screens": ["recipe list", "recipe detail"],
+      "entities": ["Recipe"],
+      "features": ["recipe cards", "ingredient filters", "detail view", "save recipe", "empty state"]
+    },
+    {
+      "id": "community-forum",
+      "name": "ForumBase",
+      "defaultTarget": "web",
+      "tags": ["community", "forum", "discussion", "threads", "posts", "comments"],
+      "style": "community app",
+      "screens": ["threads", "thread detail"],
+      "entities": ["Thread"],
+      "features": ["thread list", "category filters", "reply preview", "empty state", "moderation status"]
+    },
+    {
+      "id": "chat-app",
+      "name": "ChatDesk",
+      "defaultTarget": "mobile",
+      "tags": ["chat", "messaging", "messages", "inbox", "conversation", "dm"],
+      "style": "mobile communication app",
+      "screens": ["inbox", "conversation"],
+      "entities": ["Conversation", "Message"],
+      "features": ["conversation list", "message thread", "compose message", "read state", "empty state"]
+    },
+    {
+      "id": "file-manager",
+      "name": "FileShelf",
+      "defaultTarget": "web",
+      "tags": ["file manager", "documents", "files", "uploads", "folders", "assets"],
+      "style": "utility dashboard",
+      "screens": ["files", "folder detail"],
+      "entities": ["File"],
+      "features": ["file grid", "folder filters", "search", "metadata panel", "empty state"]
+    },
+    {
+      "id": "media-gallery",
+      "name": "GalleryGrid",
+      "defaultTarget": "web",
+      "tags": ["gallery", "photos", "images", "media", "album", "portfolio gallery"],
+      "style": "visual gallery",
+      "screens": ["gallery", "media detail"],
+      "entities": ["MediaItem"],
+      "features": ["media grid", "filters", "detail view", "lightbox state", "empty state"]
+    },
+    {
+      "id": "admin-panel",
+      "name": "AdminKit",
+      "defaultTarget": "web",
+      "tags": ["admin", "admin panel", "backoffice", "operations", "management console"],
+      "style": "admin dashboard",
+      "screens": ["overview", "records"],
+      "entities": ["Record"],
+      "features": ["summary cards", "data table", "filters", "row actions", "empty state"]
+    },
+    {
+      "id": "calendar-planner",
+      "name": "CalendarFlow",
+      "defaultTarget": "web",
+      "tags": ["calendar", "planner", "schedule", "agenda", "availability", "events calendar"],
+      "style": "productivity planner",
+      "screens": ["calendar", "event detail"],
+      "entities": ["CalendarEvent"],
+      "features": ["calendar grid", "agenda list", "event detail", "date filters", "empty day state"]
+    },
+    {
+      "id": "personal-finance",
+      "name": "MoneyBoard",
+      "defaultTarget": "web",
+      "tags": ["personal finance", "budget dashboard", "net worth", "finance dashboard", "cash flow"],
+      "style": "finance dashboard",
+      "screens": ["overview", "accounts"],
+      "entities": ["Account", "Transaction"],
+      "features": ["summary cards", "cash flow", "category breakdown", "account list", "empty state"]
+    },
+    {
+      "id": "subscription-tracker",
+      "name": "SubTrack",
+      "defaultTarget": "mobile",
+      "tags": ["subscription", "subscriptions", "recurring bills", "renewals", "monthly costs"],
+      "style": "mobile finance utility",
+      "screens": ["subscriptions", "renewal detail"],
+      "entities": ["Subscription"],
+      "features": ["subscription list", "renewal reminders", "cost summary", "category filters", "empty state"]
+    },
+    {
+      "id": "inventory-manager",
+      "name": "StockRoom",
+      "defaultTarget": "web",
+      "tags": ["inventory manager", "inventory", "warehouse", "stock levels", "sku", "supplies"],
+      "style": "operations dashboard",
+      "screens": ["inventory", "item detail"],
+      "entities": ["InventoryItem"],
+      "features": ["stock table", "low-stock state", "category filters", "item detail", "adjust quantity"]
+    },
+    {
+      "id": "asset-tracker",
+      "name": "AssetBase",
+      "defaultTarget": "web",
+      "tags": ["asset tracker", "assets", "equipment", "devices", "maintenance", "assignments"],
+      "style": "operations dashboard",
+      "screens": ["assets", "asset detail"],
+      "entities": ["Asset"],
+      "features": ["asset list", "status filters", "assignment state", "maintenance notes", "empty state"]
+    },
+    {
+      "id": "property-management",
+      "name": "RentDesk",
+      "defaultTarget": "web",
+      "tags": ["property management", "landlord", "tenants", "leases", "rentals", "maintenance requests"],
+      "style": "operations dashboard",
+      "screens": ["properties", "tenant detail"],
+      "entities": ["Property", "Tenant"],
+      "features": ["property list", "tenant summary", "maintenance queue", "lease status", "empty state"]
+    },
+    {
+      "id": "hiring-tracker",
+      "name": "HireFlow",
+      "defaultTarget": "web",
+      "tags": ["hiring tracker", "applicant tracking", "ats", "candidates", "interviews", "recruiting pipeline"],
+      "style": "pipeline dashboard",
+      "screens": ["candidate pipeline", "candidate detail"],
+      "entities": ["Candidate"],
+      "features": ["candidate stages", "interview schedule", "score summary", "filters", "empty state"]
+    },
+    {
+      "id": "product-feedback",
+      "name": "FeedbackBoard",
+      "defaultTarget": "web",
+      "tags": ["product feedback", "feature requests", "feedback board", "roadmap feedback", "user ideas"],
+      "style": "product dashboard",
+      "screens": ["feedback", "request detail"],
+      "entities": ["FeedbackItem"],
+      "features": ["feedback list", "status filters", "priority labels", "vote count", "empty state"]
+    },
+    {
+      "id": "bug-tracker",
+      "name": "IssueDesk",
+      "defaultTarget": "web",
+      "tags": ["bug tracker", "issues", "bug report", "qa", "triage", "defects"],
+      "style": "engineering dashboard",
+      "screens": ["issues", "issue detail"],
+      "entities": ["Issue"],
+      "features": ["issue list", "severity filters", "status workflow", "assignee state", "empty state"]
+    },
+    {
+      "id": "knowledge-base",
+      "name": "HelpCenter",
+      "defaultTarget": "web",
+      "tags": ["knowledge base", "help center", "faq", "docs portal", "support articles"],
+      "style": "content support site",
+      "screens": ["article index", "article detail"],
+      "entities": ["Article"],
+      "features": ["article search", "category filters", "featured articles", "detail view", "empty state"]
+    },
+    {
+      "id": "documentation-site",
+      "name": "DocsKit",
+      "defaultTarget": "web",
+      "tags": ["documentation", "docs site", "developer docs", "api docs", "guide", "manual"],
+      "style": "documentation site",
+      "screens": ["docs home", "doc page"],
+      "entities": ["DocPage"],
+      "features": ["sidebar navigation", "search", "content sections", "related links", "responsive layout"]
+    },
+    {
+      "id": "newsletter",
+      "name": "LetterDesk",
+      "defaultTarget": "web",
+      "tags": ["newsletter", "email newsletter", "subscribers", "publication", "newsletter archive"],
+      "style": "content product",
+      "screens": ["archive", "issue detail"],
+      "entities": ["NewsletterIssue"],
+      "features": ["issue archive", "featured issue", "subscribe CTA", "topic filters", "empty state"]
+    },
+    {
+      "id": "social-link-bio",
+      "name": "LinkPage",
+      "defaultTarget": "web",
+      "tags": ["link in bio", "social links", "creator page", "bio page", "linktree"],
+      "style": "creator landing page",
+      "screens": ["profile"],
+      "entities": ["Link"],
+      "features": ["profile header", "link list", "featured link", "social icons", "mobile layout"]
+    },
+    {
+      "id": "donation-page",
+      "name": "GivePage",
+      "defaultTarget": "web",
+      "tags": ["donation", "donations", "fundraiser", "nonprofit", "campaign", "charity"],
+      "style": "nonprofit campaign site",
+      "screens": ["campaign"],
+      "entities": ["Campaign"],
+      "features": ["campaign hero", "impact sections", "progress summary", "donation CTA", "responsive layout"]
+    },
+    {
+      "id": "volunteer-management",
+      "name": "VolunteerDesk",
+      "defaultTarget": "web",
+      "tags": ["volunteer", "volunteers", "nonprofit operations", "shifts", "signups"],
+      "style": "operations dashboard",
+      "screens": ["volunteers", "shift detail"],
+      "entities": ["Volunteer", "Shift"],
+      "features": ["volunteer list", "shift schedule", "availability state", "status filters", "empty state"]
+    },
+    {
+      "id": "membership-directory",
+      "name": "MemberBase",
+      "defaultTarget": "web",
+      "tags": ["membership", "members", "directory", "club", "association", "member portal"],
+      "style": "community directory",
+      "screens": ["directory", "member detail"],
+      "entities": ["Member"],
+      "features": ["member list", "profile detail", "category filters", "search", "empty state"]
+    },
+    {
+      "id": "onboarding-checklist",
+      "name": "OnboardKit",
+      "defaultTarget": "web",
+      "tags": ["onboarding", "checklist", "employee onboarding", "customer onboarding", "setup steps"],
+      "style": "workflow checklist",
+      "screens": ["checklist", "step detail"],
+      "entities": ["OnboardingStep"],
+      "features": ["step checklist", "progress summary", "owner labels", "due dates", "empty state"]
+    },
+    {
+      "id": "client-portal",
+      "name": "ClientRoom",
+      "defaultTarget": "web",
+      "tags": ["client portal", "client dashboard", "agency portal", "customer portal", "shared workspace"],
+      "style": "portal dashboard",
+      "screens": ["overview", "project detail"],
+      "entities": ["ClientProject"],
+      "features": ["project summary", "milestones", "files preview", "next actions", "empty state"]
+    },
+    {
+      "id": "podcast-site",
+      "name": "CastPage",
+      "defaultTarget": "web",
+      "tags": ["podcast", "episodes", "show notes", "audio show", "podcast website"],
+      "style": "media content site",
+      "screens": ["episodes", "episode detail"],
+      "entities": ["Episode"],
+      "features": ["episode list", "featured episode", "show notes", "topic filters", "responsive layout"]
+    },
+    {
+      "id": "video-library",
+      "name": "VideoShelf",
+      "defaultTarget": "web",
+      "tags": ["video library", "videos", "media library", "course videos", "watch list"],
+      "style": "media gallery",
+      "screens": ["library", "video detail"],
+      "entities": ["Video"],
+      "features": ["video grid", "category filters", "detail view", "watch state", "empty state"]
+    },
+    {
+      "id": "clinic-intake",
+      "name": "IntakeFlow",
+      "defaultTarget": "web",
+      "tags": ["clinic intake", "patient intake", "intake form", "appointment intake", "health intake"],
+      "style": "form workflow",
+      "screens": ["intake form", "submission summary"],
+      "entities": ["IntakeSubmission"],
+      "features": ["multi-section form", "validation", "review step", "submission state", "empty state"]
+    },
+    {
+      "id": "maintenance-request",
+      "name": "FixQueue",
+      "defaultTarget": "mobile",
+      "tags": ["maintenance request", "repair request", "work order", "facility request", "service request"],
+      "style": "mobile operations utility",
+      "screens": ["requests", "request detail"],
+      "entities": ["MaintenanceRequest"],
+      "features": ["request list", "status filters", "priority", "detail notes", "empty state"]
+    },
+    {
+      "id": "field-service",
+      "name": "FieldOps",
+      "defaultTarget": "mobile",
+      "tags": ["field service", "service jobs", "technician", "job route", "work orders"],
+      "style": "mobile operations app",
+      "screens": ["jobs", "job detail"],
+      "entities": ["ServiceJob"],
+      "features": ["job list", "status workflow", "customer detail", "notes", "empty state"]
+    },
+    {
+      "id": "directory-site",
+      "name": "DirectoryBase",
+      "defaultTarget": "web",
+      "tags": ["directory", "business directory", "resource directory", "local directory", "vendor directory"],
+      "style": "listing directory",
+      "screens": ["directory", "listing detail"],
+      "entities": ["DirectoryListing"],
+      "features": ["listing grid", "category filters", "search", "detail view", "empty state"]
+    }
+  ]
+}
