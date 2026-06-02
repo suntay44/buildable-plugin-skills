@@ -1,0 +1,370 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { spawnSync } from "node:child_process";
+
+const root = new URL("..", import.meta.url).pathname;
+const cli = join(root, "bin/buildable.mjs");
+
+function run(args, options = {}) {
+  return spawnSync(process.execPath, [cli, ...args], {
+    cwd: options.cwd ?? root,
+    encoding: "utf8"
+  });
+}
+
+function jsonFrom(result) {
+  assert.equal(result.status, 0, result.stderr);
+  return JSON.parse(result.stdout);
+}
+
+test("plan emits documented app spec fields", () => {
+  const result = run(["plan", "Build me a todo app"]);
+  const payload = jsonFrom(result);
+  const spec = payload.appSpec;
+
+  assert.equal(typeof payload.enhancedPrompt, "string");
+  assert.match(payload.enhancedPrompt, /local-first web task-manager prototype/);
+  assert.match(payload.enhancedPrompt, /Do not add/);
+  assert.match(payload.enhancedPrompt, /modern UI quality guidance/);
+  assert.match(payload.enhancedPrompt, /do not load all templates/i);
+  assert.match(payload.enhancedPrompt, /load only appSpec\.references/i);
+
+  for (const field of [
+    "name",
+    "target",
+    "archetype",
+    "complexity",
+    "stack",
+    "screens",
+    "entities",
+    "features",
+    "sampleData",
+    "style",
+    "template",
+    "templateStatus",
+    "generationMode",
+    "references",
+    "referenceLoadingContract",
+    "mustNotInclude",
+    "acceptanceCriteria",
+    "questionsNeeded",
+    "questions",
+    "localOnly"
+  ]) {
+    assert.ok(field in spec, `missing ${field}`);
+  }
+
+  assert.equal(spec.target, "web");
+  assert.equal(spec.archetype, "task-manager");
+  assert.equal(spec.templateStatus, "runnable");
+  assert.equal(spec.generationMode, "runnable-starter");
+  assert.equal(spec.localOnly, true);
+  assert.equal(spec.questionsNeeded, false);
+  assert.deepEqual(spec.questions, []);
+  assert.ok(spec.references.includes("knowledge/design-playbooks/ui-quality.md"));
+  assert.deepEqual(spec.referenceLoadingContract, [
+    "Do not load all templates.",
+    "Run buildable plan.",
+    "Load only appSpec.references.",
+    "Load starter source only for the selected template."
+  ]);
+});
+
+test("plan asks questions for architecture-changing prompts", () => {
+  const result = run(["plan", "Build me a todo app with auth and Stripe payments"]);
+  const payload = jsonFrom(result);
+
+  assert.equal(payload.classification.questionsNeeded, true);
+  assert.equal(payload.appSpec.questionsNeeded, true);
+  assert.ok(payload.appSpec.questions.some((question) => question.includes("auth")));
+  assert.ok(payload.appSpec.questions.some((question) => question.includes("payments")));
+  assert.match(payload.enhancedPrompt, /Pause before generation/);
+});
+
+test("subscription tracker does not ask billing unless payments are explicit", () => {
+  const tracker = jsonFrom(run(["plan", "Build a subscription tracker for renewal dates and monthly costs"]));
+  assert.equal(tracker.appSpec.archetype, "subscription-tracker");
+  assert.equal(tracker.appSpec.questionsNeeded, false);
+  assert.deepEqual(tracker.appSpec.questions, []);
+  assert.deepEqual(
+    tracker.appSpec.entities.find((entity) => entity.name === "Subscription")?.fields,
+    ["id", "service", "cost", "billingPeriod", "renewalDate", "status", "category", "createdAt", "updatedAt"]
+  );
+
+  const billing = jsonFrom(run(["plan", "Build a subscription tracker with Stripe checkout"]));
+  assert.equal(billing.appSpec.archetype, "subscription-tracker");
+  assert.equal(billing.appSpec.questionsNeeded, true);
+  assert.ok(billing.appSpec.questions.some((question) => question.includes("payments")));
+});
+
+test("tag classifier uses phrase boundaries instead of substring matches", () => {
+  const result = run(["plan", "Build a platform for creator onboarding"]);
+  const payload = jsonFrom(result);
+
+  assert.equal(payload.appSpec.archetype, "onboarding-checklist");
+  assert.notEqual(payload.appSpec.archetype, "survey-form");
+});
+
+test("generate pauses when architecture questions are required", () => {
+  const workspace = mkdtempSync(join(tmpdir(), "buildable-approval-"));
+  const result = run(["generate", "Build me a todo app with auth", "--out", join(workspace, "auth-app")], { cwd: workspace });
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /architecture-changing choices/);
+  assert.match(result.stderr, /auth\/accounts/);
+});
+
+test("mobile task manager selects mobile Expo template", () => {
+  const result = run(["plan", "Build me a mobile task manager"]);
+  const payload = jsonFrom(result);
+
+  assert.equal(payload.appSpec.target, "mobile");
+  assert.equal(payload.appSpec.stack.framework, "Expo");
+  assert.equal(payload.appSpec.template, "templates/mobile/task-manager/template-spec.json");
+});
+
+test("tag registry routes web archetypes to selected knowledge and generic template", () => {
+  const result = run(["plan", "Build a local business directory website"]);
+  const payload = jsonFrom(result);
+
+  assert.equal(payload.appSpec.target, "web");
+  assert.equal(payload.appSpec.archetype, "directory-site");
+  assert.equal(payload.appSpec.template, "templates/web/generic-app/template-spec.json");
+  assert.ok(payload.appSpec.references.includes("knowledge/archetypes/directory-site.md"));
+  assert.ok(!payload.appSpec.references.includes("knowledge/archetypes/task-manager.md"));
+});
+
+test("tag registry routes mobile archetypes to selected knowledge and generic template", () => {
+  const result = run(["plan", "Build a mobile field service app for technician jobs"]);
+  const payload = jsonFrom(result);
+
+  assert.equal(payload.appSpec.target, "mobile");
+  assert.equal(payload.appSpec.archetype, "field-service");
+  assert.equal(payload.appSpec.template, "templates/mobile/generic-app/template-spec.json");
+  assert.ok(payload.appSpec.references.includes("knowledge/archetypes/field-service.md"));
+  assert.ok(payload.appSpec.features.includes("job list"));
+});
+
+test("init --existing creates local workspace profile", () => {
+  const workspace = mkdtempSync(join(tmpdir(), "buildable-init-"));
+  const result = run(["init", "--existing", "--json"], { cwd: workspace });
+  const payload = jsonFrom(result);
+
+  assert.equal(payload.mode, "existing-app");
+  assert.ok(existsSync(join(workspace, ".buildable/config.json")));
+  assert.ok(existsSync(join(workspace, ".buildable/repo-profile.json")));
+});
+
+test("generate copies runnable web task-manager starter and review passes", () => {
+  const workspace = mkdtempSync(join(tmpdir(), "buildable-generate-"));
+  const out = join(workspace, "taskflow");
+
+  const generated = run(["generate", "Build me a todo app", "--out", out, "--json"], { cwd: workspace });
+  const payload = jsonFrom(generated);
+  assert.equal(payload.template, "templates/web/task-manager/template-spec.json");
+  assert.ok(existsSync(join(out, "app/page.tsx")));
+  assert.ok(existsSync(join(out, "buildable-app-spec.json")));
+
+  const notes = readFileSync(join(out, "BUILDABLE_NOTES.md"), "utf8");
+  assert.match(notes, /reference loading contract/i);
+  assert.match(notes, /Do not load all templates/);
+  assert.match(notes, /Load only `appSpec.references`/);
+
+  const reviewed = run(["review", out, "--json"], { cwd: workspace });
+  const report = jsonFrom(reviewed);
+  assert.equal(report.ok, true);
+  assert.deepEqual(report.issues, []);
+});
+
+test("generate refuses planned templates without explicit plan-pack flag", () => {
+  const workspace = mkdtempSync(join(tmpdir(), "buildable-planned-"));
+  const out = join(workspace, "booking");
+  const result = run(["generate", "Build me a mobile booking app", "--out", out, "--json"], { cwd: workspace });
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /not runnable yet/);
+  assert.match(result.stderr, /--plan-pack/);
+  assert.ok(!existsSync(join(out, "IMPLEMENTATION_PLAN.md")));
+});
+
+test("generate writes plan-only instruction packs for planned templates when requested", () => {
+  const workspace = mkdtempSync(join(tmpdir(), "buildable-plan-pack-"));
+  const out = join(workspace, "booking");
+  const result = run(["generate", "Build me a mobile booking app", "--out", out, "--plan-pack", "--json"], { cwd: workspace });
+  const payload = jsonFrom(result);
+
+  assert.equal(payload.runnable, false);
+  assert.equal(payload.templateStatus, "planned");
+  assert.equal(payload.generationMode, "plan-only");
+  assert.ok(existsSync(join(out, "IMPLEMENTATION_PLAN.md")));
+  assert.ok(existsSync(join(out, "buildable-app-spec.json")));
+  assert.ok(!existsSync(join(out, "package.json")));
+});
+
+test("runnable web templates generate, pass review, and surface expected files", () => {
+  const cases = [
+    { prompt: "Build me a CRM for tracking leads", template: "templates/web/crm/template-spec.json" },
+    { prompt: "Build me a SaaS analytics dashboard", template: "templates/web/dashboard/template-spec.json" },
+    { prompt: "Build me a marketplace for local services", template: "templates/web/marketplace/template-spec.json" }
+  ];
+
+  for (const { prompt, template } of cases) {
+    const workspace = mkdtempSync(join(tmpdir(), "buildable-runnable-"));
+    const out = join(workspace, "app");
+    const generated = jsonFrom(run(["generate", prompt, "--out", out, "--json"], { cwd: workspace }));
+
+    assert.equal(generated.template, template, prompt);
+    assert.equal(generated.runnable, true, prompt);
+    assert.ok(existsSync(join(out, "app/page.tsx")), `${prompt} page`);
+
+    const report = jsonFrom(run(["review", out, "--json"], { cwd: workspace }));
+    assert.equal(report.ok, true, `${prompt} review: ${JSON.stringify(report.issues)}`);
+    assert.ok(
+      report.checks.some((check) => check.name === "expected-files" && check.status === "pass"),
+      `${prompt} expected-files`
+    );
+  }
+});
+
+test("mobile habit tracker is a runnable Expo starter", () => {
+  const workspace = mkdtempSync(join(tmpdir(), "buildable-habit-"));
+  const out = join(workspace, "habits");
+  const generated = jsonFrom(run(["generate", "Build me a mobile habit tracker", "--out", out, "--json"], { cwd: workspace }));
+
+  assert.equal(generated.template, "templates/mobile/habit-tracker/template-spec.json");
+  assert.equal(generated.runnable, true);
+  assert.ok(existsSync(join(out, "app/index.tsx")));
+  assert.ok(existsSync(join(out, "app/_layout.tsx")));
+
+  const report = jsonFrom(run(["review", out, "--json"], { cwd: workspace }));
+  assert.equal(report.ok, true, JSON.stringify(report.issues));
+});
+
+test("review surfaces missing expected files for runnable archetypes", () => {
+  const workspace = mkdtempSync(join(tmpdir(), "buildable-missing-files-"));
+  const out = join(workspace, "app");
+  run(["generate", "Build me a CRM for tracking leads", "--out", out, "--json"], { cwd: workspace });
+  rmSync(join(out, "components/lead-list.tsx"));
+
+  const result = run(["review", out, "--json"], { cwd: workspace });
+  assert.notEqual(result.status, 0);
+  const report = JSON.parse(result.stdout);
+  assert.ok(report.checks.some((check) => check.name === "expected-files" && check.status === "fail"));
+  assert.ok(report.issues.some((issue) => issue.includes("lead-list.tsx")));
+});
+
+test("review fails generic app specs that are not represented in source", () => {
+  const workspace = mkdtempSync(join(tmpdir(), "buildable-review-generic-"));
+  writeFileSync(join(workspace, "package.json"), JSON.stringify({ name: "empty-generic", version: "0.0.0" }, null, 2));
+  writeFileSync(
+    join(workspace, "buildable-app-spec.json"),
+    JSON.stringify(jsonFrom(run(["plan", "Build a local business directory website"])).appSpec, null, 2)
+  );
+
+  const result = run(["review", workspace, "--json"], { cwd: workspace });
+  assert.notEqual(result.status, 0);
+  const report = JSON.parse(result.stdout);
+  assert.equal(report.ok, false);
+  assert.equal(report.status, "fail");
+  assert.ok(report.checks.some((check) => check.name === "implementation-files" && check.status === "fail"));
+  assert.ok(report.checks.some((check) => check.name === "app-spec-entities" && check.status === "fail"));
+});
+
+test("review fails when app spec is missing", () => {
+  const workspace = mkdtempSync(join(tmpdir(), "buildable-review-nospec-"));
+  mkdirSync(join(workspace, "app"));
+  writeFileSync(join(workspace, "package.json"), JSON.stringify({ name: "nospec", version: "0.0.0" }, null, 2));
+  writeFileSync(join(workspace, "app/page.tsx"), "export default function Page() { return <main />; }\n");
+
+  const result = run(["review", workspace, "--json"], { cwd: workspace });
+  assert.notEqual(result.status, 0);
+  const report = JSON.parse(result.stdout);
+  assert.ok(report.issues.some((issue) => issue.includes("No buildable app spec")));
+});
+
+test("every registered archetype produces a valid app spec", () => {
+  const registry = JSON.parse(readFileSync(join(root, "core/archetype-registry.json"), "utf8"));
+
+  for (const entry of registry.archetypes) {
+    const prompt = `Build me a ${entry.id.replace(/-/g, " ")}`;
+    const payload = jsonFrom(run(["plan", prompt]));
+    const spec = payload.appSpec;
+
+    assert.ok(spec.entities.length > 0, `${entry.id} has entities`);
+    for (const entity of spec.entities) {
+      assert.ok(
+        Array.isArray(entity.fields) && entity.fields.length >= 4,
+        `${entry.id} entity ${entity.name} needs >= 4 fields, got ${entity.fields?.length}`
+      );
+    }
+    assert.ok(spec.features.length > 0, `${entry.id} has features`);
+    for (const reference of spec.references) {
+      assert.ok(existsSync(join(root, reference)), `${entry.id} reference exists: ${reference}`);
+    }
+  }
+});
+
+test("check validates Claude plugin packaging", () => {
+  const payload = jsonFrom(run(["check", "--json"]));
+  assert.equal(payload.checked.claudePlugin, true);
+  assert.equal(payload.claudePluginIssues.length, 0);
+
+  const manifest = JSON.parse(readFileSync(join(root, ".claude-plugin/plugin.json"), "utf8"));
+  assert.equal(manifest.name, "buildable");
+
+  const marketplace = JSON.parse(readFileSync(join(root, ".claude-plugin/marketplace.json"), "utf8"));
+  assert.ok(marketplace.plugins.some((plugin) => plugin.name === "buildable"));
+
+  for (const command of ["plan", "generate", "review", "init"]) {
+    assert.ok(existsSync(join(root, `commands/buildable-${command}.md`)), `command ${command}`);
+  }
+});
+
+test("check validates template and plugin references", () => {
+  const payload = jsonFrom(run(["check", "--json"]));
+  assert.equal(payload.ok, true);
+  assert.equal(payload.missing.length, 0);
+  assert.equal(payload.registryIssues.length, 0);
+  assert.equal(payload.templateIssues.length, 0);
+  assert.equal(payload.pluginIssues.length, 0);
+  assert.equal(payload.claudePluginIssues.length, 0);
+  assert.ok(payload.checked.archetypes >= 50);
+  assert.ok(payload.checked.runnableTemplates >= 5);
+  assert.ok(payload.checked.plannedTemplates >= 1);
+});
+
+test("list exposes runnable and planned generation status", () => {
+  const payload = jsonFrom(run(["list", "--json"]));
+  assert.ok(payload.generation.runnableTemplates >= 5);
+  assert.ok(payload.generation.plannedTemplates >= 1);
+  assert.equal(payload.generation.plannedGenerateMode, "plan-only instruction pack");
+});
+
+test("eval passes all fixtures and reports context-load efficiency", () => {
+  const payload = jsonFrom(run(["eval", "--json"]));
+
+  assert.equal(payload.ok, true);
+  assert.equal(payload.failed, 0);
+  assert.ok(payload.fixtures >= 8);
+  assert.ok(payload.corpusBytes > 0);
+  // The whole point of the loading contract: each plan loads a small slice of the brain.
+  assert.ok(payload.efficiency.avgContextLoadRatio < 0.25, `ratio ${payload.efficiency.avgContextLoadRatio}`);
+  assert.ok(payload.results.every((result) => result.references > 0));
+});
+
+test("docs and plugin resources keep low-token scope explicit", () => {
+  const readme = readFileSync(join(root, "README.md"), "utf8");
+  assert.doesNotMatch(readme, /\/Users\/christianpatricksuntay\/Projects\/Buildable/);
+  assert.match(readme, /\[docs\/install\.md\]\(docs\/install\.md\)/);
+  assert.match(readme, /runnable starters/);
+
+  const plugin = JSON.parse(readFileSync(join(root, ".codex-plugin/plugin.json"), "utf8"));
+  assert.ok(plugin.resources.includes("../knowledge/INDEX.md"));
+  assert.ok(plugin.resources.includes("../templates/INDEX.md"));
+  assert.ok(!plugin.resources.includes("../knowledge"));
+  assert.ok(!plugin.resources.includes("../templates"));
+  assert.ok(!plugin.resources.includes("../core"));
+});

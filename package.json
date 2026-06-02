@@ -1,0 +1,49 @@
+{
+  "name": "@buildable/local-builder",
+  "version": "0.1.0",
+  "description": "Local-first AI app builder brain for Codex, Claude, Cursor, and CLI workflows.",
+  "type": "module",
+  "bin": {
+    "buildable": "./bin/buildable.mjs"
+  },
+  "scripts": {
+    "plan": "node ./bin/buildable.mjs plan",
+    "check": "node ./bin/buildable.mjs check",
+    "list": "node ./bin/buildable.mjs list",
+    "eval": "node ./bin/buildable.mjs eval",
+    "smoke": "node ./bin/buildable.mjs help && node ./bin/buildable.mjs check --json && node ./bin/buildable.mjs list --json && node ./bin/buildable.mjs eval --json && node ./bin/buildable.mjs plan \"Build me a lightweight CRM\" && node ./bin/buildable.mjs plan \"Build me a mobile task manager\"",
+    "test": "node --test"
+  },
+  "files": [
+    "README.md",
+    "docs/install.md",
+    "bin/",
+    "cli/",
+    "adapters/",
+    ".cursor/",
+    ".codex-plugin/",
+    ".claude-plugin/",
+    "commands/",
+    "core/",
+    "knowledge/",
+    "skills/",
+    "templates/",
+    "examples/",
+    "evals/",
+    "test/"
+  ],
+  "keywords": [
+    "ai",
+    "app-builder",
+    "local-ai",
+    "codex",
+    "claude",
+    "cursor",
+    "cli",
+    "local-first"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}
