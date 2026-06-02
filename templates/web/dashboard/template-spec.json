@@ -1,0 +1,33 @@
+{
+  "name": "web-saas-dashboard",
+  "target": "web",
+  "archetype": "dashboard",
+  "stack": {
+    "framework": "Next.js",
+    "language": "TypeScript",
+    "styling": "Tailwind CSS",
+    "data": "local-mock"
+  },
+  "status": "runnable",
+  "starter": "templates/web/dashboard/starter",
+  "expectedFiles": [
+    "app/page.tsx",
+    "components/metric-cards.tsx",
+    "components/event-table.tsx",
+    "lib/sample-data.ts",
+    "types/dashboard.ts"
+  ],
+  "references": [
+    "knowledge/archetypes/dashboard.md",
+    "knowledge/data-models/dashboard.md",
+    "knowledge/screen-graphs/dashboard.md",
+    "knowledge/ui-patterns/filters.md",
+    "knowledge/ui-patterns/tables.md",
+    "knowledge/ui-patterns/charts.md",
+    "knowledge/ui-patterns/empty-states.md",
+    "knowledge/design-playbooks/modern-saas.md",
+    "knowledge/design-playbooks/ui-quality.md",
+    "knowledge/quality-rubrics/web-app.md",
+    "templates/web/dashboard/TEMPLATE_PLAN.md"
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "StreakKit",
+    "slug": "buildable-habit-tracker",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "streakkit",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "plugins": ["expo-router"]
+  }
+}

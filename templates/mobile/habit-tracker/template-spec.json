@@ -1,0 +1,30 @@
+{
+  "name": "mobile-habit-tracker",
+  "target": "mobile",
+  "archetype": "habit-tracker",
+  "stack": {
+    "framework": "Expo",
+    "language": "TypeScript",
+    "styling": "NativeWind",
+    "navigation": "Expo Router",
+    "data": "local-state"
+  },
+  "status": "runnable",
+  "starter": "templates/mobile/habit-tracker/starter",
+  "expectedFiles": [
+    "app/index.tsx",
+    "app/_layout.tsx",
+    "components/habit-card.tsx",
+    "lib/sample-habits.ts",
+    "types/habit.ts"
+  ],
+  "references": [
+    "knowledge/archetypes/habit-tracker.md",
+    "knowledge/data-models/habit-tracker.md",
+    "knowledge/screen-graphs/habit-tracker.md",
+    "knowledge/design-playbooks/mobile-utility.md",
+    "knowledge/design-playbooks/ui-quality.md",
+    "knowledge/quality-rubrics/mobile-app.md",
+    "templates/mobile/habit-tracker/TEMPLATE_PLAN.md"
+  ]
+}

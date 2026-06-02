@@ -1,0 +1,22 @@
+{
+  "name": "mobile-task-manager",
+  "target": "mobile",
+  "archetype": "task-manager",
+  "stack": {
+    "framework": "Expo",
+    "language": "TypeScript",
+    "styling": "NativeWind",
+    "navigation": "Expo Router",
+    "data": "local-state"
+  },
+  "status": "planned",
+  "references": [
+    "knowledge/archetypes/task-manager.md",
+    "knowledge/data-models/task-manager.md",
+    "knowledge/screen-graphs/task-manager.md",
+    "knowledge/design-playbooks/mobile-utility.md",
+    "knowledge/design-playbooks/ui-quality.md",
+    "knowledge/quality-rubrics/mobile-app.md",
+    "templates/mobile/task-manager/TEMPLATE_PLAN.md"
+  ]
+}

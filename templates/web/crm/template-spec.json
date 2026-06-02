@@ -1,0 +1,33 @@
+{
+  "name": "web-crm",
+  "target": "web",
+  "archetype": "crm",
+  "stack": {
+    "framework": "Next.js",
+    "language": "TypeScript",
+    "styling": "Tailwind CSS",
+    "data": "local-state"
+  },
+  "status": "runnable",
+  "starter": "templates/web/crm/starter",
+  "expectedFiles": [
+    "app/page.tsx",
+    "components/lead-composer.tsx",
+    "components/lead-list.tsx",
+    "lib/sample-leads.ts",
+    "types/crm.ts"
+  ],
+  "references": [
+    "knowledge/archetypes/crm.md",
+    "knowledge/data-models/crm.md",
+    "knowledge/screen-graphs/crm.md",
+    "knowledge/ui-patterns/forms.md",
+    "knowledge/ui-patterns/filters.md",
+    "knowledge/ui-patterns/tables.md",
+    "knowledge/ui-patterns/action-bars.md",
+    "knowledge/design-playbooks/admin-dashboard.md",
+    "knowledge/design-playbooks/ui-quality.md",
+    "knowledge/quality-rubrics/web-app.md",
+    "templates/web/crm/TEMPLATE_PLAN.md"
+  ]
+}

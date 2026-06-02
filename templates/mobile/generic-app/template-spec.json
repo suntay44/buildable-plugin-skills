@@ -1,0 +1,22 @@
+{
+  "name": "mobile-generic-app",
+  "target": "mobile",
+  "archetype": "generic-app",
+  "stack": {
+    "framework": "Expo",
+    "language": "TypeScript",
+    "styling": "NativeWind",
+    "navigation": "Expo Router",
+    "data": "local-state"
+  },
+  "status": "planned",
+  "references": [
+    "knowledge/design-playbooks/mobile-utility.md",
+    "knowledge/design-playbooks/ui-quality.md",
+    "knowledge/ui-patterns/forms.md",
+    "knowledge/ui-patterns/empty-states.md",
+    "knowledge/quality-rubrics/mobile-app.md",
+    "templates/mobile/generic-app/TEMPLATE_PLAN.md"
+  ]
+}
+

@@ -1,0 +1,21 @@
+{
+  "name": "web-generic-app",
+  "target": "web",
+  "archetype": "generic-app",
+  "stack": {
+    "framework": "Next.js",
+    "language": "TypeScript",
+    "styling": "Tailwind CSS",
+    "data": "local-state"
+  },
+  "status": "planned",
+  "references": [
+    "knowledge/design-playbooks/ui-quality.md",
+    "knowledge/ui-patterns/forms.md",
+    "knowledge/ui-patterns/empty-states.md",
+    "knowledge/ui-patterns/responsive-layouts.md",
+    "knowledge/quality-rubrics/web-app.md",
+    "templates/web/generic-app/TEMPLATE_PLAN.md"
+  ]
+}
+

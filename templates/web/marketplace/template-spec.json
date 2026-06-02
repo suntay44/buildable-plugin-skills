@@ -1,0 +1,33 @@
+{
+  "name": "web-marketplace",
+  "target": "web",
+  "archetype": "marketplace",
+  "stack": {
+    "framework": "Next.js",
+    "language": "TypeScript",
+    "styling": "Tailwind CSS",
+    "data": "local-state"
+  },
+  "status": "runnable",
+  "starter": "templates/web/marketplace/starter",
+  "expectedFiles": [
+    "app/page.tsx",
+    "components/listing-grid.tsx",
+    "components/listing-detail.tsx",
+    "lib/sample-listings.ts",
+    "types/marketplace.ts"
+  ],
+  "references": [
+    "knowledge/archetypes/marketplace.md",
+    "knowledge/data-models/marketplace.md",
+    "knowledge/screen-graphs/marketplace.md",
+    "knowledge/ui-patterns/forms.md",
+    "knowledge/ui-patterns/filters.md",
+    "knowledge/ui-patterns/empty-states.md",
+    "knowledge/ui-patterns/navigation.md",
+    "knowledge/design-playbooks/modern-saas.md",
+    "knowledge/design-playbooks/ui-quality.md",
+    "knowledge/quality-rubrics/web-app.md",
+    "templates/web/marketplace/TEMPLATE_PLAN.md"
+  ]
+}
