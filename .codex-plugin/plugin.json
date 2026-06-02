@@ -1,0 +1,53 @@
+{
+  "schema_version": "1.0",
+  "name": "buildable",
+  "display_name": "Buildable",
+  "version": "0.1.0",
+  "description": "Local-first AI app builder brain with archetypes, templates, skills, and review rubrics for generating polished prototypes.",
+  "author": "Buildable contributors",
+  "license": "MIT",
+  "skills": [
+    {
+      "name": "buildable-planner",
+      "path": "../skills/planner/SKILL.md"
+    },
+    {
+      "name": "buildable-web-builder",
+      "path": "../skills/web-builder/SKILL.md"
+    },
+    {
+      "name": "buildable-mobile-builder",
+      "path": "../skills/mobile-builder/SKILL.md"
+    },
+    {
+      "name": "buildable-reviewer",
+      "path": "../skills/reviewer/SKILL.md"
+    }
+  ],
+  "resources": [
+    "../bin/buildable.mjs",
+    "../cli/README.md",
+    "../docs/install.md",
+    "../core/app-spec-schema.md",
+    "../core/ask-vs-build-policy.md",
+    "../core/build-workflow.md",
+    "../core/classifier.md",
+    "../core/template-spec-schema.md",
+    "../core/archetype-registry.json",
+    "../core/activation-policy.md",
+    "../core/reference-loading-contract.md",
+    "../core/schemas/app-spec.schema.json",
+    "../core/schemas/archetype-registry.schema.json",
+    "../core/schemas/template-spec.schema.json",
+    "../knowledge/INDEX.md",
+    "../templates/INDEX.md",
+    "../templates/web/generic-app/template-spec.json",
+    "../templates/web/generic-app/TEMPLATE_PLAN.md",
+    "../templates/web/task-manager/template-spec.json",
+    "../templates/web/task-manager/TEMPLATE_PLAN.md",
+    "../templates/mobile/generic-app/template-spec.json",
+    "../templates/mobile/generic-app/TEMPLATE_PLAN.md",
+    "../evals/rubric.md",
+    "../evals/prompts.md"
+  ]
+}

@@ -1,0 +1,4 @@
+display_name: Buildable Planner
+short_description: Classifies app prompts and creates local-first Buildable app specs.
+default_prompt: Plan a local-first app prototype from my prompt using Buildable.
+

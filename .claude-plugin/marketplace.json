@@ -1,0 +1,27 @@
+{
+  "name": "buildable",
+  "owner": {
+    "name": "Buildable contributors"
+  },
+  "metadata": {
+    "description": "Local-first builder-brain plugins for Claude Code.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "buildable",
+      "source": "./",
+      "description": "Prompt-to-prototype planning, archetypes, golden templates, UI/UX playbooks, and a local review loop for web and mobile app prototypes.",
+      "version": "0.1.0",
+      "license": "MIT",
+      "keywords": [
+        "app-builder",
+        "local-first",
+        "prototype",
+        "nextjs",
+        "expo"
+      ],
+      "strict": false
+    }
+  ]
+}

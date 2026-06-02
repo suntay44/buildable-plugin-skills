@@ -1,0 +1,4 @@
+display_name: Buildable Reviewer
+short_description: Reviews generated prototypes for completeness, quality, and local-first discipline.
+default_prompt: Review this Buildable prototype against its spec and rubric.
+

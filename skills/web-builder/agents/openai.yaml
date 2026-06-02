@@ -1,0 +1,4 @@
+display_name: Buildable Web Builder
+short_description: Builds local-first web prototypes from Buildable specs and templates.
+default_prompt: Generate a polished local web prototype from this Buildable app spec.
+
