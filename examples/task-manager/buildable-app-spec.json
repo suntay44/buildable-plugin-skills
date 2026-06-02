@@ -1,0 +1,98 @@
+{
+  "name": "TaskFlow",
+  "target": "web",
+  "archetype": "task-manager",
+  "complexity": "simple-prototype",
+  "stack": {
+    "framework": "Next.js",
+    "language": "TypeScript",
+    "styling": "Tailwind CSS",
+    "data": "local-state"
+  },
+  "screens": [
+    {
+      "id": "dashboard",
+      "purpose": "Create, review, filter, and complete tasks"
+    }
+  ],
+  "entities": [
+    {
+      "name": "Task",
+      "fields": [
+        "id",
+        "title",
+        "description",
+        "status",
+        "priority",
+        "dueDate",
+        "tags",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  ],
+  "features": [
+    "create task",
+    "edit task",
+    "delete task",
+    "mark complete",
+    "reopen task",
+    "filter by status",
+    "filter by priority",
+    "search tasks",
+    "show empty state"
+  ],
+  "sampleData": "meaningful",
+  "style": "modern productivity app",
+  "template": "templates/web/task-manager/template-spec.json",
+  "templateStatus": "runnable",
+  "generationMode": "runnable-starter",
+  "expectedFiles": [
+    "app/page.tsx",
+    "components/task-composer.tsx",
+    "components/task-list.tsx",
+    "lib/sample-tasks.ts",
+    "types/task.ts"
+  ],
+  "references": [
+    "knowledge/archetypes/task-manager.md",
+    "knowledge/data-models/task-manager.md",
+    "knowledge/screen-graphs/task-manager.md",
+    "knowledge/ui-patterns/forms.md",
+    "knowledge/ui-patterns/filters.md",
+    "knowledge/ui-patterns/empty-states.md",
+    "knowledge/ui-patterns/responsive-layouts.md",
+    "knowledge/ui-patterns/action-bars.md",
+    "knowledge/design-playbooks/productivity.md",
+    "knowledge/design-playbooks/ui-quality.md",
+    "knowledge/quality-rubrics/web-app.md",
+    "templates/web/task-manager/TEMPLATE_PLAN.md"
+  ],
+  "referenceLoadingContract": [
+    "Do not load all templates.",
+    "Run buildable plan.",
+    "Load only appSpec.references.",
+    "Load starter source only for the selected template."
+  ],
+  "dataMode": "local-state",
+  "starter": "templates/web/task-manager/starter",
+  "mustNotInclude": [
+    "auth unless requested",
+    "billing",
+    "cloud previews",
+    "managed databases",
+    "hosted deployment",
+    "telemetry"
+  ],
+  "acceptanceCriteria": [
+    "first screen is usable immediately",
+    "all core task actions work locally",
+    "empty and filtered-empty states are present",
+    "layout works on mobile and desktop",
+    "no hosted services are required"
+  ],
+  "localOnly": true,
+  "questionsNeeded": false,
+  "questions": [],
+  "nextStep": "Load the listed references, then generate from the selected runnable starter."
+}

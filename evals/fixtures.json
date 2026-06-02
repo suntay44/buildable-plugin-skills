@@ -1,0 +1,13 @@
+{
+  "description": "Deterministic classification + app-spec fixtures for `buildable eval`. Each fixture asserts the archetype and target a prompt should resolve to, so regressions in routing or app-spec validity are caught locally.",
+  "fixtures": [
+    { "prompt": "Build me a todo app", "archetype": "task-manager", "target": "web" },
+    { "prompt": "Build me a CRM for tracking leads", "archetype": "crm", "target": "web" },
+    { "prompt": "Build me a SaaS analytics dashboard", "archetype": "dashboard", "target": "web" },
+    { "prompt": "Build me a marketplace for local services", "archetype": "marketplace", "target": "web" },
+    { "prompt": "Build me a mobile habit tracker", "archetype": "habit-tracker", "target": "mobile" },
+    { "prompt": "Build a mobile booking app for appointments", "archetype": "booking", "target": "mobile" },
+    { "prompt": "Build a local business directory website", "archetype": "directory-site", "target": "web" },
+    { "prompt": "Build a subscription tracker for renewal dates and monthly costs", "archetype": "subscription-tracker", "target": "mobile" }
+  ]
+}
