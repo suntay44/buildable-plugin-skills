@@ -101,7 +101,7 @@ This auto-discovers the planner, web-builder, mobile-builder, and reviewer skill
 | `/buildable-plan` | Classify a prompt and print an app spec |
 | `/buildable-generate` | Copy a runnable starter or write a plan pack |
 | `/buildable-review` | Audit a prototype (`--build` runs typecheck/build) |
-| `/buildable-preview` | Render the running app, screenshot it, catch runtime errors |
+| `/buildable-preview` | Optional: render the running app, screenshot it, catch runtime errors |
 | `/buildable-init` | Make the current workspace Buildable-aware |
 
 ### Cursor
@@ -119,7 +119,7 @@ Load `.codex-plugin/plugin.json`.
 | `buildable plan "<prompt>"` | Classify a prompt and print the app spec as JSON |
 | `buildable generate "<prompt>" [--out <dir>]` | Copy a runnable starter; defaults to a folder from the app name (`--plan-pack` for planned, `--name "X"` to brand, `--augment` to plan into an existing app) |
 | `buildable review [path] [--build]` | Audit the current app by default; optional path reviews another folder, optional `--build` runs typecheck/build |
-| `buildable preview [path] --url <url>` | Render the running app in a headless browser; screenshot + catch runtime errors |
+| `buildable preview [path] --url <url>` | Optional: render the running app in a headless browser; screenshot + catch runtime errors |
 | `buildable init [--existing]` | Create `.buildable` config for a workspace |
 | `buildable check` | Verify local assets, adapters, and template references |
 | `buildable list` | List archetypes and runnable/planned template status |
@@ -138,17 +138,22 @@ Load `.codex-plugin/plugin.json`.
 - **Use `plan` when you want direction first.** It classifies the prompt, selects the archetype/template, lists the exact references the agent should load, and asks questions only for architecture-changing choices.
 - **Use `generate` when you want local files created.** It runs the same planning step, then copies the selected runnable starter or writes a plan pack. Agents like Claude, Codex, and Cursor can execute from `plan`, but `generate` saves them from recreating the starter structure by hand.
 
-### Visual preview loop
+### Review
 
-`buildable review` audits the app spec, structure, and local-first guardrails. Add `--build` only when you also want it to run installed typecheck/build scripts. `buildable preview` proves the app renders in a browser. Start the dev server, then:
+`buildable review` audits the app spec, structure, and local-first guardrails. Add `--build` only when you also want it to run installed typecheck/build scripts. This is the core check after generating or editing an app.
+
+<details>
+<summary><strong>Optional: visual preview</strong> (for headless/CI or agents without a screenshot tool)</summary>
+
+Most of the time you can just open `localhost` yourself, and agents that already have a screenshot/preview tool (such as Claude Code's preview) should use that. `buildable preview` exists for the cases that have neither — a fully autonomous or CI run that still needs to know whether the page actually renders. Start the dev server, then:
 
 ```bash
 buildable preview --url http://localhost:3000
 ```
 
-It loads the page in a headless browser (Playwright — optional, resolved from the app or Buildable), writes a screenshot to `.buildable/preview.png`, and fails on a blank render or uncaught runtime errors — the visual issues `tsc`/`build` can't see. If Playwright isn't installed it degrades gracefully with setup guidance, so the core CLI stays dependency-free.
+It loads the page in a headless browser (Playwright — optional, resolved from the app or Buildable), writes `.buildable/preview.png`, and fails on a blank render or uncaught runtime errors — the visual issues `tsc`/`build` can't see. It is the only feature that needs a browser binary, so it stays optional and skips gracefully when Playwright is absent. It targets browser-rendered web apps today; native mobile visual checks would need a simulator and remain future work.
 
-Today, `buildable preview` is primarily for browser-rendered web apps. Mobile starters should still run `buildable review` and the app's normal typecheck/build commands locally; Expo web previews or simulator screenshots can become a gated mobile visual check later because they are heavier than the default local plugin workflow.
+</details>
 
 ## Templates
 
