@@ -307,3 +307,4 @@ User prompt
 ## Current Status
 
 This repository currently contains the foundational builder brain, multiple web/mobile template specs, agent adapters for Claude Code (plugin + slash commands), Codex, and Cursor, five runnable golden templates (web task-manager, CRM, dashboard, marketplace, and mobile habit-tracker), planned templates that generate instruction packs, a generated task-manager example, schema validation, an automated classification/efficiency eval, and tested local CLI commands for `init`, `plan`, `generate`, `review`, `check`, `list`, and `eval`.
+# buildable-plugin-skills
