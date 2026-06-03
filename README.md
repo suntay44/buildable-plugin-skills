@@ -101,7 +101,7 @@ Load `.codex-plugin/plugin.json`.
 | Command | Purpose |
 | --- | --- |
 | `buildable plan "<prompt>"` | Classify a prompt and print the app spec as JSON |
-| `buildable generate "<prompt>" --out <dir>` | Copy a runnable starter (`--plan-pack` for planned templates) |
+| `buildable generate "<prompt>" --out <dir>` | Copy a runnable starter (`--plan-pack` for planned, `--name "X"` to brand, `--augment` to plan into an existing app) |
 | `buildable review [path] [--build]` | Audit a prototype; `--build` runs typecheck/build |
 | `buildable init [--existing]` | Create `.buildable` config for a workspace |
 | `buildable check` | Verify local assets, adapters, and template references |

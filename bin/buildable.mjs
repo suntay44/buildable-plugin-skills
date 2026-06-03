@@ -50,6 +50,7 @@ Commands:
   init [--existing]             Create .buildable config for a workspace.
   plan <prompt>                 Classify a prompt and print a local app spec as JSON.
   generate <prompt> --out <dir> Create a runnable starter, or use --plan-pack for planned templates.
+                                Add --name "X" to brand it, or --augment to plan into an existing app.
   review [path] [--build]       Audit a local prototype against Buildable rules. --build also runs typecheck/build.
   check [--json]                Verify local assets, adapter files, and template references.
   list [--json]                 List bundled archetypes plus runnable/planned template status.
@@ -73,7 +74,7 @@ function parseArgs(rawArgs) {
     values: {},
     positionals: []
   };
-  const valueFlags = new Set(["--out", "--mode"]);
+  const valueFlags = new Set(["--out", "--mode", "--name"]);
 
   for (let index = 0; index < rawArgs.length; index += 1) {
     const arg = rawArgs[index];
@@ -148,6 +149,30 @@ function templateFor(classification) {
 
 function appNameFor(archetype) {
   return archetypeRegistry.archetypes.find((entry) => entry.id === archetype)?.name ?? "BuildableApp";
+}
+
+function appNameFromPrompt(prompt) {
+  const match = prompt.match(/\b(?:called|named|titled)\s+["']?([A-Za-z][\w][\w .&'-]{0,38}?)["']?(?:\.|,|$|\s(?:app|application|that|which|for|to|with)\b)/i);
+  if (!match) return null;
+  return match[1].trim().replace(/[ .]+$/, "");
+}
+
+function chosenAppName(prompt, fallback) {
+  const flagName = typeof parsedArgs.values.name === "string" ? parsedArgs.values.name.trim() : "";
+  if (flagName) return flagName;
+  return appNameFromPrompt(prompt) ?? fallback;
+}
+
+function renameAppInDir(target, fromName, toName) {
+  if (!fromName || !toName || fromName === toName) return 0;
+  let changed = 0;
+  for (const file of scanTextFiles(target)) {
+    const text = readFileSync(file, "utf8");
+    if (!text.includes(fromName)) continue;
+    writeFileSync(file, text.split(fromName).join(toName));
+    changed += 1;
+  }
+  return changed;
 }
 
 function fieldNameFor(label) {
@@ -1005,6 +1030,40 @@ Do not add accounts, billing, cloud previews, managed databases, telemetry, or h
 `;
 }
 
+function augmentPlanFor(plan) {
+  return `# Buildable Augment Plan
+
+Prompt:
+
+${plan.prompt}
+
+This is an **augment** pack: apply ${plan.appSpec.name} to the EXISTING app in this
+directory. Do not scaffold a new project or overwrite unrelated code.
+
+## App Spec Summary
+
+- name: ${plan.appSpec.name}
+- target: ${plan.appSpec.target}
+- archetype: ${plan.appSpec.archetype}
+- data mode: ${plan.appSpec.dataMode}
+
+## References To Load
+
+${plan.appSpec.references.map((reference) => `- ${reference}`).join("\n")}
+
+## Build Steps
+
+1. Read \`buildable-app-spec.json\` and follow \`appSpec.referenceLoadingContract\`.
+2. Inspect the existing project: framework, routing, components, and styling conventions.
+3. Add the listed screens, entities, and features using the project's existing patterns and stack.
+4. Reuse existing components and design tokens; match the current file structure.
+5. Keep local/mock data by default. Do not introduce a new framework or restructure the app.
+6. Run \`buildable review .\` and fix blocking issues before handoff.
+
+Do not add accounts, billing, cloud previews, managed databases, telemetry, or hosted deployment unless explicitly requested.
+`;
+}
+
 function generate() {
   if (!input) {
     console.error('Missing prompt. Example: buildable generate "Build me a todo app" --out ./taskflow');
@@ -1020,7 +1079,14 @@ function generate() {
     process.exitCode = 1;
     return;
   }
-  const outValue = parsedArgs.values.out ?? slugFor(plan.appSpec.name);
+  // Smarter naming: a --name flag or "called/named X" in the prompt brands the app.
+  const defaultName = plan.appSpec.name;
+  const appName = chosenAppName(input, defaultName);
+  plan.appSpec.name = appName;
+
+  // Augment mode plans into an existing app instead of copying a fresh starter.
+  const augment = flags.has("--augment");
+  const outValue = parsedArgs.values.out ?? (augment ? "." : slugFor(plan.appSpec.name));
   const outDir = isAbsolute(outValue) ? outValue : join(process.cwd(), outValue);
   const templateSpec = readJson(plan.appSpec.template);
   const starter = templateSpec.starter ? join(root, templateSpec.starter) : null;
@@ -1032,34 +1098,39 @@ function generate() {
     return;
   }
 
-  const hasRunnableStarter = Boolean(starter && existsSync(starter));
+  const hasRunnableStarter = Boolean(starter && existsSync(starter)) && !augment;
 
-  if (!hasRunnableStarter && !flags.has("--plan-pack")) {
+  if (!augment && !Boolean(starter && existsSync(starter)) && !flags.has("--plan-pack")) {
     console.error(`Template ${plan.appSpec.template} is not runnable yet.`);
-    console.error("Use buildable plan for JSON output, or rerun generate with --plan-pack to write a local instruction pack.");
+    console.error("Use buildable plan for JSON output, rerun generate with --plan-pack to write a local instruction pack, or use --augment to plan into an existing app.");
     process.exitCode = 1;
     return;
   }
 
-  if (directoryHasFiles(outDir) && !flags.has("--force")) {
+  if (!augment && directoryHasFiles(outDir) && !flags.has("--force")) {
     console.error(`Output directory already exists and is not empty: ${outDir}`);
-    console.error("Use --force to write Buildable files into it.");
+    console.error("Use --force to write Buildable files into it, or --augment to plan into an existing app without overwriting code.");
     process.exitCode = 1;
     return;
   }
 
+  let renamedFiles = 0;
   if (hasRunnableStarter) {
     copyDirectory(starter, outDir);
+    renamedFiles = renameAppInDir(outDir, defaultName, appName);
   } else {
     mkdirSync(outDir, { recursive: true });
-    writeFileSync(join(outDir, "IMPLEMENTATION_PLAN.md"), implementationPlanFor(plan));
+    writeFileSync(join(outDir, "IMPLEMENTATION_PLAN.md"), augment ? augmentPlanFor(plan) : implementationPlanFor(plan));
   }
+
+  const mode = augment ? "generated-augment" : hasRunnableStarter ? "generated-starter" : "generated-instruction-pack";
 
   mkdirSync(join(outDir, ".buildable"), { recursive: true });
   writeJson(join(outDir, "buildable-app-spec.json"), plan.appSpec);
   writeJson(join(outDir, ".buildable", "config.json"), {
     version: packageJson.version,
-    mode: hasRunnableStarter ? "generated-starter" : "generated-instruction-pack",
+    mode,
+    appName,
     localOnly: true,
     buildableRoot: root,
     generatedAt: new Date().toISOString()
@@ -1096,11 +1167,18 @@ Do not add accounts, billing, cloud previews, managed databases, telemetry, or h
     template: plan.appSpec.template,
     templateStatus: plan.appSpec.templateStatus,
     generationMode: plan.appSpec.generationMode,
+    mode,
     runnable: hasRunnableStarter,
+    augment,
+    appName,
+    renamedFiles,
     appSpec: "buildable-app-spec.json"
   };
 
-  console.log(jsonOutput ? JSON.stringify(payload, null, 2) : `Generated ${payload.runnable ? "local starter" : "plan-only instruction pack"} at ${outDir}`);
+  const summary = augment
+    ? `Wrote augment plan for "${appName}" into ${outDir}`
+    : `Generated ${payload.runnable ? `local starter "${appName}"` : "plan-only instruction pack"} at ${outDir}`;
+  console.log(jsonOutput ? JSON.stringify(payload, null, 2) : summary);
 }
 
 function findAppSpec(target) {

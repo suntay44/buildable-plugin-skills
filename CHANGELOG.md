@@ -16,6 +16,7 @@ Unreleased section here and syncs the version across every plugin manifest.
 - Runnable mobile `booking` golden starter (Expo stepped flow: service → slot → details → confirmation) with typecheck CI.
 - Runnable mobile `task-manager` golden starter (Expo: quick add, complete/edit/delete, search + status/priority filters) with typecheck CI.
 - Data models and screen graphs for `notes`, `blog-cms`, `job-board`, `ecommerce-admin`, and `inventory-manager`.
+- Smarter `generate`: `--name`/prompt-derived app branding (renames the starter) and `--augment` to plan a feature into an existing app without copying source.
 - Deterministic spec-quality score in `buildable eval`.
 - Release tooling: `version:bump`/`version:check`, CHANGELOG, and a tag-triggered release workflow.
 

@@ -179,6 +179,42 @@ test("generate copies runnable web task-manager starter and review passes", () =
   assert.deepEqual(report.issues, []);
 });
 
+test("generate brands a runnable starter via --name", () => {
+  const workspace = mkdtempSync(join(tmpdir(), "buildable-name-"));
+  const out = join(workspace, "app");
+  const payload = jsonFrom(run(["generate", "Build me a todo app", "--out", out, "--name", "ChoreMaster", "--json"], { cwd: workspace }));
+
+  assert.equal(payload.appName, "ChoreMaster");
+  assert.ok(payload.renamedFiles > 0);
+  assert.equal(JSON.parse(readFileSync(join(out, "buildable-app-spec.json"), "utf8")).name, "ChoreMaster");
+  const page = readFileSync(join(out, "app/page.tsx"), "utf8");
+  assert.match(page, /ChoreMaster/);
+  assert.doesNotMatch(page, /TaskFlow/);
+});
+
+test("generate derives the app name from the prompt", () => {
+  const workspace = mkdtempSync(join(tmpdir(), "buildable-name2-"));
+  const out = join(workspace, "app");
+  const payload = jsonFrom(run(["generate", "Build me a todo app called FocusList", "--out", out, "--json"], { cwd: workspace }));
+  assert.equal(payload.appName, "FocusList");
+});
+
+test("generate --augment plans into an existing app without copying source", () => {
+  const workspace = mkdtempSync(join(tmpdir(), "buildable-augment-"));
+  writeFileSync(join(workspace, "package.json"), JSON.stringify({ name: "existing-app", version: "1.0.0" }, null, 2));
+
+  const payload = jsonFrom(run(["generate", "Add a CRM workflow to this app", "--out", workspace, "--augment", "--json"], { cwd: workspace }));
+  assert.equal(payload.augment, true);
+  assert.equal(payload.mode, "generated-augment");
+  assert.equal(payload.runnable, false);
+  assert.ok(existsSync(join(workspace, "IMPLEMENTATION_PLAN.md")));
+  assert.ok(existsSync(join(workspace, "buildable-app-spec.json")));
+  assert.ok(!existsSync(join(workspace, "app/page.tsx")));
+  assert.match(readFileSync(join(workspace, "IMPLEMENTATION_PLAN.md"), "utf8"), /augment/i);
+  // existing files are preserved
+  assert.equal(JSON.parse(readFileSync(join(workspace, "package.json"), "utf8")).name, "existing-app");
+});
+
 test("generate refuses planned templates without explicit plan-pack flag", () => {
   const workspace = mkdtempSync(join(tmpdir(), "buildable-planned-"));
   const out = join(workspace, "recipes");

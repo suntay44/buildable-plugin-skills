@@ -14,6 +14,8 @@ Generate a Buildable prototype for: **$ARGUMENTS**
 
    - If the CLI reports the prompt has architecture-changing choices, ask the user those questions, then rerun with `--force` only if the prompt already answers them.
    - If the CLI reports the template is not runnable yet, rerun with `--plan-pack` to write an instruction pack.
+   - Add `--name "App Name"` to brand the generated app, or pass a name in the prompt ("...called FocusList").
+   - To add a feature to an **existing** app instead of scaffolding a new one, use `--augment` (writes a plan that adapts to the current project without overwriting code).
 
 2. Read `buildable-app-spec.json` in the output directory and load only `appSpec.references`.
 
