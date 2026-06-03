@@ -1,4 +1,7 @@
-# Buildable
+<div align="center">
+<img width="1927" height="816" alt="ChatGPT Image Jun 3, 2026, 03_08_16 AM" src="https://github.com/user-attachments/assets/3d356b2e-6c44-4c99-bbc7-7c6f488c0c01" />
+
+### ⭐ Stars are appreciated!
 
 **Local-first AI app-builder brain for Claude Code, Codex, and Cursor.**
 
@@ -6,7 +9,18 @@ Buildable gives your coding agent the product intelligence that hosted no-code b
 
 It does **not** replace your agent or run as a hosted platform. It is a file-based skills/plugin package that runs locally. Buildable is independent and is not affiliated with, endorsed by, or sponsored by those products.
 
----
+
+<br />
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Works with Claude Code](https://img.shields.io/badge/Claude%20Code-Plugin-darkorange)](https://claude.ai/code)
+[![Works with Codex](https://img.shields.io/badge/Codex-Plugin-blue)](https://chatgpt.com/codex)
+[![Works with Cursor](https://img.shields.io/badge/Cursor-Plugin-black)](https://cursor.sh)
+[![Expo React Native](https://img.shields.io/badge/Target-Expo%20React%20Native-4630EB)](https://expo.dev)
+
+<br />
+</div>
+
 
 ## Contents
 
