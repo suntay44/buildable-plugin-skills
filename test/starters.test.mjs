@@ -77,6 +77,19 @@ test("web starters share identical framework config (no drift)", () => {
   }
 });
 
+test("all plugin manifests share the package version", () => {
+  const version = readJson("package.json").version;
+  assert.match(version, /^\d+\.\d+\.\d+$/, "package version is semver");
+  assert.equal(readJson(".claude-plugin/plugin.json").version, version, "claude plugin version");
+  assert.equal(readJson(".codex-plugin/plugin.json").version, version, "codex plugin version");
+
+  const marketplace = readJson(".claude-plugin/marketplace.json");
+  assert.equal(marketplace.metadata.version, version, "marketplace metadata version");
+  for (const plugin of marketplace.plugins) {
+    assert.equal(plugin.version, version, `marketplace plugin ${plugin.name} version`);
+  }
+});
+
 test("mobile starters pin NativeWind exactly and keep the className augmentation", () => {
   assert.ok(mobileStarters.length >= 1, "expected at least one runnable mobile starter");
 

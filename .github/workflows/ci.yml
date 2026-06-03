@@ -23,6 +23,7 @@ jobs:
       - run: npm run check
       - run: npm run eval
       - run: npm run config:check
+      - run: npm run version:check
 
   build-web-starter:
     name: Build web starter (${{ matrix.name }})
