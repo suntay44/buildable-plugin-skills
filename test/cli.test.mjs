@@ -234,6 +234,7 @@ test("generate --augment plans into an existing app without copying source", () 
   assert.equal(payload.augment, true);
   assert.equal(payload.mode, "generated-augment");
   assert.equal(payload.runnable, false);
+  assert.equal(payload.generationMode, "plan-only");
   assert.ok(existsSync(join(workspace, "IMPLEMENTATION_PLAN.md")));
   assert.ok(existsSync(join(workspace, "buildable-app-spec.json")));
   assert.ok(!existsSync(join(workspace, "app/page.tsx")));

@@ -1123,6 +1123,7 @@ function generate() {
 
   // Augment mode plans into an existing app instead of copying a fresh starter.
   const augment = flags.has("--augment");
+  if (augment) plan.appSpec.generationMode = "plan-only";
   const outValue = parsedArgs.values.out ?? (augment ? "." : slugFor(plan.appSpec.name));
   const outDir = isAbsolute(outValue) ? outValue : join(process.cwd(), outValue);
   const templateSpec = readJson(plan.appSpec.template);
