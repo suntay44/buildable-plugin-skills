@@ -66,6 +66,7 @@ jobs:
         include:
           - { name: habit-tracker, prompt: "Build me a mobile habit tracker" }
           - { name: booking, prompt: "Build me a mobile booking app for appointments" }
+          - { name: task-manager, prompt: "Build me a mobile task manager" }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

@@ -14,6 +14,7 @@ Unreleased section here and syncs the version across every plugin manifest.
 - Runnable web `notes` golden starter (two-pane workspace) with build verification, CI, and an eval fixture.
 - Runnable web `ecommerce-admin` golden starter (overview/products/orders) with build verification, CI, and an eval fixture.
 - Runnable mobile `booking` golden starter (Expo stepped flow: service → slot → details → confirmation) with typecheck CI.
+- Runnable mobile `task-manager` golden starter (Expo: quick add, complete/edit/delete, search + status/priority filters) with typecheck CI.
 - Data models and screen graphs for `notes`, `blog-cms`, `job-board`, `ecommerce-admin`, and `inventory-manager`.
 - Deterministic spec-quality score in `buildable eval`.
 - Release tooling: `version:bump`/`version:check`, CHANGELOG, and a tag-triggered release workflow.

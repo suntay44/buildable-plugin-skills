@@ -9,7 +9,15 @@
     "navigation": "Expo Router",
     "data": "local-state"
   },
-  "status": "planned",
+  "status": "runnable",
+  "starter": "templates/mobile/task-manager/starter",
+  "expectedFiles": [
+    "app/index.tsx",
+    "app/_layout.tsx",
+    "components/task-card.tsx",
+    "lib/sample-tasks.ts",
+    "types/task.ts"
+  ],
   "references": [
     "knowledge/archetypes/task-manager.md",
     "knowledge/data-models/task-manager.md",

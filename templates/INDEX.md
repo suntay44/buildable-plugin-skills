@@ -37,7 +37,7 @@ The same rule is emitted in every plan as `appSpec.referenceLoadingContract`. Th
 - `templates/mobile/generic-app`: planned fallback for mobile archetypes without dedicated templates.
 - `templates/mobile/habit-tracker`: runnable Expo + NativeWind habit tracker starter.
 - `templates/mobile/booking`: runnable Expo + NativeWind appointment booking starter.
-- `templates/mobile/task-manager`: planned Expo task manager template.
+- `templates/mobile/task-manager`: runnable Expo + NativeWind task manager starter.
 
 ## Command Path
 
