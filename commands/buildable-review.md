@@ -1,18 +1,18 @@
 ---
-description: Audit a generated prototype against its Buildable app spec, archetype expectations, and local-first guardrails.
-argument-hint: [path-to-app]
+description: Audit the current prototype against its Buildable app spec, archetype expectations, and local-first guardrails.
+argument-hint: [optional-path-to-app]
 allowed-tools: Bash(node:*), Bash(buildable:*), Read, Edit
 ---
 
-Review the prototype at: **${ARGUMENTS:-.}**
+Review the selected workspace by default. If a path is provided, review: **${ARGUMENTS}**
 
 1. Run the Buildable reviewer:
 
    ```bash
-   buildable review "${ARGUMENTS:-.}" 2>/dev/null || node "${CLAUDE_PLUGIN_ROOT:-.}/bin/buildable.mjs" review "${ARGUMENTS:-.}"
+   buildable review $ARGUMENTS 2>/dev/null || node "${CLAUDE_PLUGIN_ROOT:-.}/bin/buildable.mjs" review $ARGUMENTS
    ```
 
-   Add `--build` to also run the project's typecheck/build scripts when dependencies are installed.
+   Add `--build` only when the user wants the reviewer to also run the project's typecheck/build scripts and dependencies are installed.
 
 2. Read the generated `.buildable/review-report.md`. Load only the files named by reported issues.
 

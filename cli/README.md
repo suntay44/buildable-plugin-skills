@@ -28,9 +28,9 @@ buildable list
 buildable list --json
 buildable plan "build me a todo app"
 buildable init --existing
-buildable generate "build me a todo app" --out ./taskflow
-buildable generate "build me a CRM" --out ./crm-plan --plan-pack
-buildable review ./taskflow
+buildable generate "build me a todo app"
+buildable generate "build me a CRM" --plan-pack
+buildable review
 buildable check
 buildable check --json
 ```
@@ -55,6 +55,8 @@ Example:
 ```bash
 buildable plan "Build a mobile habit tracker"
 ```
+
+Use `plan` when the user wants direction before files are created. It is the no-code prompting layer: classify, choose the right references, identify questions, then let Claude, Codex, Cursor, or another agent implement from the spec.
 
 ## Reference Loading Contract
 
@@ -86,16 +88,20 @@ The same rule is emitted in every plan as `appSpec.referenceLoadingContract`.
 Use `generate` when there is no app yet:
 
 ```bash
-buildable generate "Build me a todo app" --out ./taskflow
-buildable review ./taskflow
+buildable generate "Build me a todo app"
+cd taskflow
+buildable review
 ```
 
-`generate` selects a template and writes `buildable-app-spec.json` plus `BUILDABLE_NOTES.md` for Codex, Claude, Cursor, or another local agent. If the selected template is runnable, it copies starter files. If the selected template is planned, rerun with `--plan-pack` to write a plan-only `IMPLEMENTATION_PLAN.md` instruction pack instead of claiming runnable code exists.
+`generate` selects a template and writes `buildable-app-spec.json` plus `BUILDABLE_NOTES.md` for Codex, Claude, Cursor, or another local agent. If `--out` is omitted, it creates a folder from the app name, such as `TaskFlow` -> `./taskflow`. If the selected template is runnable, it copies starter files. If the selected template is planned, rerun with `--plan-pack` to write a plan-only `IMPLEMENTATION_PLAN.md` instruction pack instead of claiming runnable code exists.
+
+Use `generate` when the user wants Buildable to create the local starting point instead of asking the agent to reproduce template structure from the plan alone.
 
 Current runnable starter coverage:
 
-- runnable: `templates/web/task-manager`
-- planned instruction packs: generic web/mobile, CRM, dashboard, marketplace, mobile task-manager, habit tracker, and booking
+- runnable web: `templates/web/task-manager`, `templates/web/crm`, `templates/web/dashboard`, `templates/web/marketplace`, `templates/web/notes`, `templates/web/ecommerce-admin`
+- runnable mobile: `templates/mobile/habit-tracker`, `templates/mobile/booking`, `templates/mobile/task-manager`
+- planned instruction packs: `templates/web/generic-app`, `templates/mobile/generic-app`, plus dedicated mobile packs for expense tracker, travel planner, fitness tracker, meal planner, chat app, subscription tracker, maintenance request, and field service
 
 ## Existing App
 
@@ -105,7 +111,7 @@ Use `init --existing` when the user already has an app:
 cd my-existing-app
 buildable init --existing
 buildable plan "Add a CRM lead tracker"
-buildable review .
+buildable review
 ```
 
 This profiles the app and writes local Buildable context without copying a full template over existing code.

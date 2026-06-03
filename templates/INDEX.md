@@ -38,6 +38,14 @@ The same rule is emitted in every plan as `appSpec.referenceLoadingContract`. Th
 - `templates/mobile/habit-tracker`: runnable Expo + NativeWind habit tracker starter.
 - `templates/mobile/booking`: runnable Expo + NativeWind appointment booking starter.
 - `templates/mobile/task-manager`: runnable Expo + NativeWind task manager starter.
+- `templates/mobile/expense-tracker`: planned Expo + NativeWind expense tracking pack.
+- `templates/mobile/travel-planner`: planned Expo + NativeWind itinerary planning pack.
+- `templates/mobile/fitness-tracker`: planned Expo + NativeWind workout logging pack.
+- `templates/mobile/meal-planner`: planned Expo + NativeWind weekly meal planning pack.
+- `templates/mobile/chat-app`: planned Expo + NativeWind local chat interface pack.
+- `templates/mobile/subscription-tracker`: planned Expo + NativeWind renewal tracking pack.
+- `templates/mobile/maintenance-request`: planned Expo + NativeWind repair request pack.
+- `templates/mobile/field-service`: planned Expo + NativeWind technician workflow pack.
 
 ## Command Path
 
@@ -50,4 +58,4 @@ buildable plan "<prompt>"
 
 `buildable plan` returns the selected template and references. Use that output instead of scanning all templates.
 
-`buildable list` shows runnable versus planned template counts. Runnable templates (web task-manager, CRM, dashboard, marketplace; mobile habit-tracker) copy real source; planned templates are app-spec and `--plan-pack` instruction-pack routes.
+`buildable list` shows runnable versus planned template counts. Runnable templates (web task-manager, CRM, dashboard, marketplace, notes, ecommerce-admin; mobile habit-tracker, booking, task-manager) copy real source; planned templates are app-spec and `--plan-pack` instruction-pack routes.

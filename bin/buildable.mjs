@@ -39,10 +39,10 @@ Local-first AI app builder brain for Codex Desktop, Claude Code, Cursor, and CLI
 
 Usage:
   buildable plan "Build me a todo app"
-  buildable generate "Build me a todo app" --out ./taskflow
-  buildable generate "Build me a lightweight CRM" --out ./crm-plan
+  buildable generate "Build me a todo app"
+  buildable generate "Build me a lightweight CRM" --name "LeadDesk"
   buildable init --existing
-  buildable review ./taskflow
+  buildable review
   buildable check
   buildable list
   buildable help
@@ -50,9 +50,10 @@ Usage:
 Commands:
   init [--existing]             Create .buildable config for a workspace.
   plan <prompt>                 Classify a prompt and print a local app spec as JSON.
-  generate <prompt> --out <dir> Create a runnable starter, or use --plan-pack for planned templates.
-                                Add --name "X" to brand it, or --augment to plan into an existing app.
-  review [path] [--build]       Audit a local prototype against Buildable rules. --build also runs typecheck/build.
+  generate <prompt> [--out <dir>] Create a runnable starter, or use --plan-pack for planned templates.
+                                  Defaults to a folder from the app name. Add --name "X" to brand it,
+                                  or --augment to plan into an existing app.
+  review [path] [--build]       Audit the current app by default. --build also runs typecheck/build.
   preview [path] --url <url>    Render the running app in a headless browser; screenshot + catch runtime errors.
   check [--json]                Verify local assets, adapter files, and template references.
   list [--json]                 List bundled archetypes plus runnable/planned template status.
@@ -1060,7 +1061,7 @@ ${plan.appSpec.references.map((reference) => `- ${reference}`).join("\n")}
 3. Load only the references listed above.
 4. Build a local ${plan.appSpec.target} prototype that implements the listed screens, entities, features, and acceptance criteria.
 5. Use local/mock data by default.
-6. Run \`buildable review .\` and fix blocking issues before handoff.
+6. Run \`buildable review\` and fix blocking issues before handoff.
 
 Do not add accounts, billing, cloud previews, managed databases, telemetry, or hosted deployment unless explicitly requested.
 `;
@@ -1094,7 +1095,7 @@ ${plan.appSpec.references.map((reference) => `- ${reference}`).join("\n")}
 3. Add the listed screens, entities, and features using the project's existing patterns and stack.
 4. Reuse existing components and design tokens; match the current file structure.
 5. Keep local/mock data by default. Do not introduce a new framework or restructure the app.
-6. Run \`buildable review .\` and fix blocking issues before handoff.
+6. Run \`buildable review\` and fix blocking issues before handoff.
 
 Do not add accounts, billing, cloud previews, managed databases, telemetry, or hosted deployment unless explicitly requested.
 `;
@@ -1102,7 +1103,7 @@ Do not add accounts, billing, cloud previews, managed databases, telemetry, or h
 
 function generate() {
   if (!input) {
-    console.error('Missing prompt. Example: buildable generate "Build me a todo app" --out ./taskflow');
+    console.error('Missing prompt. Example: buildable generate "Build me a todo app"');
     process.exitCode = 1;
     return;
   }
@@ -1191,7 +1192,7 @@ Next agent steps:
 4. Do not load all templates.
 5. ${hasRunnableStarter ? "Load starter source only for this selected template." : "Use `IMPLEMENTATION_PLAN.md` as a plan-only instruction pack; no runnable starter exists yet."}
 6. ${hasRunnableStarter ? "Adapt this local starter to the user's request." : "Implement the app in this directory or apply the plan to an existing local app."}
-7. Run \`buildable review .\` after app code exists.
+7. Run \`buildable review\` after app code exists.
 
 Do not add accounts, billing, cloud previews, managed databases, telemetry, or hosted deployment unless explicitly requested.
 `

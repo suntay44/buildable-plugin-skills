@@ -4,7 +4,7 @@
 
 Buildable gives your coding agent the product intelligence that hosted no-code builders (Lovable, Replit Agent, Base44, Emergent) hide behind their infrastructure — archetypes, golden templates, UI/UX playbooks, and a review loop — so it goes from a vague prompt to a polished prototype, using only a small slice of context per request.
 
-It does **not** replace your agent or run as a hosted platform. It is a file-based skills/plugin package that runs locally.
+It does **not** replace your agent or run as a hosted platform. It is a file-based skills/plugin package that runs locally. Buildable is independent and is not affiliated with, endorsed by, or sponsored by those products.
 
 ---
 
@@ -21,7 +21,7 @@ It does **not** replace your agent or run as a hosted platform. It is a file-bas
 - [Supported app types](#supported-app-types)
 - [Non-goals](#non-goals)
 - [Repository map](#repository-map)
-- [Contributing](#contributing)
+- [Templates catalog](#templates-catalog)
 - [License](#license)
 
 ---
@@ -54,9 +54,10 @@ Buildable guides product structure but leaves implementation to your agent and y
 npm install
 npm link
 buildable check
-buildable plan "Build me a lightweight CRM"
-buildable generate "Build me a todo app" --out ./taskflow
-buildable review ./taskflow --build
+buildable plan "Build me a task manager"
+buildable generate "Build me a task manager"
+cd taskflow
+buildable review
 ```
 
 Prefer not to link a global command? Run through Node:
@@ -102,8 +103,8 @@ Load `.codex-plugin/plugin.json`.
 | Command | Purpose |
 | --- | --- |
 | `buildable plan "<prompt>"` | Classify a prompt and print the app spec as JSON |
-| `buildable generate "<prompt>" --out <dir>` | Copy a runnable starter (`--plan-pack` for planned, `--name "X"` to brand, `--augment` to plan into an existing app) |
-| `buildable review [path] [--build]` | Audit a prototype; `--build` runs typecheck/build |
+| `buildable generate "<prompt>" [--out <dir>]` | Copy a runnable starter; defaults to a folder from the app name (`--plan-pack` for planned, `--name "X"` to brand, `--augment` to plan into an existing app) |
+| `buildable review [path] [--build]` | Audit the current app by default; optional path reviews another folder, optional `--build` runs typecheck/build |
 | `buildable preview [path] --url <url>` | Render the running app in a headless browser; screenshot + catch runtime errors |
 | `buildable init [--existing]` | Create `.buildable` config for a workspace |
 | `buildable check` | Verify local assets, adapters, and template references |
@@ -115,22 +116,32 @@ Load `.codex-plugin/plugin.json`.
 ### Three local workflows
 
 - **`init`** — make a workspace Buildable-aware. Use `--existing` inside an app to profile the repo without overwriting code.
-- **`generate`** — create a runnable starter, or a `--plan-pack` instruction pack for planned templates.
+- **`generate`** — create a runnable starter, or a `--plan-pack` instruction pack for planned templates. If `--out` is omitted, Buildable creates a folder from the app name.
 - **`review`** — judge and improve the result against the app spec and local-first guardrails.
+
+### Plan vs generate
+
+- **Use `plan` when you want direction first.** It classifies the prompt, selects the archetype/template, lists the exact references the agent should load, and asks questions only for architecture-changing choices.
+- **Use `generate` when you want local files created.** It runs the same planning step, then copies the selected runnable starter or writes a plan pack. Agents like Claude, Codex, and Cursor can execute from `plan`, but `generate` saves them from recreating the starter structure by hand.
 
 ### Visual preview loop
 
-`review --build` proves the app *compiles*; `buildable preview` proves it *renders*. Start the dev server, then:
+`buildable review` audits the app spec, structure, and local-first guardrails. Add `--build` only when you also want it to run installed typecheck/build scripts. `buildable preview` proves the app renders in a browser. Start the dev server, then:
 
 ```bash
-buildable preview ./taskflow --url http://localhost:3000
+buildable preview --url http://localhost:3000
 ```
 
 It loads the page in a headless browser (Playwright — optional, resolved from the app or Buildable), writes a screenshot to `.buildable/preview.png`, and fails on a blank render or uncaught runtime errors — the visual issues `tsc`/`build` can't see. If Playwright isn't installed it degrades gracefully with setup guidance, so the core CLI stays dependency-free.
 
+Today, `buildable preview` is primarily for browser-rendered web apps. Mobile starters should still run `buildable review` and the app's normal typecheck/build commands locally; Expo web previews or simulator screenshots can become a gated mobile visual check later because they are heavier than the default local plugin workflow.
+
 ## Templates
 
-Runnable starters copy real, build-verified source. Planned templates write a `--plan-pack` instruction pack instead.
+Golden templates are Buildable's approved starting points. They come in two levels:
+
+- **Runnable starters** copy real, build-verified source into the user's local folder.
+- **Planned template packs** do not copy app source yet; they write a scoped `IMPLEMENTATION_PLAN.md`, `buildable-app-spec.json`, and reference list so Claude, Codex, Cursor, or another agent can implement the app without reading every template.
 
 | Template | Target | Status |
 | --- | --- | --- |
@@ -143,7 +154,16 @@ Runnable starters copy real, build-verified source. Planned templates write a `-
 | `templates/mobile/habit-tracker` | mobile | ✅ runnable |
 | `templates/mobile/booking` | mobile | ✅ runnable |
 | `templates/mobile/task-manager` | mobile | ✅ runnable |
-| `templates/web/generic-app`, others | web/mobile | 📝 planned |
+| `templates/web/generic-app` | web | 📝 planned fallback |
+| `templates/mobile/expense-tracker` | mobile | 📝 planned |
+| `templates/mobile/travel-planner` | mobile | 📝 planned |
+| `templates/mobile/fitness-tracker` | mobile | 📝 planned |
+| `templates/mobile/meal-planner` | mobile | 📝 planned |
+| `templates/mobile/chat-app` | mobile | 📝 planned |
+| `templates/mobile/subscription-tracker` | mobile | 📝 planned |
+| `templates/mobile/maintenance-request` | mobile | 📝 planned |
+| `templates/mobile/field-service` | mobile | 📝 planned |
+| `templates/mobile/generic-app` | mobile | 📝 planned fallback |
 
 - **Default web stack:** Next.js, TypeScript, Tailwind CSS, shadcn-style patterns, local/mock data.
 - **Default mobile stack:** Expo, React Native, TypeScript, NativeWind, Expo Router, local/mock data.
@@ -152,13 +172,15 @@ Runnable starters copy real, build-verified source. Planned templates write a `-
 
 ```bash
 # Fresh: copy a runnable starter and an app spec
-buildable generate "Build me a todo app" --out ./taskflow
+buildable generate "Build me a todo app"
+cd taskflow
+buildable review
 
 # Existing: profile the app and get guidance without overwriting code
 cd my-existing-app
 buildable init --existing
 buildable plan "Add a booking workflow to this app"
-buildable review .
+buildable review
 ```
 
 ## How much it guides
@@ -202,7 +224,7 @@ Buildable V1 does **not** include billing, builder accounts, cloud previews, man
 ```txt
 core/           Prompt classification, app spec, workflow, ask-vs-build policy
 knowledge/      Archetypes, data models, screen graphs, UI patterns, playbooks, rubrics
-templates/      Golden templates (5 runnable starters + planned specs)
+templates/      Golden templates (9 runnable starters + 10 planned specs)
 skills/         Agent skills: planner, web-builder, mobile-builder, reviewer
 commands/       Claude Code slash commands
 adapters/       Codex, Claude, Cursor integration notes
@@ -215,9 +237,9 @@ evals/          Prompts, fixtures, and scoring rubric (buildable eval)
 examples/       Generated reference apps
 ```
 
-## Contributing
+## Templates catalog
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). In short: contribute concrete builder intelligence (archetypes, templates, UI patterns, eval fixtures), keep everything local-first, and include a fixture prompt + acceptance checklist.
+See [TEMPLATES.md](TEMPLATES.md) for the full list of archetypes, golden templates, UI/UX playbooks, rubrics, and simple contribution instructions.
 
 ## License
 

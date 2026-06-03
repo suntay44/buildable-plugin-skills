@@ -40,7 +40,7 @@ Mandatory order:
 4. If the template is `generic-app`, use the selected archetype reference to shape screens and entities instead of loading unrelated mobile templates.
 5. Generate touch-first screens and local state.
 6. Validate navigation, touch targets, and state coverage.
-7. Run `buildable review <app-path>` when the CLI is available.
+7. Run `buildable review` from the selected app workspace when the CLI is available.
 
 ## Build Order
 

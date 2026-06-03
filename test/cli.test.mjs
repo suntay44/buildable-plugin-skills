@@ -137,14 +137,17 @@ test("tag registry routes web archetypes to selected knowledge and generic templ
   assert.ok(!payload.appSpec.references.includes("knowledge/archetypes/task-manager.md"));
 });
 
-test("tag registry routes mobile archetypes to selected knowledge and generic template", () => {
+test("tag registry routes mobile archetypes to selected dedicated planned template", () => {
   const result = run(["plan", "Build a mobile field service app for technician jobs"]);
   const payload = jsonFrom(result);
 
   assert.equal(payload.appSpec.target, "mobile");
   assert.equal(payload.appSpec.archetype, "field-service");
-  assert.equal(payload.appSpec.template, "templates/mobile/generic-app/template-spec.json");
+  assert.equal(payload.appSpec.template, "templates/mobile/field-service/template-spec.json");
+  assert.equal(payload.appSpec.templateStatus, "planned");
+  assert.equal(payload.appSpec.generationMode, "plan-only");
   assert.ok(payload.appSpec.references.includes("knowledge/archetypes/field-service.md"));
+  assert.ok(payload.appSpec.references.includes("templates/mobile/field-service/TEMPLATE_PLAN.md"));
   assert.ok(payload.appSpec.features.includes("job list"));
 });
 
@@ -177,6 +180,30 @@ test("generate copies runnable web task-manager starter and review passes", () =
   const report = jsonFrom(reviewed);
   assert.equal(report.ok, true);
   assert.deepEqual(report.issues, []);
+});
+
+test("generate defaults output directory from app name", () => {
+  const workspace = mkdtempSync(join(tmpdir(), "buildable-default-out-"));
+  const out = join(workspace, "taskflow");
+
+  const payload = jsonFrom(run(["generate", "Build me a task manager", "--json"], { cwd: workspace }));
+
+  assert.match(payload.outDir, /taskflow$/);
+  assert.equal(payload.appName, "TaskFlow");
+  assert.ok(existsSync(join(out, "app/page.tsx")));
+  assert.ok(existsSync(join(out, "buildable-app-spec.json")));
+});
+
+test("review defaults to the current app workspace", () => {
+  const workspace = mkdtempSync(join(tmpdir(), "buildable-review-cwd-"));
+  const out = join(workspace, "taskflow");
+
+  jsonFrom(run(["generate", "Build me a task manager", "--json"], { cwd: workspace }));
+  const report = jsonFrom(run(["review", "--json"], { cwd: out }));
+
+  assert.equal(report.ok, true);
+  assert.equal(report.appSpec, "buildable-app-spec.json");
+  assert.ok(existsSync(join(out, ".buildable/review-report.md")));
 });
 
 test("generate brands a runnable starter via --name", () => {
@@ -238,6 +265,21 @@ test("generate writes plan-only instruction packs for planned templates when req
   assert.ok(existsSync(join(out, "IMPLEMENTATION_PLAN.md")));
   assert.ok(existsSync(join(out, "buildable-app-spec.json")));
   assert.ok(!existsSync(join(out, "package.json")));
+});
+
+test("generate writes dedicated mobile planned packs when requested", () => {
+  const workspace = mkdtempSync(join(tmpdir(), "buildable-mobile-plan-pack-"));
+  const out = join(workspace, "fieldops");
+  const result = run(["generate", "Build a mobile field service app for technician jobs", "--out", out, "--plan-pack", "--json"], { cwd: workspace });
+  const payload = jsonFrom(result);
+
+  assert.equal(payload.runnable, false);
+  assert.equal(payload.template, "templates/mobile/field-service/template-spec.json");
+  assert.equal(payload.templateStatus, "planned");
+  assert.equal(payload.generationMode, "plan-only");
+  assert.ok(existsSync(join(out, "IMPLEMENTATION_PLAN.md")));
+  assert.ok(existsSync(join(out, "buildable-app-spec.json")));
+  assert.match(readFileSync(join(out, "IMPLEMENTATION_PLAN.md"), "utf8"), /field-service/);
 });
 
 test("runnable web templates generate, pass review, and surface expected files", () => {

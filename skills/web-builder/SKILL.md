@@ -35,7 +35,7 @@ Mandatory order:
 
 1. Read the app spec.
 2. If `questionsNeeded` is true, ask the user before generating.
-3. For fresh starts, prefer `buildable generate "<prompt>" --out <dir>` when a runnable template exists.
+3. For fresh starts, prefer `buildable generate "<prompt>"` when a runnable template exists. Add `--out <dir>` only when the user requested a specific folder.
 4. Load only the references listed in the app spec.
 5. If the template is `generic-app`, use the selected archetype reference to shape screens and entities instead of loading unrelated templates.
 6. Inspect the local project if generating inside an existing app.
