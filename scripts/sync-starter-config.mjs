@@ -15,7 +15,8 @@ const targets = [
   "templates/web/crm/starter",
   "templates/web/dashboard/starter",
   "templates/web/marketplace/starter",
-  "templates/web/notes/starter"
+  "templates/web/notes/starter",
+  "templates/web/ecommerce-admin/starter"
 ];
 const sharedFiles = ["tsconfig.json", "postcss.config.js", "next.config.js", "next-env.d.ts"];
 

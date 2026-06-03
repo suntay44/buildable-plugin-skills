@@ -1,0 +1,33 @@
+{
+  "name": "web-ecommerce-admin",
+  "target": "web",
+  "archetype": "ecommerce-admin",
+  "stack": {
+    "framework": "Next.js",
+    "language": "TypeScript",
+    "styling": "Tailwind CSS",
+    "data": "local-state"
+  },
+  "status": "runnable",
+  "starter": "templates/web/ecommerce-admin/starter",
+  "expectedFiles": [
+    "app/page.tsx",
+    "components/product-table.tsx",
+    "components/order-table.tsx",
+    "lib/sample-data.ts",
+    "types/commerce.ts"
+  ],
+  "references": [
+    "knowledge/archetypes/ecommerce-admin.md",
+    "knowledge/data-models/ecommerce-admin.md",
+    "knowledge/screen-graphs/ecommerce-admin.md",
+    "knowledge/ui-patterns/tables.md",
+    "knowledge/ui-patterns/filters.md",
+    "knowledge/ui-patterns/empty-states.md",
+    "knowledge/ui-patterns/action-bars.md",
+    "knowledge/design-playbooks/admin-dashboard.md",
+    "knowledge/design-playbooks/ui-quality.md",
+    "knowledge/quality-rubrics/web-app.md",
+    "templates/web/ecommerce-admin/TEMPLATE_PLAN.md"
+  ]
+}

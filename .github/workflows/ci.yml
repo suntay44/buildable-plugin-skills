@@ -37,6 +37,7 @@ jobs:
           - { name: dashboard, prompt: "Build me a SaaS analytics dashboard" }
           - { name: marketplace, prompt: "Build me a marketplace for local services" }
           - { name: notes, prompt: "Build me a notes app" }
+          - { name: ecommerce-admin, prompt: "Build me an ecommerce admin to manage products and orders" }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

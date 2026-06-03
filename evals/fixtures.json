@@ -9,6 +9,7 @@
     { "prompt": "Build me a mobile habit tracker", "archetype": "habit-tracker", "target": "mobile" },
     { "prompt": "Build a mobile booking app for appointments", "archetype": "booking", "target": "mobile" },
     { "prompt": "Build a local business directory website", "archetype": "directory-site", "target": "web" },
-    { "prompt": "Build a subscription tracker for renewal dates and monthly costs", "archetype": "subscription-tracker", "target": "mobile" }
+    { "prompt": "Build a subscription tracker for renewal dates and monthly costs", "archetype": "subscription-tracker", "target": "mobile" },
+    { "prompt": "Build me an ecommerce admin to manage products and orders", "archetype": "ecommerce-admin", "target": "web" }
   ]
 }
