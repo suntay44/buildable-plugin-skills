@@ -28,7 +28,7 @@ Mandatory order:
 1. Run `buildable review <app-path>` when the CLI is available. Add `--build` to run the project's typecheck/build scripts when dependencies are installed.
 2. Read the app spec and selected quality rubric.
 3. Run available build, typecheck, lint, or test commands (or rely on `review --build`).
-4. Inspect the generated UI when possible.
+4. Inspect the generated UI when possible — start the app and run `buildable preview <path> --url <url>` to render it, screenshot it, and catch runtime/visual errors that build checks miss.
 5. Check required interactions, state coverage, responsive behavior, and accessibility.
 6. Produce a focused fix list.
 7. Apply fixes when operating as the active coding agent.

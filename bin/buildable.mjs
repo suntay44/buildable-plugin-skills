@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { createRequire } from "node:module";
 import { spawnSync } from "node:child_process";
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -52,6 +53,7 @@ Commands:
   generate <prompt> --out <dir> Create a runnable starter, or use --plan-pack for planned templates.
                                 Add --name "X" to brand it, or --augment to plan into an existing app.
   review [path] [--build]       Audit a local prototype against Buildable rules. --build also runs typecheck/build.
+  preview [path] --url <url>    Render the running app in a headless browser; screenshot + catch runtime errors.
   check [--json]                Verify local assets, adapter files, and template references.
   list [--json]                 List bundled archetypes plus runnable/planned template status.
   eval [--json]                 Score classification fixtures and report context-load efficiency.
@@ -74,7 +76,7 @@ function parseArgs(rawArgs) {
     values: {},
     positionals: []
   };
-  const valueFlags = new Set(["--out", "--mode", "--name"]);
+  const valueFlags = new Set(["--out", "--mode", "--name", "--url"]);
 
   for (let index = 0; index < rawArgs.length; index += 1) {
     const arg = rawArgs[index];
@@ -630,6 +632,7 @@ function check() {
     "commands/buildable-generate.md",
     "commands/buildable-review.md",
     "commands/buildable-init.md",
+    "commands/buildable-preview.md",
     "evals/fixtures.json"
   ];
   const missing = required.filter((path) => !existsSync(join(root, path)));
@@ -1476,6 +1479,142 @@ ${warnings.length ? warnings.map((warning) => `- ${warning}`).join("\n") : "- No
   if (!report.ok) process.exitCode = 1;
 }
 
+function writePreviewReport(target, report) {
+  mkdirSync(join(target, ".buildable"), { recursive: true });
+  writeFileSync(
+    join(target, ".buildable", "preview-report.md"),
+    `# Buildable Preview Report
+
+Status: ${report.status}
+URL: ${report.url}
+${report.screenshot ? `Screenshot: ${report.screenshot}` : ""}
+
+## Checks
+
+${(report.checks ?? []).length ? report.checks.map((check) => `- ${check.status}: ${check.name} - ${check.message}`).join("\n") : "- None"}
+
+${report.guidance ? `## Next\n\n${report.guidance}\n` : ""}`
+  );
+}
+
+async function loadChromium(target) {
+  const bases = [join(target, "package.json"), join(root, "package.json")];
+  for (const base of bases) {
+    for (const pkg of ["playwright", "playwright-core"]) {
+      try {
+        const resolved = createRequire(base).resolve(pkg);
+        const mod = await import(pathToFileURL(resolved).href);
+        // Playwright ships CommonJS, so the browser may be under default in ESM interop.
+        const chromium = mod.chromium ?? mod.default?.chromium;
+        if (chromium) return chromium;
+      } catch {
+        // not installed at this location; try the next
+      }
+    }
+  }
+  return null;
+}
+
+async function runPreview() {
+  const targetValue = parsedArgs.positionals[0] ?? ".";
+  const target = isAbsolute(targetValue) ? targetValue : join(process.cwd(), targetValue);
+  const url = parsedArgs.values.url ?? "http://localhost:3000";
+
+  // Headless browser is an optional capability; the core CLI stays dependency-free.
+  // Prefer Playwright installed in the target app, then in Buildable itself.
+  const chromium = await loadChromium(target);
+
+  if (!chromium) {
+    const report = {
+      ok: true,
+      status: "skipped",
+      url,
+      target,
+      reason: "Playwright is not installed.",
+      guidance:
+        "Enable the visual preview loop with:\n\n    npm i -D playwright && npx playwright install chromium\n\nThen start the app (e.g. `npm run dev`) and rerun `buildable preview <path> --url <url>`. Agents with their own preview/screenshot tools can use those instead."
+    };
+    writePreviewReport(target, report);
+    if (jsonOutput) {
+      console.log(JSON.stringify(report, null, 2));
+    } else {
+      console.log("Buildable preview skipped: Playwright is not installed.");
+      console.log(report.guidance);
+      console.log("  report: .buildable/preview-report.md");
+    }
+    return;
+  }
+
+  const checks = [];
+  const consoleErrors = [];
+  const pageErrors = [];
+  let navOk = false;
+  let title = "";
+  let bodyLength = 0;
+  let screenshot = null;
+  let navError = "";
+
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+    page.on("console", (message) => {
+      if (message.type() === "error") consoleErrors.push(message.text());
+    });
+    page.on("pageerror", (error) => pageErrors.push(String(error)));
+
+    try {
+      const response = await page.goto(url, { waitUntil: "networkidle", timeout: 30000 });
+      navOk = Boolean(response && response.ok());
+      title = await page.title();
+      bodyLength = await page.evaluate(() => (document.body ? document.body.innerText.trim().length : 0));
+      mkdirSync(join(target, ".buildable"), { recursive: true });
+      const shotPath = join(target, ".buildable", "preview.png");
+      await page.screenshot({ path: shotPath, fullPage: true });
+      screenshot = ".buildable/preview.png";
+    } catch (error) {
+      navError = error instanceof Error ? error.message : String(error);
+    }
+  } finally {
+    await browser.close();
+  }
+
+  const blank = bodyLength < 20;
+  const add = (name, passed, message) => checks.push({ name, status: passed ? "pass" : "fail", message });
+  add("navigation", navOk, navOk ? `Loaded ${url} (title: ${title || "untitled"})` : `Could not load ${url}. ${navError}`.trim());
+  add("not-blank", navOk && !blank, blank ? "Rendered page body is empty or nearly empty." : `Rendered ${bodyLength} characters of visible text.`);
+  add("no-page-errors", pageErrors.length === 0, pageErrors.length === 0 ? "No uncaught runtime errors." : `Uncaught errors: ${pageErrors.slice(0, 3).join(" | ")}`);
+  add("no-console-errors", consoleErrors.length === 0, consoleErrors.length === 0 ? "No console errors." : `Console errors: ${consoleErrors.slice(0, 3).join(" | ")}`);
+
+  const failed = checks.filter((check) => check.status === "fail");
+  // Console errors are a warning, not a hard failure.
+  const blocking = failed.filter((check) => check.name !== "no-console-errors");
+  const report = {
+    ok: blocking.length === 0,
+    status: blocking.length === 0 ? "pass" : "fail",
+    url,
+    target,
+    title,
+    screenshot,
+    checks,
+    guidance: "Open the screenshot and confirm the first screen looks intentional: visible primary actions, real sample data, and non-generic empty states. Fix anything the screenshot reveals, then rerun."
+  };
+
+  writePreviewReport(target, report);
+
+  if (jsonOutput) {
+    const output = JSON.stringify(report, null, 2);
+    if (report.ok) console.log(output);
+    else console.error(output);
+  } else {
+    console.log(`Buildable preview ${report.status} for ${url}`);
+    for (const check of checks) console.log(`  ${check.status}: ${check.name} - ${check.message}`);
+    if (screenshot) console.log(`  screenshot: ${screenshot}`);
+    console.log("  report: .buildable/preview-report.md");
+  }
+
+  if (!report.ok) process.exitCode = 1;
+}
+
 if (!command || command === "help" || command === "--help" || command === "-h") {
   usage();
 } else if (command === "version" || command === "--version" || command === "-v") {
@@ -1493,6 +1632,8 @@ if (!command || command === "help" || command === "--help" || command === "-h") 
   generate();
 } else if (command === "review") {
   review();
+} else if (command === "preview") {
+  runPreview();
 } else if (command === "check") {
   check();
 } else if (command === "list") {

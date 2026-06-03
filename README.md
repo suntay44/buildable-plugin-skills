@@ -79,13 +79,14 @@ Buildable ships a plugin manifest (`.claude-plugin/plugin.json`) and a local mar
 /plugin install buildable@buildable
 ```
 
-This auto-discovers the planner, web-builder, mobile-builder, and reviewer skills and registers four slash commands:
+This auto-discovers the planner, web-builder, mobile-builder, and reviewer skills and registers these slash commands:
 
 | Command | What it does |
 | --- | --- |
 | `/buildable-plan` | Classify a prompt and print an app spec |
 | `/buildable-generate` | Copy a runnable starter or write a plan pack |
 | `/buildable-review` | Audit a prototype (`--build` runs typecheck/build) |
+| `/buildable-preview` | Render the running app, screenshot it, catch runtime errors |
 | `/buildable-init` | Make the current workspace Buildable-aware |
 
 ### Cursor
@@ -103,10 +104,11 @@ Load `.codex-plugin/plugin.json`.
 | `buildable plan "<prompt>"` | Classify a prompt and print the app spec as JSON |
 | `buildable generate "<prompt>" --out <dir>` | Copy a runnable starter (`--plan-pack` for planned, `--name "X"` to brand, `--augment` to plan into an existing app) |
 | `buildable review [path] [--build]` | Audit a prototype; `--build` runs typecheck/build |
+| `buildable preview [path] --url <url>` | Render the running app in a headless browser; screenshot + catch runtime errors |
 | `buildable init [--existing]` | Create `.buildable` config for a workspace |
 | `buildable check` | Verify local assets, adapters, and template references |
 | `buildable list` | List archetypes and runnable/planned template status |
-| `buildable eval` | Score classification fixtures and context-load efficiency |
+| `buildable eval [--compare]` | Score classification, efficiency, and spec quality (`--compare` vs a raw prompt) |
 
 `plan` emits an `enhancedPrompt` and `appSpec` with the selected archetype, target, stack, template, references, expected features, acceptance criteria, and no-hosted-feature guardrails. Matching uses compact tags in `core/archetype-registry.json`, so the agent classifies against one small registry instead of reading every archetype file.
 
@@ -115,6 +117,16 @@ Load `.codex-plugin/plugin.json`.
 - **`init`** — make a workspace Buildable-aware. Use `--existing` inside an app to profile the repo without overwriting code.
 - **`generate`** — create a runnable starter, or a `--plan-pack` instruction pack for planned templates.
 - **`review`** — judge and improve the result against the app spec and local-first guardrails.
+
+### Visual preview loop
+
+`review --build` proves the app *compiles*; `buildable preview` proves it *renders*. Start the dev server, then:
+
+```bash
+buildable preview ./taskflow --url http://localhost:3000
+```
+
+It loads the page in a headless browser (Playwright — optional, resolved from the app or Buildable), writes a screenshot to `.buildable/preview.png`, and fails on a blank render or uncaught runtime errors — the visual issues `tsc`/`build` can't see. If Playwright isn't installed it degrades gracefully with setup guidance, so the core CLI stays dependency-free.
 
 ## Templates
 

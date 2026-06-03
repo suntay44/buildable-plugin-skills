@@ -11,7 +11,7 @@ Buildable ships a plugin manifest at `.claude-plugin/plugin.json` and a marketpl
 /plugin install buildable@buildable
 ```
 
-This registers four slash commands — `/buildable-plan`, `/buildable-generate`, `/buildable-review`, `/buildable-init` — and auto-discovers the planner, web-builder, mobile-builder, and reviewer skills from `skills/*/SKILL.md`.
+This registers the slash commands — `/buildable-plan`, `/buildable-generate`, `/buildable-review`, `/buildable-preview`, `/buildable-init` — and auto-discovers the planner, web-builder, mobile-builder, and reviewer skills from `skills/*/SKILL.md`.
 
 ## Local Setup (Instructions Only)
 

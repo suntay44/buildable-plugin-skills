@@ -384,9 +384,22 @@ test("check validates Claude plugin packaging", () => {
   const marketplace = JSON.parse(readFileSync(join(root, ".claude-plugin/marketplace.json"), "utf8"));
   assert.ok(marketplace.plugins.some((plugin) => plugin.name === "buildable"));
 
-  for (const command of ["plan", "generate", "review", "init"]) {
+  for (const command of ["plan", "generate", "review", "init", "preview"]) {
     assert.ok(existsSync(join(root, `commands/buildable-${command}.md`)), `command ${command}`);
   }
+});
+
+test("preview degrades gracefully when no headless browser is available", () => {
+  const workspace = mkdtempSync(join(tmpdir(), "buildable-preview-"));
+  const result = run(["preview", workspace, "--json"], { cwd: workspace });
+
+  // No Playwright installed in the test env: skip cleanly, do not fail.
+  assert.equal(result.status, 0, result.stderr);
+  const report = JSON.parse(result.stdout);
+  assert.equal(report.status, "skipped");
+  assert.equal(report.ok, true);
+  assert.match(report.guidance, /playwright/i);
+  assert.ok(existsSync(join(workspace, ".buildable/preview-report.md")));
 });
 
 test("check validates template and plugin references", () => {
