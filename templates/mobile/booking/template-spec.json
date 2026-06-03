@@ -27,6 +27,7 @@
     "knowledge/design-playbooks/mobile-utility.md",
     "knowledge/design-playbooks/ui-quality.md",
     "knowledge/quality-rubrics/mobile-app.md",
+    "knowledge/ui-patterns/empty-states.md",
     "templates/mobile/booking/TEMPLATE_PLAN.md"
   ]
 }

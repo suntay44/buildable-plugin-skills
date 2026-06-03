@@ -25,6 +25,8 @@
     "knowledge/design-playbooks/mobile-utility.md",
     "knowledge/design-playbooks/ui-quality.md",
     "knowledge/quality-rubrics/mobile-app.md",
+    "knowledge/ui-patterns/empty-states.md",
+    "knowledge/ui-patterns/forms.md",
     "templates/mobile/habit-tracker/TEMPLATE_PLAN.md"
   ]
 }

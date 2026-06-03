@@ -13,6 +13,7 @@
   "references": [
     "knowledge/archetypes/travel-planner.md",
     "knowledge/ui-patterns/navigation.md",
+    "knowledge/ui-patterns/filters.md",
     "knowledge/ui-patterns/empty-states.md",
     "knowledge/design-playbooks/mobile-utility.md",
     "knowledge/design-playbooks/ui-quality.md",

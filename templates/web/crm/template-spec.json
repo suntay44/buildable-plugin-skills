@@ -28,6 +28,7 @@
     "knowledge/design-playbooks/admin-dashboard.md",
     "knowledge/design-playbooks/ui-quality.md",
     "knowledge/quality-rubrics/web-app.md",
+    "knowledge/ui-patterns/empty-states.md",
     "templates/web/crm/TEMPLATE_PLAN.md"
   ]
 }
