@@ -29,10 +29,11 @@ Score generated prototypes from 0 to 3 in each category.
 
 ## Automated Eval
 
-`buildable eval` runs the deterministic fixtures in `evals/fixtures.json` and scores two things:
+`buildable eval` runs the deterministic fixtures in `evals/fixtures.json` and scores three things:
 
 - **Routing correctness**: each prompt resolves to the expected archetype and target, and the generated app spec validates.
 - **Context-load efficiency**: the share of the bundled brain (`knowledge/` + template plans/specs) each plan actually loads via `appSpec.references`. Lower is better — it is the measurable form of the reference-loading contract and the "maximum output, minimal tokens" goal.
+- **Spec quality** (0–1): how concrete each generated app spec is — entities with real fields, feature depth, screens, acceptance criteria, and guardrails. Higher is better; the suite tracks the average and minimum so regressions in spec richness are visible.
 
 Run it with:
 

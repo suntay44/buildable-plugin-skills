@@ -353,6 +353,11 @@ test("eval passes all fixtures and reports context-load efficiency", () => {
   // The whole point of the loading contract: each plan loads a small slice of the brain.
   assert.ok(payload.efficiency.avgContextLoadRatio < 0.25, `ratio ${payload.efficiency.avgContextLoadRatio}`);
   assert.ok(payload.results.every((result) => result.references > 0));
+
+  // Spec quality is a tracked metric: generated specs should be concrete.
+  assert.ok(payload.specQuality.avgScore >= 0.8, `avg spec quality ${payload.specQuality.avgScore}`);
+  assert.ok(payload.specQuality.minScore >= 0.6, `min spec quality ${payload.specQuality.minScore}`);
+  assert.ok(payload.results.every((result) => typeof result.specQuality === "number"));
 });
 
 test("docs and plugin resources keep low-token scope explicit", () => {

@@ -762,6 +762,21 @@ function referencedBytes(references) {
   }, 0);
 }
 
+function specQualityScore(appSpec) {
+  // Deterministic 0..1 measure of how concrete/complete a generated app spec is.
+  const entities = appSpec.entities ?? [];
+  const components = {
+    entitiesConcrete: entities.length === 0 ? 0 : entities.filter((entity) => (entity.fields ?? []).length >= 4).length / entities.length,
+    featureDepth: Math.min(1, (appSpec.features?.length ?? 0) / 6),
+    hasScreens: (appSpec.screens?.length ?? 0) > 0 ? 1 : 0,
+    hasAcceptance: (appSpec.acceptanceCriteria?.length ?? 0) >= 3 ? 1 : 0,
+    hasGuardrails: (appSpec.mustNotInclude?.length ?? 0) > 0 ? 1 : 0
+  };
+  const values = Object.values(components);
+  const score = values.reduce((sum, value) => sum + value, 0) / values.length;
+  return { score: Number(score.toFixed(3)), components };
+}
+
 function runEval() {
   const fixturesPath = join(root, "evals/fixtures.json");
   if (!existsSync(fixturesPath)) {
@@ -790,6 +805,7 @@ function runEval() {
     if (specIssues.length > 0) failures.push(`spec: ${specIssues.join("; ")}`);
     if (missingReferences.length > 0) failures.push(`missing references: ${missingReferences.join(", ")}`);
 
+    const quality = specQualityScore(appSpec);
     results.push({
       prompt: fixture.prompt,
       archetype: classification.archetype,
@@ -797,6 +813,8 @@ function runEval() {
       references: appSpec.references.length,
       loadedBytes,
       contextLoadRatio: totalCorpus > 0 ? Number((loadedBytes / totalCorpus).toFixed(4)) : 0,
+      specQuality: quality.score,
+      specQualityComponents: quality.components,
       ok: failures.length === 0,
       failures
     });
@@ -805,6 +823,7 @@ function runEval() {
   const passed = results.filter((result) => result.ok).length;
   const avgReferences = results.length ? results.reduce((sum, r) => sum + r.references, 0) / results.length : 0;
   const avgRatio = results.length ? results.reduce((sum, r) => sum + r.contextLoadRatio, 0) / results.length : 0;
+  const avgQuality = results.length ? results.reduce((sum, r) => sum + r.specQuality, 0) / results.length : 0;
   const payload = {
     ok: passed === results.length,
     fixtures: results.length,
@@ -815,6 +834,10 @@ function runEval() {
       avgReferencesLoaded: Number(avgReferences.toFixed(1)),
       avgContextLoadRatio: Number(avgRatio.toFixed(4)),
       avgContextSavedPercent: Number(((1 - avgRatio) * 100).toFixed(1))
+    },
+    specQuality: {
+      avgScore: Number(avgQuality.toFixed(3)),
+      minScore: results.length ? Number(Math.min(...results.map((r) => r.specQuality)).toFixed(3)) : 0
     },
     results
   };
@@ -829,12 +852,13 @@ function runEval() {
     for (const result of results) {
       const status = result.ok ? "pass" : "FAIL";
       console.log(`  [${status}] ${result.prompt}`);
-      console.log(`         ${result.archetype} (${result.target}) · ${result.references} refs · ${(result.contextLoadRatio * 100).toFixed(1)}% of corpus`);
+      console.log(`         ${result.archetype} (${result.target}) · ${result.references} refs · ${(result.contextLoadRatio * 100).toFixed(1)}% of corpus · spec quality ${result.specQuality}`);
       for (const failure of result.failures) console.log(`         - ${failure}`);
     }
     console.log("");
     console.log(`Avg references loaded per plan: ${payload.efficiency.avgReferencesLoaded}`);
     console.log(`Avg context loaded vs full brain: ${(payload.efficiency.avgContextLoadRatio * 100).toFixed(1)}% (saves ${payload.efficiency.avgContextSavedPercent}% of tokens)`);
+    console.log(`Avg spec quality: ${payload.specQuality.avgScore} (min ${payload.specQuality.minScore})`);
   }
 
   if (!payload.ok) process.exitCode = 1;
