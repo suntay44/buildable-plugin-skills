@@ -208,7 +208,8 @@ test("runnable web templates generate, pass review, and surface expected files",
   const cases = [
     { prompt: "Build me a CRM for tracking leads", template: "templates/web/crm/template-spec.json" },
     { prompt: "Build me a SaaS analytics dashboard", template: "templates/web/dashboard/template-spec.json" },
-    { prompt: "Build me a marketplace for local services", template: "templates/web/marketplace/template-spec.json" }
+    { prompt: "Build me a marketplace for local services", template: "templates/web/marketplace/template-spec.json" },
+    { prompt: "Build me a notes app", template: "templates/web/notes/template-spec.json" }
   ];
 
   for (const { prompt, template } of cases) {

@@ -5,6 +5,7 @@
     { "prompt": "Build me a CRM for tracking leads", "archetype": "crm", "target": "web" },
     { "prompt": "Build me a SaaS analytics dashboard", "archetype": "dashboard", "target": "web" },
     { "prompt": "Build me a marketplace for local services", "archetype": "marketplace", "target": "web" },
+    { "prompt": "Build me a notes app for organizing ideas", "archetype": "notes", "target": "web" },
     { "prompt": "Build me a mobile habit tracker", "archetype": "habit-tracker", "target": "mobile" },
     { "prompt": "Build a mobile booking app for appointments", "archetype": "booking", "target": "mobile" },
     { "prompt": "Build a local business directory website", "archetype": "directory-site", "target": "web" },

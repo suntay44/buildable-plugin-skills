@@ -11,7 +11,12 @@ import { fileURLToPath } from "node:url";
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const canonical = "templates/web/task-manager/starter";
-const targets = ["templates/web/crm/starter", "templates/web/dashboard/starter", "templates/web/marketplace/starter"];
+const targets = [
+  "templates/web/crm/starter",
+  "templates/web/dashboard/starter",
+  "templates/web/marketplace/starter",
+  "templates/web/notes/starter"
+];
 const sharedFiles = ["tsconfig.json", "postcss.config.js", "next.config.js", "next-env.d.ts"];
 
 const checkOnly = process.argv.includes("--check");

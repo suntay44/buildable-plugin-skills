@@ -1,0 +1,33 @@
+{
+  "name": "web-notes",
+  "target": "web",
+  "archetype": "notes",
+  "stack": {
+    "framework": "Next.js",
+    "language": "TypeScript",
+    "styling": "Tailwind CSS",
+    "data": "local-state"
+  },
+  "status": "runnable",
+  "starter": "templates/web/notes/starter",
+  "expectedFiles": [
+    "app/page.tsx",
+    "components/note-editor.tsx",
+    "components/note-list.tsx",
+    "lib/sample-notes.ts",
+    "types/note.ts"
+  ],
+  "references": [
+    "knowledge/archetypes/notes.md",
+    "knowledge/data-models/notes.md",
+    "knowledge/screen-graphs/notes.md",
+    "knowledge/ui-patterns/forms.md",
+    "knowledge/ui-patterns/filters.md",
+    "knowledge/ui-patterns/empty-states.md",
+    "knowledge/ui-patterns/responsive-layouts.md",
+    "knowledge/design-playbooks/productivity.md",
+    "knowledge/design-playbooks/ui-quality.md",
+    "knowledge/quality-rubrics/web-app.md",
+    "templates/web/notes/TEMPLATE_PLAN.md"
+  ]
+}

@@ -126,6 +126,7 @@ Runnable starters copy real, build-verified source. Planned templates write a `-
 | `templates/web/crm` | web | ✅ runnable |
 | `templates/web/dashboard` | web | ✅ runnable |
 | `templates/web/marketplace` | web | ✅ runnable |
+| `templates/web/notes` | web | ✅ runnable |
 | `templates/mobile/habit-tracker` | mobile | ✅ runnable |
 | `templates/web/generic-app`, others | web/mobile | 📝 planned |
 

@@ -29,6 +29,7 @@ The same rule is emitted in every plan as `appSpec.referenceLoadingContract`. Th
 - `templates/web/crm`: runnable Next.js sales pipeline CRM starter.
 - `templates/web/dashboard`: runnable Next.js SaaS analytics dashboard starter.
 - `templates/web/marketplace`: runnable Next.js services marketplace starter.
+- `templates/web/notes`: runnable Next.js two-pane notes workspace starter.
 
 ## Mobile Templates
 

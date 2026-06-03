@@ -9,6 +9,13 @@ Unreleased section here and syncs the version across every plugin manifest.
 
 ## [Unreleased]
 
+### Added
+
+- Runnable web `notes` golden starter (two-pane workspace) with build verification, CI, and an eval fixture.
+- Data models and screen graphs for `notes`, `blog-cms`, `job-board`, `ecommerce-admin`, and `inventory-manager`.
+- Deterministic spec-quality score in `buildable eval`.
+- Release tooling: `version:bump`/`version:check`, CHANGELOG, and a tag-triggered release workflow.
+
 ## [0.1.0] - 2026-06-02
 
 ### Added
