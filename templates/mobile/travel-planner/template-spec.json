@@ -1,0 +1,22 @@
+{
+  "name": "mobile-travel-planner",
+  "target": "mobile",
+  "archetype": "travel-planner",
+  "stack": {
+    "framework": "Expo",
+    "language": "TypeScript",
+    "styling": "NativeWind",
+    "navigation": "Expo Router",
+    "data": "local-state"
+  },
+  "status": "planned",
+  "references": [
+    "knowledge/archetypes/travel-planner.md",
+    "knowledge/ui-patterns/navigation.md",
+    "knowledge/ui-patterns/empty-states.md",
+    "knowledge/design-playbooks/mobile-utility.md",
+    "knowledge/design-playbooks/ui-quality.md",
+    "knowledge/quality-rubrics/mobile-app.md",
+    "templates/mobile/travel-planner/TEMPLATE_PLAN.md"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "name": "mobile-maintenance-request",
+  "target": "mobile",
+  "archetype": "maintenance-request",
+  "stack": {
+    "framework": "Expo",
+    "language": "TypeScript",
+    "styling": "NativeWind",
+    "navigation": "Expo Router",
+    "data": "local-state"
+  },
+  "status": "planned",
+  "references": [
+    "knowledge/archetypes/maintenance-request.md",
+    "knowledge/ui-patterns/forms.md",
+    "knowledge/ui-patterns/filters.md",
+    "knowledge/ui-patterns/navigation.md",
+    "knowledge/design-playbooks/mobile-utility.md",
+    "knowledge/design-playbooks/ui-quality.md",
+    "knowledge/quality-rubrics/mobile-app.md",
+    "templates/mobile/maintenance-request/TEMPLATE_PLAN.md"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "name": "mobile-fitness-tracker",
+  "target": "mobile",
+  "archetype": "fitness-tracker",
+  "stack": {
+    "framework": "Expo",
+    "language": "TypeScript",
+    "styling": "NativeWind",
+    "navigation": "Expo Router",
+    "data": "local-state"
+  },
+  "status": "planned",
+  "references": [
+    "knowledge/archetypes/fitness-tracker.md",
+    "knowledge/ui-patterns/forms.md",
+    "knowledge/ui-patterns/charts.md",
+    "knowledge/ui-patterns/empty-states.md",
+    "knowledge/design-playbooks/mobile-utility.md",
+    "knowledge/design-playbooks/ui-quality.md",
+    "knowledge/quality-rubrics/mobile-app.md",
+    "templates/mobile/fitness-tracker/TEMPLATE_PLAN.md"
+  ]
+}

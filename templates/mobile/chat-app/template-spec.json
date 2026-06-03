@@ -1,0 +1,23 @@
+{
+  "name": "mobile-chat-app",
+  "target": "mobile",
+  "archetype": "chat-app",
+  "stack": {
+    "framework": "Expo",
+    "language": "TypeScript",
+    "styling": "NativeWind",
+    "navigation": "Expo Router",
+    "data": "local-state"
+  },
+  "status": "planned",
+  "references": [
+    "knowledge/archetypes/chat-app.md",
+    "knowledge/ui-patterns/navigation.md",
+    "knowledge/ui-patterns/action-bars.md",
+    "knowledge/ui-patterns/empty-states.md",
+    "knowledge/design-playbooks/mobile-utility.md",
+    "knowledge/design-playbooks/ui-quality.md",
+    "knowledge/quality-rubrics/mobile-app.md",
+    "templates/mobile/chat-app/TEMPLATE_PLAN.md"
+  ]
+}

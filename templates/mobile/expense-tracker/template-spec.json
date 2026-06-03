@@ -1,0 +1,23 @@
+{
+  "name": "mobile-expense-tracker",
+  "target": "mobile",
+  "archetype": "expense-tracker",
+  "stack": {
+    "framework": "Expo",
+    "language": "TypeScript",
+    "styling": "NativeWind",
+    "navigation": "Expo Router",
+    "data": "local-state"
+  },
+  "status": "planned",
+  "references": [
+    "knowledge/archetypes/expense-tracker.md",
+    "knowledge/ui-patterns/forms.md",
+    "knowledge/ui-patterns/filters.md",
+    "knowledge/ui-patterns/empty-states.md",
+    "knowledge/design-playbooks/mobile-utility.md",
+    "knowledge/design-playbooks/ui-quality.md",
+    "knowledge/quality-rubrics/mobile-app.md",
+    "templates/mobile/expense-tracker/TEMPLATE_PLAN.md"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "name": "mobile-field-service",
+  "target": "mobile",
+  "archetype": "field-service",
+  "stack": {
+    "framework": "Expo",
+    "language": "TypeScript",
+    "styling": "NativeWind",
+    "navigation": "Expo Router",
+    "data": "local-state"
+  },
+  "status": "planned",
+  "references": [
+    "knowledge/archetypes/field-service.md",
+    "knowledge/ui-patterns/filters.md",
+    "knowledge/ui-patterns/navigation.md",
+    "knowledge/ui-patterns/action-bars.md",
+    "knowledge/design-playbooks/mobile-utility.md",
+    "knowledge/design-playbooks/ui-quality.md",
+    "knowledge/quality-rubrics/mobile-app.md",
+    "templates/mobile/field-service/TEMPLATE_PLAN.md"
+  ]
+}

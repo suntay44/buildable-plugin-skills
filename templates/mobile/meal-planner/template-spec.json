@@ -1,0 +1,23 @@
+{
+  "name": "mobile-meal-planner",
+  "target": "mobile",
+  "archetype": "meal-planner",
+  "stack": {
+    "framework": "Expo",
+    "language": "TypeScript",
+    "styling": "NativeWind",
+    "navigation": "Expo Router",
+    "data": "local-state"
+  },
+  "status": "planned",
+  "references": [
+    "knowledge/archetypes/meal-planner.md",
+    "knowledge/ui-patterns/forms.md",
+    "knowledge/ui-patterns/filters.md",
+    "knowledge/ui-patterns/empty-states.md",
+    "knowledge/design-playbooks/mobile-utility.md",
+    "knowledge/design-playbooks/ui-quality.md",
+    "knowledge/quality-rubrics/mobile-app.md",
+    "templates/mobile/meal-planner/TEMPLATE_PLAN.md"
+  ]
+}
