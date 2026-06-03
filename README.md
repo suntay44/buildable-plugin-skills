@@ -129,6 +129,7 @@ Runnable starters copy real, build-verified source. Planned templates write a `-
 | `templates/web/notes` | web | ✅ runnable |
 | `templates/web/ecommerce-admin` | web | ✅ runnable |
 | `templates/mobile/habit-tracker` | mobile | ✅ runnable |
+| `templates/mobile/booking` | mobile | ✅ runnable |
 | `templates/web/generic-app`, others | web/mobile | 📝 planned |
 
 - **Default web stack:** Next.js, TypeScript, Tailwind CSS, shadcn-style patterns, local/mock data.

@@ -9,7 +9,15 @@
     "navigation": "Expo Router",
     "data": "local-state"
   },
-  "status": "planned",
+  "status": "runnable",
+  "starter": "templates/mobile/booking/starter",
+  "expectedFiles": [
+    "app/index.tsx",
+    "app/_layout.tsx",
+    "components/service-picker.tsx",
+    "lib/sample-services.ts",
+    "types/booking.ts"
+  ],
   "references": [
     "knowledge/archetypes/booking.md",
     "knowledge/data-models/booking.md",

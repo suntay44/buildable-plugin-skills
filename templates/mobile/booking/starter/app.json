@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "Slotwise",
+    "slug": "buildable-booking",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "slotwise",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "plugins": ["expo-router"]
+  }
+}

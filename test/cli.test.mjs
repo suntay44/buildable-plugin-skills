@@ -181,8 +181,8 @@ test("generate copies runnable web task-manager starter and review passes", () =
 
 test("generate refuses planned templates without explicit plan-pack flag", () => {
   const workspace = mkdtempSync(join(tmpdir(), "buildable-planned-"));
-  const out = join(workspace, "booking");
-  const result = run(["generate", "Build me a mobile booking app", "--out", out, "--json"], { cwd: workspace });
+  const out = join(workspace, "tasks");
+  const result = run(["generate", "Build me a mobile task manager", "--out", out, "--json"], { cwd: workspace });
 
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /not runnable yet/);
@@ -192,8 +192,8 @@ test("generate refuses planned templates without explicit plan-pack flag", () =>
 
 test("generate writes plan-only instruction packs for planned templates when requested", () => {
   const workspace = mkdtempSync(join(tmpdir(), "buildable-plan-pack-"));
-  const out = join(workspace, "booking");
-  const result = run(["generate", "Build me a mobile booking app", "--out", out, "--plan-pack", "--json"], { cwd: workspace });
+  const out = join(workspace, "tasks");
+  const result = run(["generate", "Build me a mobile task manager", "--out", out, "--plan-pack", "--json"], { cwd: workspace });
   const payload = jsonFrom(result);
 
   assert.equal(payload.runnable, false);
@@ -240,6 +240,20 @@ test("mobile habit tracker is a runnable Expo starter", () => {
   assert.equal(generated.runnable, true);
   assert.ok(existsSync(join(out, "app/index.tsx")));
   assert.ok(existsSync(join(out, "app/_layout.tsx")));
+
+  const report = jsonFrom(run(["review", out, "--json"], { cwd: workspace }));
+  assert.equal(report.ok, true, JSON.stringify(report.issues));
+});
+
+test("mobile booking is a runnable Expo starter", () => {
+  const workspace = mkdtempSync(join(tmpdir(), "buildable-booking-"));
+  const out = join(workspace, "booking");
+  const generated = jsonFrom(run(["generate", "Build me a mobile booking app for appointments", "--out", out, "--json"], { cwd: workspace }));
+
+  assert.equal(generated.template, "templates/mobile/booking/template-spec.json");
+  assert.equal(generated.runnable, true);
+  assert.ok(existsSync(join(out, "app/index.tsx")));
+  assert.ok(existsSync(join(out, "components/service-picker.tsx")));
 
   const report = jsonFrom(run(["review", out, "--json"], { cwd: workspace }));
   assert.equal(report.ok, true, JSON.stringify(report.issues));

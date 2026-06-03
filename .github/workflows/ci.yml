@@ -58,15 +58,21 @@ jobs:
         run: node ./bin/buildable.mjs review ./.ci-app
 
   typecheck-mobile-starter:
-    name: Typecheck Expo starter
+    name: Typecheck Expo starter (${{ matrix.name }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: habit-tracker, prompt: "Build me a mobile habit tracker" }
+          - { name: booking, prompt: "Build me a mobile booking app for appointments" }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
       - name: Generate Expo starter
-        run: node ./bin/buildable.mjs generate "Build me a mobile habit tracker" --out ./.ci-mobile --json
+        run: node ./bin/buildable.mjs generate "${{ matrix.prompt }}" --out ./.ci-mobile --json
       - name: Install starter dependencies
         working-directory: ./.ci-mobile
         run: npm install --no-audit --no-fund
