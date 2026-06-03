@@ -840,6 +840,13 @@ function runEval() {
       contextLoadRatio: totalCorpus > 0 ? Number((loadedBytes / totalCorpus).toFixed(4)) : 0,
       specQuality: quality.score,
       specQualityComponents: quality.components,
+      guidance: {
+        references: appSpec.references.length,
+        features: appSpec.features.length,
+        entityFields: (appSpec.entities ?? []).reduce((sum, entity) => sum + (entity.fields ?? []).length, 0),
+        acceptanceCriteria: (appSpec.acceptanceCriteria ?? []).length,
+        screens: (appSpec.screens ?? []).length
+      },
       ok: failures.length === 0,
       failures
     });
@@ -867,6 +874,23 @@ function runEval() {
     results
   };
 
+  if (flags.has("--compare")) {
+    const keys = ["references", "features", "entityFields", "acceptanceCriteria", "screens"];
+    const average = (key) => (results.length ? Number((results.reduce((sum, r) => sum + r.guidance[key], 0) / results.length).toFixed(1)) : 0);
+    const buildable = Object.fromEntries(keys.map((key) => [key, average(key)]));
+    // A raw prompt with no Buildable layer supplies none of this structure.
+    const raw = Object.fromEntries(keys.map((key) => [key, 0]));
+    payload.comparison = {
+      baseline: "raw prompt (no Buildable guidance)",
+      perPromptAverage: { buildable, raw },
+      guidanceAddedPerPrompt: keys.reduce((sum, key) => sum + buildable[key], 0),
+      contextCostVsLoadEverything: {
+        buildable: `${(avgRatio * 100).toFixed(1)}% of the brain`,
+        loadEverything: "100% of the brain"
+      }
+    };
+  }
+
   if (jsonOutput) {
     const output = JSON.stringify(payload, null, 2);
     if (payload.ok) console.log(output);
@@ -884,6 +908,15 @@ function runEval() {
     console.log(`Avg references loaded per plan: ${payload.efficiency.avgReferencesLoaded}`);
     console.log(`Avg context loaded vs full brain: ${(payload.efficiency.avgContextLoadRatio * 100).toFixed(1)}% (saves ${payload.efficiency.avgContextSavedPercent}% of tokens)`);
     console.log(`Avg spec quality: ${payload.specQuality.avgScore} (min ${payload.specQuality.minScore})`);
+
+    if (payload.comparison) {
+      const { buildable } = payload.comparison.perPromptAverage;
+      console.log("");
+      console.log("Guided vs raw prompt (per prompt, on average):");
+      console.log(`  Buildable: ${buildable.features} features · ${buildable.entityFields} typed entity fields · ${buildable.references} curated references · ${buildable.acceptanceCriteria} acceptance criteria`);
+      console.log("  Raw prompt: 0 of each (the agent starts from a blank slate)");
+      console.log(`  ...delivered while loading ${payload.comparison.contextCostVsLoadEverything.buildable} instead of 100%.`);
+    }
   }
 
   if (!payload.ok) process.exitCode = 1;

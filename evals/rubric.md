@@ -40,7 +40,10 @@ Run it with:
 ```bash
 buildable eval
 buildable eval --json
+buildable eval --compare    # guided vs raw-prompt baseline
 ```
+
+`--compare` reports, per prompt on average, the concrete structure Buildable supplies (features, typed entity fields, curated references, acceptance criteria) versus a raw prompt that supplies none — while loading only a small share of the bundled brain.
 
 The suite fails if any fixture misroutes, produces an invalid spec, or references a missing file.
 

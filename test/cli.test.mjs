@@ -424,6 +424,19 @@ test("eval passes all fixtures and reports context-load efficiency", () => {
   assert.ok(payload.specQuality.avgScore >= 0.8, `avg spec quality ${payload.specQuality.avgScore}`);
   assert.ok(payload.specQuality.minScore >= 0.6, `min spec quality ${payload.specQuality.minScore}`);
   assert.ok(payload.results.every((result) => typeof result.specQuality === "number"));
+  // Default eval output stays free of the comparison block.
+  assert.equal(payload.comparison, undefined);
+});
+
+test("eval --compare quantifies guidance added over a raw prompt", () => {
+  const payload = jsonFrom(run(["eval", "--compare", "--json"]));
+
+  assert.ok(payload.comparison, "comparison block present");
+  const { buildable, raw } = payload.comparison.perPromptAverage;
+  assert.ok(buildable.features > 0 && buildable.entityFields > 0 && buildable.references > 0);
+  assert.equal(raw.features, 0);
+  assert.equal(raw.references, 0);
+  assert.ok(payload.comparison.guidanceAddedPerPrompt > 0);
 });
 
 test("docs and plugin resources keep low-token scope explicit", () => {
