@@ -45,8 +45,8 @@ export default function Home() {
 
         <TaskSummary tasks={tasks} />
 
-        <div className="grid gap-4 lg:grid-cols-[360px_1fr] lg:items-start">
-          <div className="grid gap-4">
+        <div className="grid gap-4 lg:grid-cols-[360px_minmax(0,1fr)] lg:items-start">
+          <div className="grid min-w-0 gap-4">
             <TaskComposer onCreate={(task) => setTasks((current) => [task, ...current])} />
             <TaskFilters filters={filters} onChange={setFilters} />
           </div>

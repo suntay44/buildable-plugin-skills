@@ -16,6 +16,6 @@ Next agent steps:
 4. Do not load all templates.
 5. Load starter source only for this selected template.
 6. Adapt this local starter to the user's request.
-7. Run `buildable review .` after app code exists.
+7. Run `buildable review` after app code exists.
 
 Do not add accounts, billing, cloud previews, managed databases, telemetry, or hosted deployment unless explicitly requested.

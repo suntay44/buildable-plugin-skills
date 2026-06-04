@@ -1,7 +1,8 @@
 {
   "version": "0.1.0",
   "mode": "generated-starter",
+  "appName": "TaskFlow",
   "localOnly": true,
   "buildableRoot": "/Users/christianpatricksuntay/Projects/Buildable",
-  "generatedAt": "2026-06-02T03:52:29.588Z"
+  "generatedAt": "2026-06-04T05:48:26.598Z"
 }
