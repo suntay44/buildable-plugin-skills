@@ -10,7 +10,7 @@ type Props = {
 export function LeadFiltersBar({ filters, sources, onChange }: Props) {
   return (
     <section aria-label="Lead filters" className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="grid gap-3 md:grid-cols-[1fr_170px_170px]">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
         <label className="grid gap-1 text-sm font-medium text-slate-700">
           Search
           <input

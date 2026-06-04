@@ -59,12 +59,12 @@ export default function Home() {
 
         <PipelineSummary leads={leads} />
 
-        <div className="grid gap-4 lg:grid-cols-[340px_1fr] lg:items-start">
-          <div className="grid gap-4">
+        <div className="grid gap-4 lg:grid-cols-[340px_minmax(0,1fr)] lg:items-start">
+          <div className="grid min-w-0 gap-4">
             <LeadComposer onCreate={createLead} />
             <LeadFiltersBar filters={filters} sources={sources} onChange={setFilters} />
           </div>
-          <div className="grid gap-4">
+          <div className="grid min-w-0 gap-4">
             <LeadList
               leads={visibleLeads}
               allLeadsCount={leads.length}

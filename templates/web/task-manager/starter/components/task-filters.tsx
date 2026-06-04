@@ -9,7 +9,7 @@ type Props = {
 export function TaskFilters({ filters, onChange }: Props) {
   return (
     <section aria-label="Task filters" className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="grid gap-3 md:grid-cols-[1fr_160px_160px]">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
         <label className="grid gap-1 text-sm font-medium text-slate-700">
           Search
           <input
