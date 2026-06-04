@@ -1,7 +1,7 @@
 {
   "name": "@buildable/local-builder",
   "version": "0.1.0",
-  "description": "Local-first AI app builder brain for Codex, Claude, Cursor, and CLI workflows.",
+  "description": "Local product-structure compiler + quality gate for coding agents (Claude Code, Codex, Cursor): prompt to a runnable, build-verified starter to a reviewed result. Pairs with design plugins.",
   "type": "module",
   "bin": {
     "buildable": "./bin/buildable.mjs"

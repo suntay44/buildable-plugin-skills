@@ -11,7 +11,7 @@
     {
       "name": "buildable",
       "source": "./",
-      "description": "Prompt-to-prototype planning, archetypes, golden templates, UI/UX playbooks, and a local review loop for web and mobile app prototypes.",
+      "description": "Local product-structure compiler and quality gate for your coding agent: a prompt becomes the right archetype, a runnable build-verified starter, and a reviewed result (build, layout, accessibility, state coverage, local-first). Pairs with design plugins like Frontend Design.",
       "version": "0.1.0",
       "license": "MIT",
       "keywords": [

@@ -2,6 +2,10 @@
 
 Buildable is a local-first skills, plugin, and CLI repository. Use it as an enhanced prompting and product-intelligence layer for coding agents; do not wire it to a hosted builder, telemetry service, central template registry, managed database, or cloud preview system.
 
+## What it is
+
+Buildable is a **product-structure compiler and quality gate** for your coding agent: it decides *what* to build (archetype → screens, entities, features, states), copies a runnable, build-verified starter, and reviews the result (build, layout, accessibility, state coverage, local-first). It is not a design-taste plugin or a hosted builder — it runs entirely in your repo and agent, and pairs with design plugins like [Frontend Design](https://claude.com/plugins/frontend-design) for the visual polish. See the [README comparison](../README.md#what-it-is-and-when-to-use-it) for details.
+
 ## Requirements
 
 - Node.js 18 or newer for the CLI.

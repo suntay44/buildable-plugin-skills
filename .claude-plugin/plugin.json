@@ -1,7 +1,7 @@
 {
   "name": "buildable",
   "version": "0.1.0",
-  "description": "Local-first AI app builder brain for Claude Code. Adds prompt-to-prototype planning, curated app archetypes, golden templates, UI/UX playbooks, and a review loop so the agent builds polished web and mobile prototypes with minimal token usage.",
+  "description": "Local product-structure compiler and quality gate for your coding agent. A prompt becomes the right archetype, a runnable build-verified starter, and a reviewed result (build, layout, accessibility, state coverage, local-first), loading only the references each prompt needs. Pairs with design plugins like Frontend Design.",
   "author": {
     "name": "Buildable contributors"
   },
