@@ -1462,6 +1462,55 @@ function review() {
   });
   for (const risk of layoutRisks) warnings.push(risk);
 
+  // Accessibility + state-coverage heuristics (graded, non-blocking warnings).
+  const controlCount = (implementationText.match(/<input\b|<select\b|<textarea\b/g) ?? []).length;
+  const labelSignals = (implementationText.match(/<label\b|aria-label=/g) ?? []).length;
+  const unlabeled = Math.max(0, controlCount - labelSignals);
+  checks.push({
+    name: "accessible-forms",
+    status: controlCount === 0 || unlabeled === 0 ? "pass" : "warn",
+    message:
+      controlCount === 0
+        ? "No web form controls to label."
+        : unlabeled === 0
+          ? `All ${controlCount} form control(s) appear labeled.`
+          : `${unlabeled} of ${controlCount} form control(s) may be missing a <label> or aria-label.`
+  });
+  if (unlabeled > 0) warnings.push(`${unlabeled} form control(s) may be missing a <label> or aria-label. See knowledge/ui-patterns/forms.md.`);
+
+  const interactiveCount = controlCount + (implementationText.match(/<button\b/g) ?? []).length;
+  const hasFocusStyle = /focus-visible|focus:/.test(implementationText);
+  checks.push({
+    name: "focus-styles",
+    status: interactiveCount === 0 || hasFocusStyle ? "pass" : "warn",
+    message:
+      interactiveCount === 0
+        ? "No interactive web controls."
+        : hasFocusStyle
+          ? "Visible focus styles present."
+          : "No focus-visible styles found for interactive controls."
+  });
+  if (interactiveCount > 0 && !hasFocusStyle) warnings.push("No visible focus styles (focus-visible) found; keyboard users cannot see focus. See knowledge/quality-rubrics/web-app.md.");
+
+  const expectsEmptyState =
+    (appSpec?.features ?? []).some((feature) => /\bempty\b|filtered/i.test(feature)) ||
+    (appSpec?.acceptanceCriteria ?? []).some((criterion) => /\bempty\b/i.test(criterion));
+  const hasEmptyEvidence =
+    /border-dashed/.test(implementationText) ||
+    /clear filter/.test(implementationText) ||
+    /no [a-z]+ (yet|match)/.test(implementationText) ||
+    /empty[-\s]?state/.test(implementationText);
+  if (appSpec && expectsEmptyState) {
+    checks.push({
+      name: "state-coverage",
+      status: hasEmptyEvidence ? "pass" : "warn",
+      message: hasEmptyEvidence
+        ? "Empty / filtered-empty state present in source."
+        : "Archetype expects an empty/filtered-empty state, but none was found in source."
+    });
+    if (!hasEmptyEvidence) warnings.push("Expected empty/filtered-empty state not found in source. See knowledge/ui-patterns/empty-states.md.");
+  }
+
   if (flags.has("--build")) {
     runBuildChecks(target, checks, issues, warnings);
   }

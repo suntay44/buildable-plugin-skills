@@ -382,6 +382,27 @@ test("review flags responsive-layout risk and runnable starters pass it", () => 
   assert.ok(flagged.warnings.some((w) => w.includes("Responsive-layout risk") && w.includes("bad-grid.tsx") && w.includes("minmax(0,1fr)")));
 });
 
+test("review grades accessibility and state coverage", () => {
+  const workspace = mkdtempSync(join(tmpdir(), "buildable-quality-"));
+  const out = join(workspace, "app");
+  run(["generate", "Build me a todo app", "--out", out, "--json"], { cwd: workspace });
+
+  // The shipped starter passes the quality checks.
+  const clean = jsonFrom(run(["review", out, "--json"], { cwd: workspace }));
+  const status = (name) => clean.checks.find((check) => check.name === name)?.status;
+  assert.equal(status("accessible-forms"), "pass");
+  assert.equal(status("focus-styles"), "pass");
+  assert.equal(status("state-coverage"), "pass");
+
+  // Several unlabeled controls outnumber labels and are flagged (as a warning, not a failure).
+  const naked = Array.from({ length: 5 }, (_, i) => `<input placeholder="x${i}" />`).join("");
+  writeFileSync(join(out, "components/naked.tsx"), `export function Naked() { return <form>${naked}</form>; }\n`);
+  const flagged = jsonFrom(run(["review", out, "--json"], { cwd: workspace }));
+  assert.equal(flagged.ok, true);
+  assert.equal(flagged.checks.find((check) => check.name === "accessible-forms").status, "warn");
+  assert.ok(flagged.warnings.some((w) => w.includes("missing a <label> or aria-label")));
+});
+
 test("review fails generic app specs that are not represented in source", () => {
   const workspace = mkdtempSync(join(tmpdir(), "buildable-review-generic-"));
   writeFileSync(join(workspace, "package.json"), JSON.stringify({ name: "empty-generic", version: "0.0.0" }, null, 2));

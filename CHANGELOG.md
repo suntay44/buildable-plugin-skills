@@ -12,6 +12,7 @@ Unreleased section here and syncs the version across every plugin manifest.
 ### Added
 
 - Responsive-layout rulebook (`knowledge/ui-patterns/responsive-layouts.md`) plus a `buildable review` heuristic that warns when a grid pairs a fixed track with a bare `1fr` (the sidebar-overflow bug class) — use `minmax(0,1fr)`.
+- `buildable review` quality checks: `accessible-forms` (controls without a label/aria-label), `focus-styles` (no `focus-visible`), and `state-coverage` (declared empty/filtered state missing from source), wired to the web-app rubric and forms playbook.
 - Runnable web `notes` golden starter (two-pane workspace) with build verification, CI, and an eval fixture.
 - Runnable web `ecommerce-admin` golden starter (overview/products/orders) with build verification, CI, and an eval fixture.
 - Runnable mobile `booking` golden starter (Expo stepped flow: service → slot → details → confirmation) with typecheck CI.

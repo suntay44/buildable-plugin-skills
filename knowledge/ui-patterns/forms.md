@@ -14,9 +14,9 @@ The app needs creation, editing, filtering, booking, or user-entered configurati
 
 ## Accessibility
 
-- labels must be associated with controls
+- Every `<input>`, `<select>`, and `<textarea>` must be associated with a `<label>` (wrap it, or use `htmlFor`/`id`) or carry an `aria-label`. `buildable review` warns (`accessible-forms`) when controls outnumber labels.
+- A visible focus style is required: keep a `:focus-visible` rule in `globals.css`. `buildable review` warns (`focus-styles`) when interactive controls exist with no `focus-visible` styles.
 - keyboard submission should work
-- focus states must be visible
 - disabled states must remain legible
 
 ## Empty/Error States
