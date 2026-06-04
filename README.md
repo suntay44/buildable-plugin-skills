@@ -162,6 +162,21 @@ Golden templates are Buildable's approved starting points. They come in two leve
 - **Runnable starters** copy real, build-verified source into the user's local folder.
 - **Planned template packs** do not copy app source yet; they write a scoped `IMPLEMENTATION_PLAN.md`, `buildable-app-spec.json`, and reference list so Claude, Codex, Cursor, or another agent can implement the app without reading every template.
 
+### What it generates
+
+Real, unedited output — each rendered straight from a single prompt against its runnable starter:
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/web-task-manager.png" alt="Generated task manager"><br><sub><code>buildable generate "Build me a todo app"</code></sub></td>
+    <td width="50%"><img src="docs/screenshots/web-crm.png" alt="Generated CRM"><br><sub><code>buildable generate "Build me a CRM for tracking leads"</code></sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/web-dashboard.png" alt="Generated SaaS dashboard"><br><sub><code>buildable generate "Build me a SaaS analytics dashboard"</code></sub></td>
+    <td width="50%"><img src="docs/screenshots/web-marketplace.png" alt="Generated services marketplace"><br><sub><code>buildable generate "Build me a marketplace for local services"</code></sub></td>
+  </tr>
+</table>
+
 | Template | Target | Status |
 | --- | --- | --- |
 | `templates/web/task-manager` | web | ✅ runnable |
@@ -258,7 +273,7 @@ examples/       Generated reference apps
 
 ## Templates catalog
 
-See [TEMPLATES.md](TEMPLATES.md) for the full list of archetypes, golden templates, UI/UX playbooks, rubrics, and simple contribution instructions.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full list of archetypes, golden templates, UI/UX playbooks, rubrics, and simple contribution instructions.
 
 ## License
 

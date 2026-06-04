@@ -20,7 +20,7 @@
   },
   "files": [
     "README.md",
-    "TEMPLATES.md",
+    "CONTRIBUTING.md",
     "CHANGELOG.md",
     "docs/install.md",
     "bin/",
