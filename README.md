@@ -25,6 +25,7 @@ It does **not** replace your agent or run as a hosted platform. It is a file-bas
 ## Contents
 
 - [Why Buildable](#why-buildable)
+- [What it is](#what-it-is-and-when-to-use-it)
 - [How it works](#how-it-works)
 - [Quick start](#quick-start)
 - [Install as a plugin](#install-as-a-plugin)
@@ -49,6 +50,23 @@ A raw coding agent starts every app from a blank slate. Hosted builders feel mag
 - **UI/UX playbooks** — patterns for forms, tables, filters, empty states, and responsive layout.
 - **Plan + review loop** — a CLI that classifies prompts, emits an app spec, and audits the result.
 - **Progressive loading** — the agent reads only the references a prompt needs, not the whole repo.
+
+## What it is (and when to use it)
+
+Buildable is a **product-structure compiler and quality gate** for your coding agent: it decides *what* to build (archetype → screens, entities, features, states), copies a **runnable, build-verified starter**, and **reviews** the result (build, layout, accessibility, state coverage, local-first). It is **not** a design-taste plugin or a hosted builder.
+
+| | Buildable | Design plugins (e.g. Frontend Design) | Hosted builders (Lovable, v0, Replit) |
+| --- | :---: | :---: | :---: |
+| Decides product structure | ✅ | — | ✅ |
+| Runnable, build-verified code | ✅ | — | hosted |
+| Reviews / grades the output | ✅ | — | — |
+| Local — your repo, your agent | ✅ | ✅ | — |
+| Polishes the visual design | ok | ✅ | ✅ |
+
+**Pairs with [Frontend Design](https://claude.com/plugins/frontend-design):** Buildable decides what to build and proves it works; add a design skill for the final polish. They're complementary layers, not competitors.
+
+- **Use it when** you want consistent, real prototypes for common app types — fast, in your own stack, no lock-in.
+- **Skip it when** you need a one-off component or throwaway script; a raw agent is enough.
 
 ## How it works
 
@@ -227,27 +245,15 @@ Buildable applies three levels of guidance so it reduces blank-page ambiguity wi
 
 ## Token efficiency
 
-Buildable is built for progressive loading — agents should never load the whole repository:
+Agents load only the references a prompt needs (the `appSpec.referenceLoadingContract`), never the whole repo. Across the golden prompts, each plan pulls **~7% of the bundled brain — about 93% fewer context tokens** — while still specifying, on average, **6 features, 9 typed entity fields, and 4 acceptance criteria** that a raw prompt gives you none of. Prove it yourself:
 
-```txt
-Do not load all templates.
-Run buildable plan.
-Load only appSpec.references.
-Load starter source only for the selected template.
+```bash
+buildable eval --compare
 ```
-
-This rule ships in every plan as `appSpec.referenceLoadingContract` (source: `core/reference-loading-contract.md`). `buildable eval` measures it: across the golden fixtures, each plan loads **~9 references ≈ 9% of the bundled brain**, so roughly **90% of context tokens are saved** versus loading everything. Discovery without reading every file goes through `knowledge/INDEX.md` and `templates/INDEX.md`.
 
 ## Supported app types
 
-V1 targets common prototype categories, all tag-matched via `core/archetype-registry.json`:
-
-- **Productivity** — task manager, notes/knowledge, project management, time/expense/invoice trackers, calendars
-- **Business** — CRM, SaaS dashboard, marketplace, ecommerce/admin, inventory, hiring, helpdesk, knowledge base
-- **Sites** — landing pages, portfolios, blogs/CMS, restaurants, real estate, job boards, directories, docs
-- **Lifestyle/mobile** — habit/fitness trackers, booking, travel, meal/recipe, personal finance, subscriptions
-- **Community** — forums, chat, membership, volunteer, events, donations, surveys/forms
-- **Operations** — property management, field service, asset tracking, maintenance, clinic intake
+~55 common categories — task managers, CRMs, dashboards, marketplaces, notes, ecommerce admin, booking, habit/fitness trackers, blogs, job boards, inventory, and more (tag-matched via `core/archetype-registry.json`). See the full list and which are runnable in **[TEMPLATES.md](TEMPLATES.md)**.
 
 ## Non-goals
 
