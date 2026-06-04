@@ -42,7 +42,7 @@ export default function Home() {
 
         <MetricCards metrics={sampleMetrics} />
 
-        <div className="grid gap-4 lg:grid-cols-[1fr_280px] lg:items-start">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-start">
           <TrendChart points={series} label={`Active usage · ${rangeLabels[filters.range]}`} />
           <section aria-label="Event health" className="grid gap-3 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
             <h2 className="text-sm font-semibold text-ink">Event health</h2>

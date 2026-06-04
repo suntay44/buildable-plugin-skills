@@ -15,7 +15,7 @@ export function ListingFiltersBar({ filters, listings, categories, onChange }: P
 
   return (
     <section aria-label="Listing filters" className="grid gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="grid gap-3 md:grid-cols-[1fr_200px]">
+      <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_200px]">
         <label className="grid gap-1 text-sm font-medium text-slate-700">
           Search listings
           <input

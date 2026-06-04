@@ -23,7 +23,7 @@ export function ProductTable({ products, filters, onFilters, onAdjustStock }: Pr
 
   return (
     <section aria-label="Products" className="grid gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="grid gap-3 sm:grid-cols-[1fr_180px]">
+      <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_180px]">
         <label className="grid gap-1 text-sm font-medium text-slate-700">
           Search products
           <input
