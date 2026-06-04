@@ -1281,6 +1281,30 @@ function addCheck(checks, issues, warnings, name, passed, message, severity = "i
   }
 }
 
+function responsiveLayoutRisks(file, label) {
+  // Flag grid definitions that pair a fixed (px/rem/em) track with a bare `fr`
+  // unit. A bare `1fr` is `minmax(auto, 1fr)`, whose `auto` minimum lets wide
+  // content (tables, long text) blow the column out and overlap siblings. Use
+  // `minmax(0, 1fr)` instead. See knowledge/ui-patterns/responsive-layouts.md.
+  if (!/\.(tsx|jsx|css|html)$/.test(file)) return [];
+  const text = readFileSync(file, "utf8");
+  const specs = [];
+  for (const match of text.matchAll(/grid-cols-\[([^\]]+)\]/g)) specs.push(match[1].replace(/_/g, " "));
+  for (const match of text.matchAll(/grid-template-columns:\s*([^;]+);/g)) specs.push(match[1]);
+
+  const risks = [];
+  for (const spec of specs) {
+    if (/minmax\(\s*0/.test(spec)) continue;
+    const tracks = spec.trim().split(/\s+/);
+    const hasFixed = tracks.some((track) => /\d(?:px|rem|em)\b/.test(track));
+    const hasBareFr = tracks.some((track) => /^\d+(?:\.\d+)?fr$/.test(track));
+    if (hasFixed && hasBareFr) {
+      risks.push(`Responsive-layout risk in ${label}: grid columns "${spec.trim()}" mix a fixed track with a bare fr unit. Use minmax(0,1fr) so wide content cannot overflow the column.`);
+    }
+  }
+  return risks;
+}
+
 function runBuildChecks(target, checks, issues, warnings) {
   const pkgPath = join(target, "package.json");
   if (!existsSync(pkgPath)) {
@@ -1426,6 +1450,17 @@ function review() {
       }
     }
   }
+
+  const layoutRisks = implementationFiles.flatMap((file) => responsiveLayoutRisks(file, relative(target, file)));
+  checks.push({
+    name: "responsive-layout",
+    status: layoutRisks.length === 0 ? "pass" : "warn",
+    message:
+      layoutRisks.length === 0
+        ? "No grid columns at risk of overflowing their track."
+        : `${layoutRisks.length} grid(s) pair a fixed track with a bare fr unit; use minmax(0,1fr). See knowledge/ui-patterns/responsive-layouts.md.`
+  });
+  for (const risk of layoutRisks) warnings.push(risk);
 
   if (flags.has("--build")) {
     runBuildChecks(target, checks, issues, warnings);

@@ -8,7 +8,7 @@ Score each category from 0 to 3.
 - `Completeness`: implements required core interactions.
 - `First Screen`: useful immediately with meaningful sample data.
 - `State Coverage`: handles empty, active, edited, deleted, and filtered states.
-- `Responsiveness`: works on mobile and desktop without overlap or overflow.
+- `Responsiveness`: works on mobile and desktop without overlap or overflow. Follow `knowledge/ui-patterns/responsive-layouts.md` — pair fixed grid tracks with `minmax(0,1fr)` (never a bare `1fr`), add `min-w-0` to children holding tables/long text, and stack sidebar content instead of using viewport-keyed multi-column grids inside it.
 - `Accessibility`: labels, keyboard-friendly controls, focus states, contrast.
 - `Visual Quality`: hierarchy, spacing, modern product feel, non-generic UI.
 - `Code Quality`: clear structure, typed data, simple state, no unnecessary backend.

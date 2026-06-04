@@ -365,6 +365,23 @@ test("review surfaces missing expected files for runnable archetypes", () => {
   assert.ok(report.issues.some((issue) => issue.includes("lead-list.tsx")));
 });
 
+test("review flags responsive-layout risk and runnable starters pass it", () => {
+  const workspace = mkdtempSync(join(tmpdir(), "buildable-layout-"));
+  const out = join(workspace, "app");
+  run(["generate", "Build me a todo app", "--out", out, "--json"], { cwd: workspace });
+
+  // The shipped starter must not trip the heuristic.
+  const clean = jsonFrom(run(["review", out, "--json"], { cwd: workspace }));
+  assert.equal(clean.checks.find((check) => check.name === "responsive-layout").status, "pass");
+
+  // A fixed track paired with a bare 1fr is flagged — as a warning, not a failure.
+  writeFileSync(join(out, "components/bad-grid.tsx"), 'export function Bad() { return <div className="grid lg:grid-cols-[320px_1fr]" />; }\n');
+  const flagged = jsonFrom(run(["review", out, "--json"], { cwd: workspace }));
+  assert.equal(flagged.ok, true);
+  assert.equal(flagged.checks.find((check) => check.name === "responsive-layout").status, "warn");
+  assert.ok(flagged.warnings.some((w) => w.includes("Responsive-layout risk") && w.includes("bad-grid.tsx") && w.includes("minmax(0,1fr)")));
+});
+
 test("review fails generic app specs that are not represented in source", () => {
   const workspace = mkdtempSync(join(tmpdir(), "buildable-review-generic-"));
   writeFileSync(join(workspace, "package.json"), JSON.stringify({ name: "empty-generic", version: "0.0.0" }, null, 2));
