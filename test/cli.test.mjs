@@ -456,6 +456,29 @@ test("review --strict catches BaaS/auth/payment drift, not just billing", () => 
   }
 });
 
+test("review --strict scans beyond starter-sized apps and includes jsx/html", () => {
+  const workspace = mkdtempSync(join(tmpdir(), "buildable-strict-scan-"));
+  const out = join(workspace, "app");
+  run(["generate", "Build me a todo app", "--out", out, "--json"], { cwd: workspace });
+
+  const filler = join(out, "components", "filler");
+  mkdirSync(filler, { recursive: true });
+  for (let index = 0; index < 120; index += 1) {
+    writeFileSync(join(filler, `filler-${String(index).padStart(3, "0")}.tsx`), `export const filler${index} = "${index}";\n`);
+  }
+
+  mkdirSync(join(out, "zz-late"), { recursive: true });
+  writeFileSync(join(out, "zz-late", "late-drift.jsx"), 'export const drift = "uses supabase";\n');
+  writeFileSync(join(out, "zz-late", "late-drift.html"), "<div>stripe checkout</div>\n");
+
+  const strict = run(["review", out, "--strict", "--json"], { cwd: workspace });
+  assert.notEqual(strict.status, 0);
+  const report = JSON.parse(strict.stdout);
+  assert.equal(report.ok, false);
+  assert.ok(report.issues.some((issue) => issue.includes("supabase") && issue.includes("late-drift.jsx")));
+  assert.ok(report.issues.some((issue) => issue.includes("stripe") && issue.includes("late-drift.html")));
+});
+
 test("codex manifest exposes reference roots and docs explain available vs loaded", () => {
   const plugin = JSON.parse(readFileSync(join(root, ".codex-plugin/plugin.json"), "utf8"));
   assert.ok(plugin.resources.includes("../knowledge"));
@@ -467,6 +490,16 @@ test("codex manifest exposes reference roots and docs explain available vs loade
   assert.match(cliDoc, /available/i);
   assert.match(cliDoc, /appSpec\.references/);
   assert.doesNotMatch(cliDoc, /stay scoped to indexes/);
+  assert.doesNotMatch(cliDoc, /scoped plugin resources/);
+});
+
+test("copied Cursor commands are portable outside the Buildable repo", () => {
+  for (const command of ["plan", "generate", "review", "preview"]) {
+    const text = readFileSync(join(root, `.cursor/commands/buildable-${command}.md`), "utf8");
+    assert.match(text, /buildable /, `${command} should prefer the global buildable command`);
+    assert.match(text, /BUILDABLE_ROOT/, `${command} should document the checkout fallback`);
+    assert.doesNotMatch(text, /node \.\/bin\/buildable\.mjs/, `${command} must not assume the current workspace is Buildable`);
+  }
 });
 
 test("review fails generic app specs that are not represented in source", () => {

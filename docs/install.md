@@ -119,7 +119,7 @@ Buildable includes a Cursor rule at `.cursor/rules/buildable.mdc` and slash comm
 Local setup:
 
 1. Open this repository in Cursor, or copy `.cursor/rules/buildable.mdc` and `.cursor/commands/` into another local app workspace that should use Buildable.
-2. Keep the Buildable checkout nearby and reference its `core/`, `knowledge/`, `templates/`, and `skills/` paths in your prompt.
+2. Keep the Buildable checkout nearby and reference its `core/`, `knowledge/`, `templates/`, and `skills/` paths in your prompt. If you copy the commands into another workspace and do not globally link `buildable`, set `BUILDABLE_ROOT=/path/to/buildable`.
 3. Run `buildable plan "<prompt>"` for a concrete spec Cursor can follow before generating code.
 4. After Cursor edits or generates a prototype, `cd` into the app and run `buildable review` (passing a path also works for another folder).
 

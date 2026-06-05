@@ -134,5 +134,5 @@ Buildable may strongly define expected product shape for common app types. It mu
 - `plan` performs lightweight prompt classification and emits an app spec with references.
 - `generate` copies runnable local starters or writes plan-only instruction packs, then writes an app spec.
 - `review` audits local prototypes against app spec structure, source representation, and local-first guardrails, then writes `.buildable/review-report.md`.
-- `check` verifies that core Buildable files, template references, template statuses, and scoped plugin resources exist.
+- `check` verifies that core Buildable files, template references, template statuses, and plugin resource coverage exist.
 - `list` prints bundled template specs with runnable/planned status for quick inspection.

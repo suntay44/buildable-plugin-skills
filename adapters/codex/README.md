@@ -24,5 +24,6 @@ Codex should read from this checkout and generate into the user's local workspac
 - `buildable list`
 - `buildable check`
 - `buildable plan "<prompt>"`
-
-Future commands can add generation and review once runnable golden templates exist.
+- `buildable generate "<prompt>"`
+- `buildable review`
+- `buildable preview --url http://localhost:3000`

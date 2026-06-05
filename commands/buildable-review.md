@@ -16,6 +16,6 @@ Review the selected workspace by default. If a path is provided, review: **${ARG
 
 2. Read the generated `.buildable/review-report.md`. Load only the files named by reported issues.
 
-3. Fix blocking issues first (missing entities, missing features, hosted-feature drift, build failures), then polish issues. Keep changes local-first.
+3. Fix blocking issues first (missing entities, missing features, non-local-first drift, build failures), then polish issues. Keep changes local-first.
 
 4. Report what you fixed and any residual risks. If the review now passes, say so plainly.

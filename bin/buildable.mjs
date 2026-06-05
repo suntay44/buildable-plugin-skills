@@ -1255,9 +1255,10 @@ function findAppSpec(target) {
   return candidates.find((path) => existsSync(path));
 }
 
-function scanTextFiles(target, maxFiles = 80) {
+function scanTextFiles(target, maxFiles = Number.POSITIVE_INFINITY) {
   const results = [];
-  const ignored = new Set(["node_modules", ".next", ".git", "dist", "build"]);
+  const ignored = new Set(["node_modules", ".next", ".git", ".expo", "dist", "build", "coverage"]);
+  const textFilePattern = /\.(md|json|ts|tsx|js|jsx|mjs|cjs|css|html)$/;
 
   function walk(current) {
     if (results.length >= maxFiles) return;
@@ -1265,7 +1266,7 @@ function scanTextFiles(target, maxFiles = 80) {
       if (ignored.has(entry.name)) continue;
       const full = join(current, entry.name);
       if (entry.isDirectory()) walk(full);
-      if (entry.isFile() && /\.(md|json|ts|tsx|js|css)$/.test(entry.name)) results.push(full);
+      if (entry.isFile() && textFilePattern.test(entry.name)) results.push(full);
       if (results.length >= maxFiles) return;
     }
   }
@@ -1279,7 +1280,7 @@ function isImplementationFile(target, file) {
   if (relativePath.startsWith(".buildable/")) return false;
   if (["BUILDABLE_NOTES.md", "BUILDABLE_TEMPLATE.md", "IMPLEMENTATION_PLAN.md", "buildable-app-spec.json", "package.json"].includes(relativePath)) return false;
   if (/(^|\/)(next-env\.d\.ts|next\.config\.js|postcss\.config\.js|tailwind\.config\.ts|tsconfig\.json)$/.test(relativePath)) return false;
-  return /\.(ts|tsx|js|jsx|css|html|md)$/.test(file);
+  return /\.(ts|tsx|js|jsx|mjs|cjs|css|html|md)$/.test(file);
 }
 
 function textHasToken(text, token) {
