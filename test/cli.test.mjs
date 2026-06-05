@@ -433,14 +433,40 @@ test("review --strict fails on local-first guardrail drift", () => {
   // Default: warning only, review still passes.
   const lenient = jsonFrom(run(["review", out, "--json"], { cwd: workspace }));
   assert.equal(lenient.ok, true);
-  assert.ok(lenient.warnings.some((w) => w.includes("Hosted-feature term")));
+  assert.ok(lenient.warnings.some((w) => w.includes("Non-local-first term")));
 
   // Strict: blocking failure (non-zero exit, issue recorded).
   const strict = run(["review", out, "--strict", "--json"], { cwd: workspace });
   assert.notEqual(strict.status, 0);
   const report = JSON.parse(strict.stdout);
   assert.equal(report.ok, false);
-  assert.ok(report.issues.some((issue) => issue.includes("Hosted-feature term")));
+  assert.ok(report.issues.some((issue) => issue.includes("Non-local-first term")));
+});
+
+test("review --strict catches BaaS/auth/payment drift, not just billing", () => {
+  const workspace = mkdtempSync(join(tmpdir(), "buildable-strict2-"));
+  const out = join(workspace, "app");
+  run(["generate", "Build me a todo app", "--out", out, "--json"], { cwd: workspace });
+
+  for (const term of ["supabase", "stripe", "login", "firebase", "next-auth"]) {
+    writeFileSync(join(out, "components/drift.tsx"), `export const note = "uses ${term} for the backend";\n`);
+    const strict = run(["review", out, "--strict", "--json"], { cwd: workspace });
+    assert.notEqual(strict.status, 0, `${term} should fail --strict`);
+    assert.ok(JSON.parse(strict.stdout).issues.some((issue) => issue.includes(`"${term}"`)), `${term} issue recorded`);
+  }
+});
+
+test("codex manifest exposes reference roots and docs explain available vs loaded", () => {
+  const plugin = JSON.parse(readFileSync(join(root, ".codex-plugin/plugin.json"), "utf8"));
+  assert.ok(plugin.resources.includes("../knowledge"));
+  assert.ok(plugin.resources.includes("../templates"));
+
+  // The CLI docs must explain that exposing a dir is availability, not agent loading,
+  // so the "scoped vs broad resources" drift can't silently return.
+  const cliDoc = readFileSync(join(root, "cli/README.md"), "utf8");
+  assert.match(cliDoc, /available/i);
+  assert.match(cliDoc, /appSpec\.references/);
+  assert.doesNotMatch(cliDoc, /stay scoped to indexes/);
 });
 
 test("review fails generic app specs that are not represented in source", () => {

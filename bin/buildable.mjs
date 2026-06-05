@@ -13,7 +13,21 @@ const flags = parsedArgs.flags;
 const jsonOutput = flags.has("--json");
 const packageJson = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
 const archetypeRegistry = JSON.parse(readFileSync(join(root, "core/archetype-registry.json"), "utf8"));
-const hostedTerms = ["billing", "cloud preview", "managed database", "telemetry", "hosted deployment"];
+// Hosted/non-local-first dependencies that should not appear in a prototype unless the user
+// asked for them — aligned with the ask-vs-build policy and appSpec.mustNotInclude. Matched
+// as whole tokens (see hasTagPhrase) so "stripe" does not flag "striped".
+const localFirstDriftTerms = [
+  // hosting / deployment
+  "cloud preview", "hosted deployment", "vercel", "netlify", "fly.io", "render.com",
+  // payments / billing
+  "billing", "stripe", "paddle", "lemonsqueezy", "checkout session",
+  // auth / accounts
+  "authentication", "oauth", "login", "sign in", "sign up", "next-auth", "clerk", "auth0",
+  // hosted databases / backend-as-a-service
+  "managed database", "supabase", "firebase", "firestore", "mongodb", "postgres", "postgresql", "mysql", "prisma", "planetscale", "dynamodb",
+  // telemetry / analytics
+  "telemetry", "posthog", "sentry", "segment.io"
+];
 const templateStatuses = ["planned", "starter", "runnable"];
 const referenceLoadingContract = [
   "Do not load all templates.",
@@ -924,7 +938,7 @@ function runEval() {
     }
     console.log("");
     console.log(`Avg references loaded per plan: ${payload.efficiency.avgReferencesLoaded}`);
-    console.log(`Avg context loaded vs full brain: ${(payload.efficiency.avgContextLoadRatio * 100).toFixed(1)}% (saves ${payload.efficiency.avgContextSavedPercent}% of tokens)`);
+    console.log(`Avg bundled-brain bytes loaded: ${(payload.efficiency.avgContextLoadRatio * 100).toFixed(1)}% (${payload.efficiency.avgContextSavedPercent}% less than loading the whole brain)`);
     console.log(`Avg spec quality: ${payload.specQuality.avgScore} (min ${payload.specQuality.minScore})`);
 
     if (payload.comparison) {
@@ -1452,15 +1466,18 @@ function review() {
   }
 
   for (const file of textFiles) {
+    if (
+      file.endsWith("BUILDABLE_NOTES.md") ||
+      file.endsWith("BUILDABLE_TEMPLATE.md") ||
+      file.endsWith("buildable-app-spec.json")
+    ) {
+      continue;
+    }
     const text = readFileSync(file, "utf8").toLowerCase();
-    for (const term of hostedTerms) {
-      if (
-        text.includes(term) &&
-        !file.endsWith("BUILDABLE_NOTES.md") &&
-        !file.endsWith("BUILDABLE_TEMPLATE.md") &&
-        !file.endsWith("buildable-app-spec.json")
-      ) {
-        const message = `Hosted-feature term "${term}" appears in ${relative(target, file)}.`;
+    for (const term of localFirstDriftTerms) {
+      // Whole-token match so "stripe" doesn't flag "striped", "login" doesn't flag "blogin", etc.
+      if (hasTagPhrase(text, term)) {
+        const message = `Non-local-first term "${term}" appears in ${relative(target, file)}.`;
         // --strict turns local-first guardrail drift into a blocking failure.
         if (flags.has("--strict")) issues.push(message);
         else warnings.push(message);

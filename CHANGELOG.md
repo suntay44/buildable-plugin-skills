@@ -11,6 +11,7 @@ Unreleased section here and syncs the version across every plugin manifest.
 
 ### Added
 
+- Broader local-first guardrail scan in `buildable review` (and `--strict`): aligned with the ask-vs-build policy, it now flags hosted/BaaS/auth/payment terms (supabase, firebase, postgres, prisma, stripe, next-auth, oauth, login, vercel, …), matched as whole tokens.
 - Responsive-layout rulebook (`knowledge/ui-patterns/responsive-layouts.md`) plus a `buildable review` heuristic that warns when a grid pairs a fixed track with a bare `1fr` (the sidebar-overflow bug class) — use `minmax(0,1fr)`.
 - `buildable review` quality checks: `accessible-forms` (controls without a label/aria-label), `focus-styles` (no `focus-visible`), and `state-coverage` (declared empty/filtered state missing from source), wired to the web-app rubric and forms playbook.
 - Runnable web `notes` golden starter (two-pane workspace) with build verification, CI, and an eval fixture.
