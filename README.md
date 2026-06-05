@@ -245,7 +245,7 @@ Buildable applies three levels of guidance so it reduces blank-page ambiguity wi
 
 ## Token efficiency
 
-Agents load only the references a prompt needs (the `appSpec.referenceLoadingContract`), never the whole repo. Across the golden prompts, each plan pulls **~7% of the bundled brain — about 93% fewer context tokens** — while still specifying, on average, **6 features, 9 typed entity fields, and 4 acceptance criteria** that a raw prompt gives you none of. Prove it yourself:
+Agents load only the references a prompt needs (the `appSpec.referenceLoadingContract`), never the whole repo. Across the golden prompts, each plan loads **~7% of the bundled-brain reference bytes — about 93% less than loading the whole brain** — while still specifying, on average, **6 features, 9 typed entity fields, and 4 acceptance criteria** that a raw prompt gives you none of. (This measures Buildable's *bundled context*, not your total Claude/Codex session tokens.) Prove it yourself:
 
 ```bash
 buildable eval --compare

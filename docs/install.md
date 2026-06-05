@@ -108,7 +108,7 @@ Instructions-only setup:
 1. Copy or symlink `adapters/claude/CLAUDE.md` into the Claude Code project context you want to use, or paste its contents into that project's Claude instructions.
 2. Keep this repository available locally so Claude can read `core/`, `knowledge/`, `templates/`, `skills/`, and `evals/`.
 3. Run `buildable plan "<prompt>"` when you want an explicit app spec before code generation.
-4. Run `buildable review <app-path>` after Claude edits or generates a prototype (add `--build` to run typecheck/build).
+4. After Claude edits or generates a prototype, `cd` into the app and run `buildable review` (add `--build` to run typecheck/build, `--strict` to fail on local-first drift). Reviewing a different folder by path — `buildable review <app-path>` — also works.
 
 Claude should use mock/local data by default and avoid accounts, billing, hosted previews, telemetry, managed databases, and deployment features unless you explicitly request them.
 
@@ -121,7 +121,7 @@ Local setup:
 1. Open this repository in Cursor, or copy `.cursor/rules/buildable.mdc` and `.cursor/commands/` into another local app workspace that should use Buildable.
 2. Keep the Buildable checkout nearby and reference its `core/`, `knowledge/`, `templates/`, and `skills/` paths in your prompt.
 3. Run `buildable plan "<prompt>"` for a concrete spec Cursor can follow before generating code.
-4. Run `buildable review <app-path>` after Cursor edits or generates a prototype.
+4. After Cursor edits or generates a prototype, `cd` into the app and run `buildable review` (passing a path also works for another folder).
 
 The rule is scoped to prompt-to-prototype work and should not push Cursor toward hosted builder features.
 

@@ -81,7 +81,11 @@ The same rule is emitted in every plan as `appSpec.referenceLoadingContract`.
 - template spec files are readable
 - template references point to existing local files
 - Codex plugin skills and resources resolve locally
-- plugin resources stay scoped to indexes, contracts, schemas, and selected template specs rather than broad directories
+- every file a plan can reference is *available* to the Codex plugin (the manifest exposes `knowledge/` and `templates/`), and `check` verifies that coverage
+
+### Available to the plugin vs loaded by the agent
+
+These are two different things. The Codex manifest *exposes* `knowledge/` and `templates/` so any `appSpec.references` target can be resolved — that is availability. It does **not** mean the agent loads those directories. At runtime the agent loads only the exact files in `appSpec.references`, per `core/reference-loading-contract.md`. The token-efficiency story is about what is *loaded*, not what is *available*.
 
 ## Fresh Start
 
