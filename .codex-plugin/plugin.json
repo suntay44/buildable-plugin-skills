@@ -39,14 +39,8 @@
     "../core/schemas/app-spec.schema.json",
     "../core/schemas/archetype-registry.schema.json",
     "../core/schemas/template-spec.schema.json",
-    "../knowledge/INDEX.md",
-    "../templates/INDEX.md",
-    "../templates/web/generic-app/template-spec.json",
-    "../templates/web/generic-app/TEMPLATE_PLAN.md",
-    "../templates/web/task-manager/template-spec.json",
-    "../templates/web/task-manager/TEMPLATE_PLAN.md",
-    "../templates/mobile/generic-app/template-spec.json",
-    "../templates/mobile/generic-app/TEMPLATE_PLAN.md",
+    "../knowledge",
+    "../templates",
     "../evals/rubric.md",
     "../evals/prompts.md"
   ]

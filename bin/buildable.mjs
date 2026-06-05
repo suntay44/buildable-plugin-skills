@@ -53,7 +53,9 @@ Commands:
   generate <prompt> [--out <dir>] Create a runnable starter, or use --plan-pack for planned templates.
                                   Defaults to a folder from the app name. Add --name "X" to brand it,
                                   or --augment to plan into an existing app.
-  review [path] [--build]       Audit the current app by default. --build also runs typecheck/build.
+  review [path] [--build] [--strict]
+                                Audit the current app by default. --build also runs typecheck/build;
+                                --strict fails (not just warns) on local-first guardrail drift.
   preview [path] --url <url>    Render the running app in a headless browser; screenshot + catch runtime errors.
   check [--json]                Verify local assets, adapter files, and template references.
   list [--json]                 List bundled archetypes plus runnable/planned template status.
@@ -126,12 +128,15 @@ function classify(prompt) {
     }))
     .sort((a, b) => b.score - a.score);
   const selected = scored[0]?.score > 0 ? scored[0].entry : archetypeRegistry.archetypes.find((entry) => entry.id === "task-manager");
-  const target = requestedMobile && !requestedWeb ? "mobile" : selected.defaultTarget;
+  // An explicit "web"/"mobile" in the prompt is authoritative; otherwise use the archetype default.
+  const explicitTarget = requestedMobile !== requestedWeb && (requestedMobile || requestedWeb);
+  const target = explicitTarget ? (requestedMobile ? "mobile" : "web") : selected.defaultTarget;
 
   const questions = askFirstRules.filter((rule) => rule.pattern.test(normalized)).map((rule) => rule.question);
 
   return {
     target,
+    explicitTarget,
     archetype: selected.id,
     complexity: "simple-prototype",
     questionsNeeded: questions.length > 0,
@@ -142,12 +147,12 @@ function classify(prompt) {
 
 function templateFor(classification) {
   const templates = listTemplates();
-  const explicit = templates.find(
-    (entry) => entry.archetype === classification.archetype && entry.target === classification.target
-  );
-  const fallback = templates.find((entry) => entry.archetype === classification.archetype);
-  const generic = templates.find((entry) => entry.archetype === "generic-app" && entry.target === classification.target);
-  return explicit ?? fallback ?? generic ?? templates[0];
+  const sameTarget = (entry) => entry.target === classification.target;
+  // Dedicated template for this archetype on the requested platform.
+  const dedicated = templates.find((entry) => entry.archetype === classification.archetype && sameTarget(entry));
+  // Same-platform generic pack — the safe fallback that never crosses target.
+  const genericSameTarget = templates.find((entry) => entry.archetype === "generic-app" && sameTarget(entry));
+  return dedicated ?? genericSameTarget ?? templates[0];
 }
 
 function appNameFor(archetype) {
@@ -370,7 +375,8 @@ function specFor(prompt) {
   const templateSpec = existsSync(templatePath)
     ? JSON.parse(readFileSync(templatePath, "utf8"))
     : { references: [] };
-  const target = templateSpec.target ?? classification.target;
+  // The classified target is authoritative; templateFor already returns a same-target template.
+  const target = classification.target;
   const defaults = defaultsFor(classification.archetype);
   const archetypeReference = `knowledge/archetypes/${classification.archetype}.md`;
   const references = [...(templateSpec.references ?? [])];
@@ -668,14 +674,22 @@ function check() {
         pluginIssues.push(`missing skill ${skill.name}: ${skill.path}`);
       }
     }
+    const resourceRoots = (plugin.resources ?? []).map((resource) => relative(root, join(root, ".codex-plugin", resource)));
     for (const resource of plugin.resources ?? []) {
-      const resourcePath = relative(root, join(root, ".codex-plugin", resource));
-      if (!existsSync(join(root, resourcePath))) {
+      if (!existsSync(join(root, relative(root, join(root, ".codex-plugin", resource))))) {
         pluginIssues.push(`missing resource ${resource}`);
       }
-      if (["../core", "../knowledge", "../templates", "../evals", "../bin", "../cli", "../docs"].includes(resource)) {
-        pluginIssues.push(`resource ${resource} is too broad for the low-token loading contract`);
-      }
+    }
+    // The manifest must expose every file a plan can reference (loading discipline is
+    // enforced at runtime by appSpec.referenceLoadingContract, not by withholding files).
+    const covered = (reference) => resourceRoots.some((res) => reference === res || reference.startsWith(`${res}/`));
+    const planReferences = new Set();
+    for (const template of templates) {
+      for (const reference of readJson(template.path).references ?? []) planReferences.add(reference);
+    }
+    for (const entry of archetypeRegistry.archetypes) planReferences.add(`knowledge/archetypes/${entry.id}.md`);
+    for (const reference of planReferences) {
+      if (!covered(reference)) pluginIssues.push(`codex resources do not expose ${reference}`);
     }
   }
 
@@ -1446,7 +1460,10 @@ function review() {
         !file.endsWith("BUILDABLE_TEMPLATE.md") &&
         !file.endsWith("buildable-app-spec.json")
       ) {
-        warnings.push(`Hosted-feature term "${term}" appears in ${relative(target, file)}.`);
+        const message = `Hosted-feature term "${term}" appears in ${relative(target, file)}.`;
+        // --strict turns local-first guardrail drift into a blocking failure.
+        if (flags.has("--strict")) issues.push(message);
+        else warnings.push(message);
       }
     }
   }

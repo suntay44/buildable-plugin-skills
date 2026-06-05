@@ -151,6 +151,22 @@ test("tag registry routes mobile archetypes to selected dedicated planned templa
   assert.ok(payload.appSpec.features.includes("job list"));
 });
 
+test("explicit platform keyword is authoritative and never cross-targets", () => {
+  // No dedicated mobile CRM -> stays mobile via the same-target generic pack (not web/crm).
+  const mobileCrm = jsonFrom(run(["plan", "Build me a mobile CRM"]));
+  assert.equal(mobileCrm.appSpec.target, "mobile");
+  assert.equal(mobileCrm.appSpec.template, "templates/mobile/generic-app/template-spec.json");
+
+  // Explicit "web" stays web even though the habit-tracker archetype defaults to mobile.
+  const webHabit = jsonFrom(run(["plan", "Build me a web habit tracker"]));
+  assert.equal(webHabit.appSpec.target, "web");
+  assert.equal(webHabit.appSpec.template, "templates/web/generic-app/template-spec.json");
+
+  // Without an explicit keyword, the archetype default still applies.
+  assert.equal(jsonFrom(run(["plan", "Build me a habit tracker"])).appSpec.target, "mobile");
+  assert.equal(jsonFrom(run(["plan", "Build me a CRM"])).appSpec.target, "web");
+});
+
 test("init --existing creates local workspace profile", () => {
   const workspace = mkdtempSync(join(tmpdir(), "buildable-init-"));
   const result = run(["init", "--existing", "--json"], { cwd: workspace });
@@ -403,6 +419,30 @@ test("review grades accessibility and state coverage", () => {
   assert.ok(flagged.warnings.some((w) => w.includes("missing a <label> or aria-label")));
 });
 
+test("review --strict fails on local-first guardrail drift", () => {
+  const workspace = mkdtempSync(join(tmpdir(), "buildable-strict-"));
+  const out = join(workspace, "app");
+  run(["generate", "Build me a todo app", "--out", out, "--json"], { cwd: workspace });
+
+  // Clean starter passes even in strict mode.
+  assert.equal(jsonFrom(run(["review", out, "--strict", "--json"], { cwd: workspace })).ok, true);
+
+  // Inject a hosted-feature term.
+  writeFileSync(join(out, "components/hosted.tsx"), 'export const note = "configure billing and a managed database";\n');
+
+  // Default: warning only, review still passes.
+  const lenient = jsonFrom(run(["review", out, "--json"], { cwd: workspace }));
+  assert.equal(lenient.ok, true);
+  assert.ok(lenient.warnings.some((w) => w.includes("Hosted-feature term")));
+
+  // Strict: blocking failure (non-zero exit, issue recorded).
+  const strict = run(["review", out, "--strict", "--json"], { cwd: workspace });
+  assert.notEqual(strict.status, 0);
+  const report = JSON.parse(strict.stdout);
+  assert.equal(report.ok, false);
+  assert.ok(report.issues.some((issue) => issue.includes("Hosted-feature term")));
+});
+
 test("review fails generic app specs that are not represented in source", () => {
   const workspace = mkdtempSync(join(tmpdir(), "buildable-review-generic-"));
   writeFileSync(join(workspace, "package.json"), JSON.stringify({ name: "empty-generic", version: "0.0.0" }, null, 2));
@@ -540,9 +580,9 @@ test("docs and plugin resources keep low-token scope explicit", () => {
   assert.match(readme, /runnable starters/);
 
   const plugin = JSON.parse(readFileSync(join(root, ".codex-plugin/plugin.json"), "utf8"));
-  assert.ok(plugin.resources.includes("../knowledge/INDEX.md"));
-  assert.ok(plugin.resources.includes("../templates/INDEX.md"));
-  assert.ok(!plugin.resources.includes("../knowledge"));
-  assert.ok(!plugin.resources.includes("../templates"));
-  assert.ok(!plugin.resources.includes("../core"));
+  // The manifest must expose the dirs that appSpec.references resolve from, so plans never
+  // point at files the plugin did not ship. Low-token discipline is the runtime contract.
+  assert.ok(plugin.resources.includes("../knowledge"));
+  assert.ok(plugin.resources.includes("../templates"));
+  assert.ok(plugin.resources.includes("../core/reference-loading-contract.md"));
 });
