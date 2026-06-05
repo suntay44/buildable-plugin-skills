@@ -9,10 +9,10 @@ Review the selected workspace by default. If a path is provided, review: **${ARG
 1. Run the Buildable reviewer:
 
    ```bash
-   buildable review $ARGUMENTS 2>/dev/null || node "${CLAUDE_PLUGIN_ROOT:-.}/bin/buildable.mjs" review $ARGUMENTS
+   buildable review "${ARGUMENTS:-.}" 2>/dev/null || node "${CLAUDE_PLUGIN_ROOT:-.}/bin/buildable.mjs" review "${ARGUMENTS:-.}"
    ```
 
-   Add `--build` only when the user wants the reviewer to also run the project's typecheck/build scripts and dependencies are installed.
+   Add `--build` only when the user wants the reviewer to also run the project's typecheck/build scripts and dependencies are installed. Add `--strict` to fail (not just warn) on local-first guardrail drift (unrequested billing, managed databases, telemetry, etc.).
 
 2. Read the generated `.buildable/review-report.md`. Load only the files named by reported issues.
 

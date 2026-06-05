@@ -253,7 +253,7 @@ buildable eval --compare
 
 ## Supported app types
 
-~55 common categories — task managers, CRMs, dashboards, marketplaces, notes, ecommerce admin, booking, habit/fitness trackers, blogs, job boards, inventory, and more (tag-matched via `core/archetype-registry.json`). See the full list and which are runnable in **[TEMPLATES.md](TEMPLATES.md)**.
+~55 common categories — task managers, CRMs, dashboards, marketplaces, notes, ecommerce admin, booking, habit/fitness trackers, blogs, job boards, inventory, and more (tag-matched via `core/archetype-registry.json`). See the full list and which are runnable in **[CONTRIBUTING.md](CONTRIBUTING.md)**.
 
 ## Non-goals
 

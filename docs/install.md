@@ -23,9 +23,9 @@ buildable check
 buildable list
 buildable eval
 buildable plan "Build me a lightweight CRM"
-buildable generate "Build me a todo app" --out ./taskflow
-buildable generate "Build me a lightweight CRM" --out ./crm
-buildable review ./taskflow --build
+buildable generate "Build me a todo app"
+cd taskflow
+buildable review --build
 ```
 
 Without a global command:
@@ -49,14 +49,17 @@ npm test
 Fresh start:
 
 ```bash
-buildable generate "Build me a todo app" --out ./taskflow
-buildable review ./taskflow
+buildable generate "Build me a todo app"
+cd taskflow
+buildable review
 ```
 
-Planned template:
+If `--out` is omitted, Buildable creates a folder from the app name (e.g. `TaskFlow` → `./taskflow`).
+
+Planned template (no runnable starter yet):
 
 ```bash
-buildable generate "Build me a CRM" --out ./crm-plan --plan-pack
+buildable generate "Build me a recipe app" --plan-pack
 ```
 
 This writes local implementation instructions, not runnable app source.
@@ -67,7 +70,7 @@ Existing app:
 cd my-existing-app
 buildable init --existing
 buildable plan "Add a task manager workflow to this app"
-buildable review .
+buildable review
 ```
 
 For existing apps, Buildable should provide context and review guidance. It should not copy a full template over user code unless explicitly run with generation into a separate output directory.
