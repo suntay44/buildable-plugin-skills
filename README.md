@@ -108,7 +108,7 @@ See [docs/install.md](docs/install.md) for Codex Desktop, Claude Code, Cursor, a
 Buildable ships a plugin manifest (`.claude-plugin/plugin.json`) and a local marketplace (`.claude-plugin/marketplace.json`):
 
 ```txt
-/plugin marketplace add /absolute/path/to/Buildable
+/plugin marketplace add suntay44/buildable-plugin-skills
 /plugin install buildable@buildable
 ```
 

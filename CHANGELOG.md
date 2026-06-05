@@ -36,5 +36,5 @@ Unreleased section here and syncs the version across every plugin manifest.
 - `buildable eval` scores classification fixtures and context-load efficiency (~90% of context tokens saved per plan).
 - Starter config single-source sync (`npm run sync:starters`) with a drift guard, version-pin guard tests, and a CI workflow that builds every runnable starter.
 
-[Unreleased]: https://github.com/buildable/buildable/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/buildable/buildable/releases/tag/v0.1.0
+[Unreleased]: https://github.com/suntay44/buildable-plugin-skills/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/suntay44/buildable-plugin-skills/releases/tag/v0.1.0

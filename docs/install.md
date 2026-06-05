@@ -94,7 +94,7 @@ Buildable ships a Claude Code plugin (`.claude-plugin/plugin.json` + `.claude-pl
 Plugin setup (recommended):
 
 ```txt
-/plugin marketplace add /absolute/path/to/Buildable
+/plugin marketplace add suntay44/buildable-plugin-skills
 /plugin install buildable@buildable
 ```
 

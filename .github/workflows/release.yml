@@ -1,5 +1,9 @@
 name: Release
 
+# Push a version tag (e.g. `git tag v0.2.0 && git push --tags`) to cut a
+# GitHub release. Distribution is the public repo itself — users install with
+# `/plugin marketplace add suntay44/buildable-plugin-skills`, which is free and
+# scales on GitHub's infrastructure. No npm publish, no secrets, no server.
 on:
   push:
     tags:
@@ -16,7 +20,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          registry-url: https://registry.npmjs.org
 
       - name: Verify manifests, config, and tests
         run: |
@@ -39,10 +42,3 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
-
-      - name: Publish to npm
-        # Requires an NPM_TOKEN secret. Skipped automatically if the secret is absent.
-        if: ${{ env.NODE_AUTH_TOKEN != '' }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish --access public

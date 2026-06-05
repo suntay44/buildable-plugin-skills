@@ -7,7 +7,7 @@ The Claude adapter exposes Buildable as a Claude Code plugin (auto-discovered sk
 Buildable ships a plugin manifest at `.claude-plugin/plugin.json` and a marketplace at `.claude-plugin/marketplace.json`. From Claude Code:
 
 ```txt
-/plugin marketplace add /absolute/path/to/Buildable
+/plugin marketplace add suntay44/buildable-plugin-skills
 /plugin install buildable@buildable
 ```
 
