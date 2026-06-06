@@ -4,6 +4,7 @@ import { dirname, isAbsolute, join, relative } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createRequire } from "node:module";
 import { spawnSync } from "node:child_process";
+import { referenceInputsFromArgs as buildReferenceInputsFromArgs } from "../core/reference-inputs.mjs";
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const command = process.argv[2];
@@ -13,6 +14,7 @@ const flags = parsedArgs.flags;
 const jsonOutput = flags.has("--json");
 const packageJson = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
 const archetypeRegistry = JSON.parse(readFileSync(join(root, "core/archetype-registry.json"), "utf8"));
+const designSystemRegistry = JSON.parse(readFileSync(join(root, "core/design-system-registry.json"), "utf8"));
 // Hosted/non-local-first dependencies that should not appear in a prototype unless the user
 // asked for them — aligned with the ask-vs-build policy and appSpec.mustNotInclude. Matched
 // as whole tokens (see hasTagPhrase) so "stripe" does not flag "striped".
@@ -45,6 +47,23 @@ const askFirstRules = [
   { pattern: /\b(map|maps|camera|geolocation|location|upload|file picker|device permission)\b/, question: "Which device permissions or location features should be included?" },
   { pattern: /\b(deploy|deployment|hosting|hosted|vercel|netlify|fly.io|cloud)\b/, question: "Do you want deployment/hosting guidance, or should Buildable keep this local-only?" }
 ];
+const ambiguousIntentRules = [
+  {
+    pattern: /\b(restaurant|cafe|coffee shop|bar|food truck|bakery)\b/,
+    intentPattern: /\b(website|landing|menu|reservation|booking|ordering|order|delivery|inventory|management|admin|dashboard|pos|app|mobile)\b/,
+    question: "For this restaurant, what do you want to build first: an informational website/menu, an ordering or reservation flow, or an inventory/management system?"
+  },
+  {
+    pattern: /\b(real estate|property|rental|apartment|homes?)\b/,
+    intentPattern: /\b(website|landing|listing|marketplace|crm|dashboard|portal|management|booking|app|mobile)\b/,
+    question: "For this real-estate idea, should Buildable plan a public listing website, an agent CRM, a client portal, or a property-management dashboard?"
+  },
+  {
+    pattern: /\b(clinic|medical|dental|doctor|healthcare|spa|salon|wellness)\b/,
+    intentPattern: /\b(website|landing|booking|appointment|intake|portal|dashboard|management|app|mobile)\b/,
+    question: "For this service business, should Buildable plan a public website, a booking/appointment flow, an intake form, or an operations dashboard?"
+  }
+];
 
 function usage() {
   console.log(`Buildable ${packageJson.version}
@@ -52,18 +71,27 @@ function usage() {
 Local-first AI app builder brain for Codex Desktop, Claude Code, Cursor, and CLI workflows.
 
 Usage:
-  buildable plan "Build me a todo app"
+  buildable plan "Build me a todo app" --write
+  buildable plan "Use this screenshot for a CRM" --file ./crm-mockup.png --write
+  buildable design "Build me a CRM website"
   buildable generate "Build me a todo app"
   buildable generate "Build me a lightweight CRM" --name "LeadDesk"
   buildable init --existing
   buildable review
+  buildable mcp
   buildable check
   buildable list
   buildable help
 
 Commands:
   init [--existing]             Create .buildable config for a workspace.
-  plan <prompt>                 Classify a prompt and print a local app spec as JSON.
+  plan <prompt> [--file <path>] [--write]
+                                Classify a prompt and print a top-down local app spec as JSON.
+                                --file/--reference/--screenshot records explicit user references;
+                                --write also saves .buildable/phase-plan.md/json.
+  design [prompt] [--page <name>] [--write]
+                                Produce an interchangeable UI/UX design brief. Uses the current
+                                app spec when present, or classifies the prompt when not.
   generate <prompt> [--out <dir>] Create a runnable starter, or use --plan-pack for planned templates.
                                   Defaults to a folder from the app name. Add --name "X" to brand it,
                                   or --augment to plan into an existing app.
@@ -71,6 +99,7 @@ Commands:
                                 Audit the current app by default. --build also runs typecheck/build;
                                 --strict fails (not just warns) on local-first guardrail drift.
   preview [path] --url <url>    Render the running app in a headless browser; screenshot + catch runtime errors.
+  mcp                           Start the Buildable MCP stdio server for desktop/agent tool clients.
   check [--json]                Verify local assets, adapter files, and template references.
   list [--json]                 List bundled archetypes plus runnable/planned template status.
   eval [--json]                 Score classification fixtures and report context-load efficiency.
@@ -93,7 +122,17 @@ function parseArgs(rawArgs) {
     values: {},
     positionals: []
   };
-  const valueFlags = new Set(["--out", "--mode", "--name", "--url"]);
+  const valueFlags = new Set(["--out", "--mode", "--name", "--url", "--page", "--target", "--spec", "--file", "--reference", "--screenshot"]);
+  const multiValueFlags = new Set(["--file", "--reference", "--screenshot"]);
+
+  function setValue(name, value) {
+    const key = name.slice(2);
+    if (multiValueFlags.has(name)) {
+      result.values[key] = [...(Array.isArray(result.values[key]) ? result.values[key] : []), value];
+    } else {
+      result.values[key] = value;
+    }
+  }
 
   for (let index = 0; index < rawArgs.length; index += 1) {
     const arg = rawArgs[index];
@@ -103,9 +142,9 @@ function parseArgs(rawArgs) {
       result.flags.add(name);
 
       if (inlineValue !== undefined) {
-        result.values[name.slice(2)] = inlineValue;
+        setValue(name, inlineValue);
       } else if (valueFlags.has(name) && rawArgs[index + 1] && !rawArgs[index + 1].startsWith("--")) {
-        result.values[name.slice(2)] = rawArgs[index + 1];
+        setValue(name, rawArgs[index + 1]);
         index += 1;
       }
     } else {
@@ -131,6 +170,10 @@ function uniqueValues(values) {
   return [...new Set(values.filter((value) => typeof value === "string" && value.trim() !== "").map((value) => value.trim()))];
 }
 
+function referenceInputsFromArgs(args = parsedArgs, cwd = process.cwd()) {
+  return buildReferenceInputsFromArgs(args, cwd);
+}
+
 function classify(prompt) {
   const normalized = prompt.toLowerCase();
   const requestedMobile = /\b(mobile|iphone|android|expo|react native)\b/.test(normalized);
@@ -146,7 +189,11 @@ function classify(prompt) {
   const explicitTarget = requestedMobile !== requestedWeb && (requestedMobile || requestedWeb);
   const target = explicitTarget ? (requestedMobile ? "mobile" : "web") : selected.defaultTarget;
 
-  const questions = askFirstRules.filter((rule) => rule.pattern.test(normalized)).map((rule) => rule.question);
+  const architectureQuestions = askFirstRules.filter((rule) => rule.pattern.test(normalized)).map((rule) => rule.question);
+  const directionQuestions = ambiguousIntentRules
+    .filter((rule) => rule.pattern.test(normalized) && !rule.intentPattern.test(normalized))
+    .map((rule) => rule.question);
+  const questions = uniqueValues([...directionQuestions, ...architectureQuestions]);
 
   return {
     target,
@@ -155,6 +202,7 @@ function classify(prompt) {
     complexity: "simple-prototype",
     questionsNeeded: questions.length > 0,
     questions,
+    clarificationNeeded: directionQuestions.length > 0,
     confidence: scored[0]?.score > 0 ? "high" : "medium"
   };
 }
@@ -352,10 +400,205 @@ function defaultsFor(archetype) {
   };
 }
 
+function designSystemFor(classification, defaults, prompt) {
+  const profiles = designSystemRegistry.profiles ?? [];
+  const matched = profiles.find((profile) => profile.matches?.includes(classification.archetype));
+  const fallback = profiles.find((profile) => profile.id === (classification.target === "mobile" ? "mobile-utility" : "focused-productivity"));
+  const profile = matched ?? fallback ?? profiles[0];
+  const palette = { ...(profile.palette ?? {}) };
+  const typography = { ...(profile.typography ?? {}) };
+  const layoutRules = [...(profile.layoutRules ?? [])];
+  const componentRules = [...(profile.componentRules ?? [])];
+  const accessibility = [...(profile.accessibility ?? [])];
+  const avoid = [...(profile.avoid ?? [])];
+
+  if (/\bdark\b|\bdark mode\b/i.test(prompt)) {
+    palette.intent = `${palette.intent}; support dark mode with equivalent contrast`;
+    componentRules.push("include light/dark token pairs instead of hard-coded one-off colors");
+  }
+  if (/\bminimal|minimalist|clean\b/i.test(prompt)) {
+    layoutRules.push("use fewer surfaces and stronger whitespace, while keeping workflow actions visible");
+    avoid.push("hiding required controls for the sake of minimalism");
+  }
+  if (/\bluxury|premium|high-end\b/i.test(prompt)) {
+    typography.mood = `${typography.mood}; elevated spacing and restrained contrast`;
+    avoid.push("flashy effects that make the product feel less trustworthy");
+  }
+  if (/\bplayful|fun|colorful\b/i.test(prompt)) {
+    palette.intent = `${palette.intent}; allow a brighter accent only if semantic states stay clear`;
+    avoid.push("confusing playful color with status color");
+  }
+
+  return {
+    profile: profile.id,
+    styleName: profile.styleName ?? defaults.style,
+    visualTone: profile.visualTone ?? defaults.style,
+    palette,
+    typography,
+    density: profile.density ?? (classification.target === "mobile" ? "thumb-friendly" : "comfortable"),
+    layoutRules: uniqueValues(layoutRules).slice(0, 5),
+    componentRules: uniqueValues(componentRules).slice(0, 5),
+    motion: profile.motion ?? "subtle feedback-only transitions",
+    accessibility: uniqueValues(accessibility).slice(0, 5),
+    avoid: uniqueValues(avoid).slice(0, 5)
+  };
+}
+
+function designPromptLine(designSystem) {
+  if (!designSystem) return "Design system: follow the selected Buildable UI/UX playbooks.";
+  const paletteIntent = designSystem.palette?.intent ?? "clear semantic color roles";
+  const typographyMood = designSystem.typography?.mood ?? "readable product typography";
+  return `Design system: ${designSystem.styleName}; tone: ${designSystem.visualTone}; palette: ${paletteIntent}; typography: ${typographyMood}; density: ${designSystem.density}; motion: ${designSystem.motion}.`;
+}
+
+function designRulesLine(designSystem) {
+  if (!designSystem) return "UI/UX rules: clear hierarchy, polished spacing, responsive behavior, accessible controls, and useful empty states.";
+  const layoutRules = (designSystem.layoutRules ?? []).slice(0, 3).join("; ");
+  const componentRules = (designSystem.componentRules ?? []).slice(0, 3).join("; ");
+  const avoid = (designSystem.avoid ?? []).slice(0, 3).join("; ");
+  return `UI/UX rules: ${layoutRules}. Components: ${componentRules}. Avoid: ${avoid}.`;
+}
+
+function mockDataFor(defaults) {
+  return {
+    strategy: "realistic-local-seed-data",
+    recordsPerEntity: "6-10",
+    rules: [
+      "Use domain-specific names, labels, statuses, dates, and amounts instead of generic placeholders.",
+      "Include enough variety to exercise filters, search, sorting, status chips, summaries, and empty states.",
+      "Include at least one edge-case record such as overdue, high priority, low stock, cancelled, draft, or inactive when relevant.",
+      "Keep all data local/mock unless the user explicitly approves persistence or external integrations."
+    ],
+    entities: (defaults.entities ?? []).map((entity) => ({
+      name: entity.name,
+      minimumRecords: 6,
+      fieldsToPopulate: (entity.fields ?? []).filter((field) => !["id", "createdAt", "updatedAt"].includes(field)).slice(0, 8)
+    })),
+    requiredStates: ["populated", "empty", "filtered-empty", "loading-or-saving", "error-or-validation"]
+  };
+}
+
+function phasePlanFor(plan) {
+  const promptArg = JSON.stringify(plan.prompt);
+  const phases = [
+    {
+      id: "clarify",
+      title: "Clarify Product Direction",
+      status: plan.appSpec.questionsNeeded ? "required" : "complete",
+      goal: plan.appSpec.questionsNeeded
+        ? "Ask the user the listed questions before design or generation."
+        : "No blocking product-direction questions detected.",
+      questions: plan.appSpec.questions
+    },
+    {
+      id: "plan",
+      title: "Plan App Structure",
+      status: "complete",
+      command: `buildable plan ${promptArg}`,
+      goal: "Use the selected archetype, target, stack, screens, entities, features, references, guardrails, and compact design system."
+    },
+    {
+      id: "mock-data",
+      title: "Prepare Mock Data",
+      status: plan.appSpec.questionsNeeded ? "blocked-until-clarified" : "ready",
+      goal: "Create realistic local seed data for the selected entities before judging the UI.",
+      guidance: plan.appSpec.mockData
+    },
+    {
+      id: "design",
+      title: "Design UI/UX",
+      status: plan.appSpec.questionsNeeded ? "blocked-until-clarified" : "ready",
+      command: `buildable design ${promptArg} --write`,
+      goal: "Deepen appSpec.designSystem into concrete UI/UX tokens, page rules, component states, and mockup-data presentation guidance."
+    },
+    {
+      id: "build",
+      title: "Build Local Prototype",
+      status: plan.appSpec.questionsNeeded ? "blocked-until-clarified" : "ready",
+      command: plan.appSpec.templateStatus === "runnable"
+        ? `buildable generate ${promptArg}`
+        : `buildable generate ${promptArg} --plan-pack`,
+      goal: "Generate or implement the local prototype using the selected template and design brief. Keep data local/mock by default."
+    },
+    {
+      id: "review",
+      title: "Review And Fix",
+      status: "ready-after-build",
+      command: "buildable review",
+      goal: "Audit app spec coverage, local-first guardrails, accessibility, responsive layout, state coverage, and build health."
+    }
+  ];
+
+  return phases;
+}
+
+function planMarkdownFor(plan) {
+  const phases = plan.phasePlan ?? phasePlanFor(plan);
+  return `# Buildable Phase Plan
+
+Prompt:
+
+${plan.prompt}
+
+Recommended workflow: Plan > Design > Build > Review
+
+## Direction
+
+- app: ${plan.appSpec.name}
+- target: ${plan.appSpec.target}
+- archetype: ${plan.appSpec.archetype}
+- stack: ${plan.appSpec.stack.framework}, ${plan.appSpec.stack.language}, ${plan.appSpec.stack.styling}
+- template: ${plan.appSpec.template}
+- template status: ${plan.appSpec.templateStatus}
+
+## Clarifying Questions
+
+${plan.appSpec.questions.length ? plan.appSpec.questions.map((question) => `- ${question}`).join("\n") : "- None"}
+
+## Design Included In Plan
+
+- profile: ${plan.appSpec.designSystem.profile}
+- style: ${plan.appSpec.designSystem.styleName}
+- tone: ${plan.appSpec.designSystem.visualTone}
+- density: ${plan.appSpec.designSystem.density}
+
+Run \`buildable design ${JSON.stringify(plan.prompt)} --write\` only when you want a deeper UI/UX brief with concrete tokens and page/component rules.
+
+## Mock Data Guidance
+
+- strategy: ${plan.appSpec.mockData.strategy}
+- records per entity: ${plan.appSpec.mockData.recordsPerEntity}
+
+${plan.appSpec.mockData.rules.map((rule) => `- ${rule}`).join("\n")}
+
+## User Reference Inputs
+
+${plan.appSpec.referenceInputs.length ? plan.appSpec.referenceInputs.map((input) => `- ${input.kind}: ${input.path}${input.exists ? "" : " (missing)"}`).join("\n") : "- None"}
+
+When these exist, inspect only these user-provided files or screenshots in addition to \`appSpec.references\`.
+
+## Phases
+
+${phases.map((phase, index) => {
+  const lines = [`${index + 1}. ${phase.title} (${phase.status})`, `   - Goal: ${phase.goal}`];
+  if (phase.command) lines.push(`   - Command: \`${phase.command}\``);
+  if (phase.questions?.length) lines.push(...phase.questions.map((question) => `   - Question: ${question}`));
+  return lines.join("\n");
+}).join("\n\n")}
+
+## Reference Loading Contract
+
+${plan.appSpec.referenceLoadingContract.map((rule) => `- ${rule}`).join("\n")}
+`;
+}
+
 function enhancedPromptFor(originalPrompt, appSpec) {
   const features = appSpec.features.join(", ");
   const screens = appSpec.screens.map((screen) => screen.id).join(", ");
   const guardrails = appSpec.mustNotInclude.join(", ");
+  const referenceInputs = appSpec.referenceInputs?.length
+    ? `User reference inputs: ${appSpec.referenceInputs.map((input) => `${input.kind} ${input.path}`).join(", ")}. Inspect only these provided files/screenshots, extract relevant requirements and UI cues, and do not load unrelated files.`
+    : null;
 
   return [
     `User request: ${originalPrompt}`,
@@ -364,14 +607,17 @@ function enhancedPromptFor(originalPrompt, appSpec) {
     `Use the ${appSpec.stack.framework} stack from the selected Buildable template when applicable.`,
     `Expected screens: ${screens}.`,
     `Expected product behavior: ${features}.`,
-    `Use ${appSpec.sampleData} sample data and follow a ${appSpec.style} product style.`,
-    "Apply modern UI quality guidance: clear hierarchy, polished spacing, visible core actions, responsive behavior, accessible controls, and non-generic empty states.",
+    `Use ${appSpec.sampleData} sample data and follow this product style: ${appSpec.style}.`,
+    designPromptLine(appSpec.designSystem),
+    designRulesLine(appSpec.designSystem),
+    `Mock data guidance: ${appSpec.mockData.recordsPerEntity} realistic local records per entity; include populated, empty, filtered-empty, loading/saving, and validation/error states.`,
     `Reference loading contract: ${referenceLoadingContract.join(" ")}`,
+    referenceInputs,
     `Do not add: ${guardrails}.`,
     "For existing apps, adapt to the current project conventions and do not overwrite unrelated user code.",
-    appSpec.questionsNeeded ? "Pause before generation and ask the user the listed architecture questions." : "Proceed without asking for visual taste preferences.",
+    appSpec.questionsNeeded ? "Pause before design/generation and ask the user the listed product-direction or architecture questions." : "Proceed without asking for visual taste preferences.",
     "After implementation, run Buildable review and fix blocking issues before final handoff."
-  ].join("\n");
+  ].filter(Boolean).join("\n");
 }
 
 function readJson(path) {
@@ -382,7 +628,7 @@ function writeJson(path, value) {
   writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`);
 }
 
-function specFor(prompt) {
+function specFor(prompt, options = {}) {
   const classification = classify(prompt);
   const template = templateFor(classification);
   const templatePath = join(root, template.path);
@@ -392,10 +638,15 @@ function specFor(prompt) {
   // The classified target is authoritative; templateFor already returns a same-target template.
   const target = classification.target;
   const defaults = defaultsFor(classification.archetype);
+  const designSystem = designSystemFor(classification, defaults, prompt);
   const archetypeReference = `knowledge/archetypes/${classification.archetype}.md`;
+  const designSelectionReference = "knowledge/design-playbooks/design-system-selection.md";
   const references = [...(templateSpec.references ?? [])];
   if (existsSync(join(root, archetypeReference)) && !references.includes(archetypeReference)) {
     references.unshift(archetypeReference);
+  }
+  if (existsSync(join(root, designSelectionReference)) && !references.includes(designSelectionReference)) {
+    references.push(designSelectionReference);
   }
 
   const appSpec = {
@@ -408,12 +659,15 @@ function specFor(prompt) {
       entities: defaults.entities,
       features: defaults.features,
       sampleData: defaults.sampleData,
+      mockData: mockDataFor(defaults),
       style: defaults.style,
+      designSystem,
       template: template.path,
       templateStatus: templateSpec.status ?? template.status,
       generationMode: templateSpec.status === "runnable" ? "runnable-starter" : "plan-only",
       expectedFiles: templateSpec.expectedFiles ?? [],
       references,
+      referenceInputs: options.referenceInputs ?? [],
       referenceLoadingContract,
       dataMode: templateSpec.stack?.data ?? "local-state",
       starter: templateSpec.starter,
@@ -434,17 +688,20 @@ function specFor(prompt) {
         : "Load the listed references and use the selected template plan as an instruction pack; no runnable starter exists yet."
     };
 
-  return {
+  const plan = {
     prompt,
     classification,
     enhancedPrompt: enhancedPromptFor(prompt, appSpec),
     appSpec
   };
+  plan.phasePlan = phasePlanFor(plan);
+  plan.planMarkdown = planMarkdownFor(plan);
+  return plan;
 }
 
 function validateAppSpec(spec) {
   const issues = [];
-  const required = ["name", "target", "archetype", "complexity", "stack", "screens", "entities", "features", "sampleData", "style", "template", "templateStatus", "generationMode", "references", "referenceLoadingContract", "mustNotInclude", "acceptanceCriteria", "questionsNeeded", "questions"];
+  const required = ["name", "target", "archetype", "complexity", "stack", "screens", "entities", "features", "sampleData", "mockData", "style", "designSystem", "template", "templateStatus", "generationMode", "references", "referenceInputs", "referenceLoadingContract", "mustNotInclude", "acceptanceCriteria", "questionsNeeded", "questions"];
 
   for (const field of required) {
     if (spec[field] === undefined || spec[field] === null) issues.push(`app spec missing ${field}`);
@@ -462,6 +719,36 @@ function validateAppSpec(spec) {
     }
   }
   if (!Array.isArray(spec.features) || spec.features.length === 0) issues.push("app spec features must be a non-empty array");
+  if (!Array.isArray(spec.referenceInputs)) {
+    issues.push("app spec referenceInputs must be an array");
+  } else {
+    for (const input of spec.referenceInputs) {
+      if (!input?.path) issues.push("app spec reference input missing path");
+      if (!input?.kind) issues.push(`app spec reference input ${input?.path ?? "<unknown>"} missing kind`);
+      if (!input?.inspectInstruction) issues.push(`app spec reference input ${input?.path ?? "<unknown>"} missing inspectInstruction`);
+    }
+  }
+  if (!spec.mockData || typeof spec.mockData !== "object") {
+    issues.push("app spec mockData must be an object");
+  } else {
+    if (!spec.mockData.strategy) issues.push("app spec mockData missing strategy");
+    if (!Array.isArray(spec.mockData.rules) || spec.mockData.rules.length === 0) issues.push("app spec mockData.rules must be a non-empty array");
+    if (!Array.isArray(spec.mockData.entities) || spec.mockData.entities.length === 0) issues.push("app spec mockData.entities must be a non-empty array");
+  }
+  if (!spec.designSystem || typeof spec.designSystem !== "object") {
+    issues.push("app spec designSystem must be an object");
+  } else {
+    for (const field of ["profile", "styleName", "visualTone", "palette", "typography", "density", "motion"]) {
+      if (spec.designSystem[field] === undefined || spec.designSystem[field] === null) {
+        issues.push(`app spec designSystem missing ${field}`);
+      }
+    }
+    for (const field of ["layoutRules", "componentRules", "accessibility", "avoid"]) {
+      if (!Array.isArray(spec.designSystem[field]) || spec.designSystem[field].length === 0) {
+        issues.push(`app spec designSystem.${field} must be a non-empty array`);
+      }
+    }
+  }
   if (!templateStatuses.includes(spec.templateStatus)) issues.push(`app spec has invalid templateStatus ${spec.templateStatus}`);
   if (!["runnable-starter", "plan-only"].includes(spec.generationMode)) issues.push(`app spec has invalid generationMode ${spec.generationMode}`);
   if (!Array.isArray(spec.references)) issues.push("app spec references must be an array");
@@ -551,6 +838,55 @@ function validateArchetypeRegistry(registry) {
   return issues;
 }
 
+function validateDesignSystemRegistry(registry) {
+  const issues = [];
+  const ids = new Set();
+  const required = ["id", "matches", "target", "styleName", "visualTone", "palette", "typography", "density", "layoutRules", "componentRules", "motion", "accessibility", "avoid"];
+
+  if (!registry || !Array.isArray(registry.profiles) || registry.profiles.length === 0) {
+    return ["core/design-system-registry.json: profiles must be a non-empty array"];
+  }
+
+  for (const profile of registry.profiles) {
+    const label = profile?.id ? `core/design-system-registry.json:${profile.id}` : "core/design-system-registry.json:<missing-id>";
+
+    for (const field of required) {
+      if (profile?.[field] === undefined || profile?.[field] === null) issues.push(`${label}: missing ${field}`);
+    }
+
+    if (typeof profile?.id !== "string" || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(profile.id)) {
+      issues.push(`${label}: id must be kebab-case`);
+    } else if (ids.has(profile.id)) {
+      issues.push(`${label}: duplicate id`);
+    } else {
+      ids.add(profile.id);
+    }
+
+    if (!["web", "mobile"].includes(profile?.target)) issues.push(`${label}: invalid target`);
+
+    for (const field of ["matches", "layoutRules", "componentRules", "accessibility", "avoid"]) {
+      if (!Array.isArray(profile?.[field]) || profile[field].length === 0) {
+        issues.push(`${label}: ${field} must be a non-empty array`);
+      } else if (profile[field].some((value) => typeof value !== "string" || value.trim() === "")) {
+        issues.push(`${label}: ${field} must contain non-empty strings`);
+      }
+    }
+
+    if (!profile?.palette?.intent || !profile?.typography?.mood) {
+      issues.push(`${label}: palette.intent and typography.mood are required`);
+    }
+  }
+
+  const coveredArchetypes = new Set(registry.profiles.flatMap((profile) => profile.matches ?? []));
+  for (const entry of archetypeRegistry.archetypes) {
+    if (!coveredArchetypes.has(entry.id)) {
+      issues.push(`core/design-system-registry.json: no design profile covers ${entry.id}`);
+    }
+  }
+
+  return issues;
+}
+
 function templateSpecPaths() {
   const targets = ["templates/web", "templates/mobile"];
   return targets.flatMap((targetDir) => {
@@ -621,10 +957,14 @@ function check() {
     "README.md",
     "package.json",
     "bin/buildable.mjs",
+    "bin/buildable-mcp.mjs",
+    ".mcp.json",
     "cli/README.md",
     "docs/install.md",
     "core/classifier.md",
     "core/archetype-registry.json",
+    "core/design-system-registry.json",
+    "core/reference-inputs.mjs",
     "core/reference-loading-contract.md",
     "core/ask-vs-build-policy.md",
     "core/app-spec-schema.md",
@@ -632,6 +972,7 @@ function check() {
     "core/schemas/app-spec.schema.json",
     "core/schemas/template-spec.schema.json",
     "knowledge/archetypes/task-manager.md",
+    "knowledge/design-playbooks/design-system-selection.md",
     "knowledge/data-models/task-manager.md",
     "knowledge/screen-graphs/task-manager.md",
     "templates/web/task-manager/template-spec.json",
@@ -646,10 +987,12 @@ function check() {
     "adapters/cursor/README.md",
     ".cursor/rules/buildable.mdc",
     ".cursor/commands/buildable-plan.md",
+    ".cursor/commands/buildable-design.md",
     ".codex-plugin/plugin.json",
     ".claude-plugin/plugin.json",
     ".claude-plugin/marketplace.json",
     "commands/buildable-plan.md",
+    "commands/buildable-design.md",
     "commands/buildable-generate.md",
     "commands/buildable-review.md",
     "commands/buildable-init.md",
@@ -659,6 +1002,7 @@ function check() {
   const missing = required.filter((path) => !existsSync(join(root, path)));
   const templateIssues = [];
   const registryIssues = validateArchetypeRegistry(archetypeRegistry);
+  const designSystemIssues = validateDesignSystemRegistry(designSystemRegistry);
   const templates = listTemplates();
   const templateStatusCounts = templates.reduce((counts, template) => {
     counts[template.status] = (counts[template.status] ?? 0) + 1;
@@ -702,6 +1046,7 @@ function check() {
       for (const reference of readJson(template.path).references ?? []) planReferences.add(reference);
     }
     for (const entry of archetypeRegistry.archetypes) planReferences.add(`knowledge/archetypes/${entry.id}.md`);
+    planReferences.add("knowledge/design-playbooks/design-system-selection.md");
     for (const reference of planReferences) {
       if (!covered(reference)) pluginIssues.push(`codex resources do not expose ${reference}`);
     }
@@ -734,6 +1079,7 @@ function check() {
   const ok =
     missing.length === 0 &&
     registryIssues.length === 0 &&
+    designSystemIssues.length === 0 &&
     templateIssues.length === 0 &&
     pluginIssues.length === 0 &&
     claudePluginIssues.length === 0;
@@ -751,6 +1097,7 @@ function check() {
     },
     missing,
     registryIssues,
+    designSystemIssues,
     templateIssues,
     pluginIssues,
     claudePluginIssues
@@ -1095,6 +1442,487 @@ Do not add accounts, billing, cloud previews, managed databases, telemetry, or h
 `;
 }
 
+const designTokenPresets = {
+  "focused-productivity": {
+    colors: {
+      background: "#F8FAFC",
+      surface: "#FFFFFF",
+      surfaceMuted: "#EEF2F7",
+      foreground: "#0F172A",
+      mutedForeground: "#64748B",
+      primary: "#2563EB",
+      primaryForeground: "#FFFFFF",
+      accent: "#14B8A6",
+      border: "#CBD5E1",
+      success: "#16A34A",
+      warning: "#D97706",
+      danger: "#DC2626",
+      focus: "#2563EB"
+    },
+    typography: {
+      heading: "Inter or system sans",
+      body: "Inter or system sans",
+      scale: "12, 14, 16, 18, 24, 32",
+      lineHeight: "1.45-1.6"
+    },
+    spacing: "4px base with 8/12/16/24/32px product spacing",
+    radius: "8px controls, 10px panels",
+    shadow: "subtle border-first elevation",
+    componentEmphasis: ["composer", "status chips", "filters", "list rows", "empty states"]
+  },
+  "operator-dashboard": {
+    colors: {
+      background: "#F8FAFC",
+      surface: "#FFFFFF",
+      surfaceMuted: "#F1F5F9",
+      foreground: "#111827",
+      mutedForeground: "#6B7280",
+      primary: "#4F46E5",
+      primaryForeground: "#FFFFFF",
+      accent: "#0EA5E9",
+      border: "#D1D5DB",
+      success: "#059669",
+      warning: "#D97706",
+      danger: "#DC2626",
+      focus: "#4F46E5"
+    },
+    darkColors: {
+      background: "#020617",
+      surface: "#0F172A",
+      surfaceMuted: "#111827",
+      foreground: "#F8FAFC",
+      mutedForeground: "#94A3B8",
+      primary: "#818CF8",
+      primaryForeground: "#0F172A",
+      accent: "#38BDF8",
+      border: "#334155",
+      success: "#34D399",
+      warning: "#FBBF24",
+      danger: "#F87171",
+      focus: "#818CF8"
+    },
+    typography: {
+      heading: "Inter, Geist, or system sans",
+      body: "Inter, Geist, or system sans",
+      mono: "JetBrains Mono or ui-monospace for tabular metrics",
+      scale: "12, 13, 14, 16, 20, 24, 30",
+      lineHeight: "1.4-1.55"
+    },
+    spacing: "4px base with dense 6/8/12/16/24px dashboard spacing",
+    radius: "6px controls, 8px panels",
+    shadow: "minimal shadows; prefer borders and tonal surfaces",
+    componentEmphasis: ["metric cards", "tables", "filters", "status badges", "detail panels"]
+  },
+  "modern-saas": {
+    colors: {
+      background: "#FFFFFF",
+      surface: "#F8FAFC",
+      surfaceMuted: "#EEF2FF",
+      foreground: "#0F172A",
+      mutedForeground: "#64748B",
+      primary: "#4F46E5",
+      primaryForeground: "#FFFFFF",
+      accent: "#06B6D4",
+      border: "#E2E8F0",
+      success: "#10B981",
+      warning: "#F59E0B",
+      danger: "#EF4444",
+      focus: "#4F46E5"
+    },
+    typography: {
+      heading: "Inter, Geist, or a crisp brand sans",
+      body: "Inter, Geist, or system sans",
+      scale: "14, 16, 18, 24, 36, 48, 64",
+      lineHeight: "1.2 headings, 1.6 body"
+    },
+    spacing: "8px base with 24/40/64/96px section spacing",
+    radius: "8px components, 12px media, avoid nested card shells",
+    shadow: "one restrained elevation level for interactive media/cards",
+    componentEmphasis: ["hero", "CTA groups", "feature sections", "social proof", "responsive nav"]
+  },
+  "marketplace-catalog": {
+    colors: {
+      background: "#FAFAF9",
+      surface: "#FFFFFF",
+      surfaceMuted: "#F5F5F4",
+      foreground: "#1C1917",
+      mutedForeground: "#78716C",
+      primary: "#0F766E",
+      primaryForeground: "#FFFFFF",
+      accent: "#F97316",
+      border: "#D6D3D1",
+      success: "#16A34A",
+      warning: "#D97706",
+      danger: "#DC2626",
+      focus: "#0F766E"
+    },
+    typography: {
+      heading: "Inter or system sans",
+      body: "Inter or system sans",
+      scale: "13, 14, 16, 18, 24, 32",
+      lineHeight: "1.45-1.6"
+    },
+    spacing: "4px base with 12/16/24/32px catalog spacing",
+    radius: "8px listings, 6px controls",
+    shadow: "light card shadows only on hover/focus",
+    componentEmphasis: ["search", "filter chips", "listing cards", "metadata rows", "detail/inquiry panels"]
+  },
+  "mobile-utility": {
+    colors: {
+      background: "#F8FAFC",
+      surface: "#FFFFFF",
+      surfaceMuted: "#EEF2F7",
+      foreground: "#0F172A",
+      mutedForeground: "#64748B",
+      primary: "#2563EB",
+      primaryForeground: "#FFFFFF",
+      accent: "#10B981",
+      border: "#CBD5E1",
+      success: "#16A34A",
+      warning: "#D97706",
+      danger: "#DC2626",
+      focus: "#2563EB"
+    },
+    typography: {
+      heading: "system sans / platform default",
+      body: "system sans / platform default",
+      scale: "12, 14, 16, 18, 22, 28",
+      lineHeight: "1.35-1.55"
+    },
+    spacing: "4px base with 12/16/20/24px touch spacing",
+    radius: "12px cards, 10px inputs, pill segmented controls",
+    shadow: "very soft elevation or border-only surfaces",
+    componentEmphasis: ["bottom actions", "segmented controls", "large tap targets", "safe-area spacing", "state feedback"]
+  },
+  "conversation-mobile": {
+    colors: {
+      background: "#F8FAFC",
+      surface: "#FFFFFF",
+      surfaceMuted: "#E0F2FE",
+      foreground: "#0F172A",
+      mutedForeground: "#64748B",
+      primary: "#0284C7",
+      primaryForeground: "#FFFFFF",
+      accent: "#7DD3FC",
+      border: "#BAE6FD",
+      success: "#16A34A",
+      warning: "#D97706",
+      danger: "#DC2626",
+      focus: "#0284C7"
+    },
+    typography: {
+      heading: "system sans / platform default",
+      body: "system sans / platform default",
+      scale: "12, 14, 16, 18, 22, 28",
+      lineHeight: "1.35-1.55"
+    },
+    spacing: "4px base with 8/12/16/20px message spacing",
+    radius: "18px message bubbles, 12px composer",
+    shadow: "no heavy shadows; rely on contrast between message surfaces",
+    componentEmphasis: ["message bubbles", "composer", "send button", "timestamps", "keyboard-safe layout"]
+  },
+  "hospitality-service": {
+    colors: {
+      background: "#FFFBF5",
+      surface: "#FFFFFF",
+      surfaceMuted: "#F4EDE4",
+      foreground: "#1F2937",
+      mutedForeground: "#6B7280",
+      primary: "#0F766E",
+      primaryForeground: "#FFFFFF",
+      accent: "#D97706",
+      border: "#E7D8C9",
+      success: "#16A34A",
+      warning: "#D97706",
+      danger: "#DC2626",
+      focus: "#0F766E"
+    },
+    typography: {
+      heading: "Lora, Fraunces, or a warm brand serif",
+      body: "Inter, Raleway, or system sans",
+      scale: "14, 16, 18, 24, 36, 48",
+      lineHeight: "1.35 headings, 1.6 body"
+    },
+    spacing: "8px base with 20/32/48/72px content spacing",
+    radius: "10px content blocks, 8px controls",
+    shadow: "soft editorial shadows for media/cards",
+    componentEmphasis: ["booking/contact CTA", "service/menu sections", "hours/location", "confirmation states"]
+  },
+  "community-content": {
+    colors: {
+      background: "#F8FAFC",
+      surface: "#FFFFFF",
+      surfaceMuted: "#ECFEFF",
+      foreground: "#0F172A",
+      mutedForeground: "#64748B",
+      primary: "#0891B2",
+      primaryForeground: "#FFFFFF",
+      accent: "#8B5CF6",
+      border: "#CBD5E1",
+      success: "#16A34A",
+      warning: "#D97706",
+      danger: "#DC2626",
+      focus: "#0891B2"
+    },
+    typography: {
+      heading: "Inter, Source Sans 3, or system sans",
+      body: "Inter, Source Sans 3, or system sans",
+      scale: "13, 14, 16, 18, 24, 32, 40",
+      lineHeight: "1.45-1.7"
+    },
+    spacing: "4px base with 12/16/24/40px content spacing",
+    radius: "8px controls and content cards",
+    shadow: "border-first surfaces with rare hover elevation",
+    componentEmphasis: ["content lists", "forms", "status/category chips", "search", "contribution empty states"]
+  }
+};
+
+function designTokensFor(designSystem, prompt) {
+  const preset = designTokenPresets[designSystem.profile] ?? designTokenPresets["focused-productivity"];
+  const wantsDark = /\bdark\b|\bdark mode\b/i.test(prompt) && preset.darkColors;
+  return {
+    colors: wantsDark ? preset.darkColors : preset.colors,
+    typography: preset.typography,
+    spacing: preset.spacing,
+    radius: preset.radius,
+    shadow: preset.shadow,
+    motion: {
+      default: designSystem.motion,
+      duration: designSystem.profile.includes("mobile") ? "120-220ms" : "150-250ms",
+      easing: "ease-out for entry, ease-in for exit, respect reduced motion"
+    },
+    components: preset.componentEmphasis
+  };
+}
+
+function pageFocusFor(prompt) {
+  const explicit = parsedArgs.values.page;
+  if (explicit) return explicit;
+  const match = prompt.match(/\b(login|sign in|signup|sign up|dashboard|home|landing|checkout|pricing|profile|settings|detail|list|form|modal|table|chart|kanban|calendar)\b/i);
+  return match ? match[0].toLowerCase().replace(/\s+/g, "-") : null;
+}
+
+function designBriefMarkdown(brief) {
+  const colorLines = Object.entries(brief.designTokens.colors).map(([key, value]) => `- ${key}: ${value}`).join("\n");
+  return `# Buildable Design Brief
+
+Prompt:
+
+${brief.prompt}
+
+Recommended workflow: ${brief.recommendedWorkflow}
+Scope: ${brief.scope}
+Next suggested command: ${brief.nextSuggestedCommand}
+
+## Scope
+
+- app: ${brief.app.name}
+- target: ${brief.app.target}
+- archetype: ${brief.app.archetype}
+- focus: ${brief.focus ?? "whole app"}
+
+## Design Command Boundary
+
+${brief.boundary}
+
+Non-goals:
+
+${brief.nonGoals.map((goal) => `- ${goal}`).join("\n")}
+
+## Design System
+
+- profile: ${brief.designSystem.profile}
+- style: ${brief.designSystem.styleName}
+- tone: ${brief.designSystem.visualTone}
+- density: ${brief.designSystem.density}
+- motion: ${brief.designSystem.motion}
+
+## Color Tokens
+
+${colorLines}
+
+## Typography
+
+- heading: ${brief.designTokens.typography.heading}
+- body: ${brief.designTokens.typography.body}
+- scale: ${brief.designTokens.typography.scale}
+- line height: ${brief.designTokens.typography.lineHeight}
+
+## UI Rules
+
+${brief.uiRules.map((rule) => `- ${rule}`).join("\n")}
+
+## Mockup Data
+
+- strategy: ${brief.mockDataGuidance.strategy}
+- records per entity: ${brief.mockDataGuidance.recordsPerEntity}
+
+${brief.mockDataGuidance.rules.map((rule) => `- ${rule}`).join("\n")}
+
+## User Reference Inputs
+
+${brief.referenceInputs.length ? brief.referenceInputs.map((input) => `- ${input.kind}: ${input.path}${input.exists ? "" : " (missing)"}`).join("\n") : "- None"}
+
+## Avoid
+
+${brief.avoid.map((rule) => `- ${rule}`).join("\n")}
+
+## Agent Handoff Prompt
+
+${brief.handoffPrompt}
+
+## Next
+
+Ask the user: "${brief.satisfactionQuestion}"
+`;
+}
+
+function designBriefFor(prompt, appSpec = null) {
+  const plan = appSpec
+    ? {
+        prompt,
+        classification: {
+          target: appSpec.target,
+          explicitTarget: false,
+          archetype: appSpec.archetype,
+          complexity: appSpec.complexity ?? "simple-prototype",
+          questionsNeeded: false,
+          questions: [],
+          confidence: "from-app-spec"
+        },
+        appSpec
+      }
+    : specFor(prompt);
+  const defaults = appSpec
+    ? {
+        style: appSpec.style,
+        screens: appSpec.screens,
+        entities: appSpec.entities,
+        features: appSpec.features,
+        sampleData: appSpec.sampleData,
+        acceptanceCriteria: appSpec.acceptanceCriteria
+      }
+    : defaultsFor(plan.classification.archetype);
+  const designSystem = designSystemFor(plan.classification, defaults, prompt);
+  const focus = pageFocusFor(prompt);
+  const designTokens = designTokensFor(designSystem, prompt);
+  const mockDataGuidance = appSpec?.mockData ?? plan.appSpec.mockData ?? mockDataFor(defaults);
+  const references = uniqueValues([
+    ...(appSpec?.references ?? plan.appSpec.references ?? []),
+    "knowledge/design-playbooks/design-system-selection.md",
+    "knowledge/design-playbooks/ui-quality.md",
+    plan.appSpec.target === "mobile" ? "knowledge/quality-rubrics/mobile-app.md" : "knowledge/quality-rubrics/web-app.md"
+  ]);
+  const uiRules = uniqueValues([
+    ...designSystem.layoutRules,
+    ...designSystem.componentRules,
+    ...designSystem.accessibility
+  ]);
+  const handoffPrompt = [
+    `Design ${focus ? `the ${focus} surface` : `the ${plan.appSpec.name} ${plan.appSpec.archetype} app`} using Buildable's ${designSystem.styleName} profile.`,
+    "This is a UI/UX-only design brief: do not create backend services, databases, auth, payments, or hosted infrastructure from this command.",
+    (plan.appSpec.referenceInputs ?? []).length ? "Inspect the explicit user reference inputs before applying visual direction; do not inspect unrelated files." : null,
+    `Use these token roles: background ${designTokens.colors.background}, surface ${designTokens.colors.surface}, foreground ${designTokens.colors.foreground}, primary ${designTokens.colors.primary}, accent ${designTokens.colors.accent}, border ${designTokens.colors.border}.`,
+    `Typography: ${designTokens.typography.heading} for headings and ${designTokens.typography.body} for body; scale ${designTokens.typography.scale}.`,
+    `Respect the reference loading contract: do not load all templates; load only the references listed in this brief and the current app files needed for the surface.`,
+    "Keep the existing stack and component conventions. Do not add auth, billing, hosted databases, telemetry, or deployment unless explicitly requested.",
+    "After implementation, run buildable review and fix blocking issues."
+  ].filter(Boolean).join(" ");
+
+  return {
+    prompt,
+    source: appSpec ? "app-spec" : "prompt",
+    scope: "ui-ux-only",
+    boundary: "The design command produces front-end UI/UX direction only. It may guide layout, visual tokens, interactions, accessibility, copy hierarchy, and component states, but it must not add backend architecture or hosted services.",
+    nonGoals: [
+      "no backend implementation",
+      "no database or persistence decision",
+      "no auth/accounts decision",
+      "no billing/payments decision",
+      "no hosted deployment, cloud preview, telemetry, or managed service"
+    ],
+    recommendedWorkflow: "Plan > Design > Build > Review",
+    nextSuggestedCommand: `buildable generate ${JSON.stringify(prompt)}`,
+    interchangeableUse: [
+      "Before plan: explore visual direction from a prompt.",
+      "After plan: deepen appSpec.designSystem into concrete tokens.",
+      "During build: design a page, state, or component without replanning the app.",
+      "Before review: create a polish checklist for the current implementation."
+    ],
+    app: {
+      name: plan.appSpec.name,
+      target: plan.appSpec.target,
+      archetype: plan.appSpec.archetype,
+      stack: plan.appSpec.stack
+    },
+    focus,
+    designSystem,
+    designTokens,
+    mockDataGuidance,
+    referenceInputs: plan.appSpec.referenceInputs ?? [],
+    uiRules,
+    avoid: designSystem.avoid,
+    references,
+    referenceLoadingContract,
+    handoffPrompt,
+    satisfactionQuestion: `Are you satisfied with this UI/UX direction and mockup-data plan? If yes, I can move to the build phase with \`${`buildable generate ${JSON.stringify(prompt)}`}\`.`
+  };
+}
+
+function findNearestAppSpec(workspace) {
+  const direct = findAppSpec(workspace);
+  if (direct) return direct;
+  return null;
+}
+
+function design() {
+  const targetValue = parsedArgs.values.target ?? ".";
+  const target = isAbsolute(targetValue) ? targetValue : join(process.cwd(), targetValue);
+  const specValue = parsedArgs.values.spec;
+  const specPath = specValue
+    ? (isAbsolute(specValue) ? specValue : join(process.cwd(), specValue))
+    : findNearestAppSpec(target);
+  const appSpec = specPath && existsSync(specPath) ? JSON.parse(readFileSync(specPath, "utf8")) : null;
+  const prompt = input || (appSpec ? `Design ${appSpec.name}` : "");
+
+  if (!prompt) {
+    console.error('Missing prompt or app spec. Example: buildable design "Build me a CRM website"');
+    process.exitCode = 1;
+    return;
+  }
+
+  const brief = designBriefFor(prompt, appSpec);
+  const appSpecIssues = appSpec ? validateAppSpec(appSpec) : [];
+  if (appSpecIssues.length > 0) brief.appSpecWarnings = appSpecIssues;
+
+  if (flags.has("--write")) {
+    mkdirSync(join(target, ".buildable"), { recursive: true });
+    writeJson(join(target, ".buildable", "design-brief.json"), brief);
+    writeFileSync(join(target, ".buildable", "design-brief.md"), designBriefMarkdown(brief));
+    brief.written = {
+      json: ".buildable/design-brief.json",
+      markdown: ".buildable/design-brief.md"
+    };
+  }
+
+  if (jsonOutput) {
+    console.log(JSON.stringify(brief, null, 2));
+  } else {
+    console.log(designBriefMarkdown(brief));
+    if (brief.written) console.log("Saved: .buildable/design-brief.json and .buildable/design-brief.md");
+  }
+}
+
+function writePhasePlanFiles(plan, target = process.cwd()) {
+  mkdirSync(join(target, ".buildable"), { recursive: true });
+  writeJson(join(target, ".buildable", "phase-plan.json"), plan);
+  writeFileSync(join(target, ".buildable", "phase-plan.md"), plan.planMarkdown);
+  return {
+    json: ".buildable/phase-plan.json",
+    markdown: ".buildable/phase-plan.md"
+  };
+}
+
 function augmentPlanFor(plan) {
   return `# Buildable Augment Plan
 
@@ -1136,7 +1964,7 @@ function generate() {
     return;
   }
 
-  const plan = specFor(input);
+  const plan = specFor(input, { referenceInputs: referenceInputsFromArgs() });
   if (plan.classification.questionsNeeded && !flags.has("--force")) {
     console.error("This prompt includes architecture-changing choices. Answer these before generation:");
     for (const question of plan.classification.questions) console.error(`- ${question}`);
@@ -1470,6 +2298,7 @@ function review() {
     if (
       file.endsWith("BUILDABLE_NOTES.md") ||
       file.endsWith("BUILDABLE_TEMPLATE.md") ||
+      file.endsWith("IMPLEMENTATION_PLAN.md") ||
       file.endsWith("buildable-app-spec.json")
     ) {
       continue;
@@ -1747,14 +2576,21 @@ if (!command || command === "help" || command === "--help" || command === "-h") 
     console.error('Missing prompt. Example: buildable plan "Build me a todo app"');
     process.exitCode = 1;
   } else {
-    console.log(JSON.stringify(specFor(input), null, 2));
+    const plan = specFor(input, { referenceInputs: referenceInputsFromArgs() });
+    if (flags.has("--write")) plan.written = writePhasePlanFiles(plan);
+    console.log(JSON.stringify(plan, null, 2));
   }
+} else if (command === "design") {
+  design();
 } else if (command === "generate") {
   generate();
 } else if (command === "review") {
   review();
 } else if (command === "preview") {
   runPreview();
+} else if (command === "mcp") {
+  const result = spawnSync(process.execPath, [join(root, "bin", "buildable-mcp.mjs")], { stdio: "inherit" });
+  process.exitCode = result.status ?? 0;
 } else if (command === "check") {
   check();
 } else if (command === "list") {

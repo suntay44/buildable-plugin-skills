@@ -36,12 +36,13 @@ Mandatory order:
 1. Read the app spec.
 2. If `questionsNeeded` is true, ask the user before generating.
 3. For fresh starts, prefer `buildable generate "<prompt>"` when a runnable template exists. Add `--out <dir>` only when the user requested a specific folder.
-4. Load only the references listed in the app spec.
-5. If the template is `generic-app`, use the selected archetype reference to shape screens and entities instead of loading unrelated templates.
-6. Inspect the local project if generating inside an existing app.
-7. Generate or adapt a complete first-screen prototype.
-8. Keep data local unless the spec explicitly requires otherwise.
-9. Run build/typecheck/lint checks when available.
+4. Apply `appSpec.designSystem` for visual tone, density, palette intent, layout rules, component rules, accessibility, and anti-patterns.
+5. Load only the references listed in the app spec.
+6. If the template is `generic-app`, use the selected archetype reference to shape screens and entities instead of loading unrelated templates.
+7. Inspect the local project if generating inside an existing app.
+8. Generate or adapt a complete first-screen prototype.
+9. Keep data local unless the spec explicitly requires otherwise.
+10. Run build/typecheck/lint checks when available.
 
 ## Build Order
 

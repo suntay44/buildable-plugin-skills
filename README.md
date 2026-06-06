@@ -30,6 +30,7 @@ It does **not** replace your agent or run as a hosted platform. It is a file-bas
 - [Quick start](#quick-start)
 - [Install as a plugin](#install-as-a-plugin)
 - [CLI commands](#cli-commands)
+- [Slash commands and MCP](#slash-commands-and-mcp)
 - [Templates](#templates)
 - [How much it guides](#how-much-it-guides)
 - [Token efficiency](#token-efficiency)
@@ -47,13 +48,13 @@ A raw coding agent starts every app from a blank slate. Hosted builders feel mag
 
 - **Curated archetypes** — 55 app types with default screens, entities, and interactions.
 - **Golden templates** — runnable, build-verified starters the agent adapts instead of inventing.
-- **UI/UX playbooks** — patterns for forms, tables, filters, empty states, and responsive layout.
+- **UI/UX system guidance** — compact design profiles plus patterns for forms, tables, filters, empty states, and responsive layout.
 - **Plan + review loop** — a CLI that classifies prompts, emits an app spec, and audits the result.
 - **Progressive loading** — the agent reads only the references a prompt needs, not the whole repo.
 
 ## What it is (and when to use it)
 
-Buildable is a **product-structure compiler and quality gate** for your coding agent: it decides *what* to build (archetype → screens, entities, features, states), copies a **runnable, build-verified starter**, and **reviews** the result (build, layout, accessibility, state coverage, local-first). It is **not** a design-taste plugin or a hosted builder.
+Buildable is a **product-structure compiler, compact UI/UX brain, and quality gate** for your coding agent: it decides *what* to build (archetype → screens, entities, features, states), gives the app a selected `designSystem`, copies a **runnable, build-verified starter**, and **reviews** the result (build, layout, accessibility, state coverage, local-first). It is not a hosted builder.
 
 | | Buildable | Design plugins (e.g. Frontend Design) | Hosted builders (Lovable, v0, Replit) |
 | --- | :---: | :---: | :---: |
@@ -61,9 +62,10 @@ Buildable is a **product-structure compiler and quality gate** for your coding a
 | Runnable, build-verified code | ✅ | — | hosted |
 | Reviews / grades the output | ✅ | — | — |
 | Local — your repo, your agent | ✅ | ✅ | — |
-| Polishes the visual design | ok | ✅ | ✅ |
+| Gives UI/UX direction | ✅ | ✅ | ✅ |
+| Deep brand/art direction | guided | ✅ | ✅ |
 
-**Pairs with [Frontend Design](https://claude.com/plugins/frontend-design):** Buildable decides what to build and proves it works; add a design skill for the final polish. They're complementary layers, not competitors.
+**Pairs with dedicated design skills:** Buildable decides what to build, gives compact product-specific UI/UX direction, and proves it works; add a design skill when you want high-end brand exploration, custom art direction, or multiple visual concepts.
 
 - **Use it when** you want consistent, real prototypes for common app types — fast, in your own stack, no lock-in.
 - **Skip it when** you need a one-off component or throwaway script; a raw agent is enough.
@@ -72,13 +74,14 @@ Buildable is a **product-structure compiler and quality gate** for your coding a
 
 ```txt
 user prompt
-  → buildable plan      classify → archetype → app spec + references
+  → buildable plan      clarify if needed → archetype → phase plan + app spec + references
+  → buildable design    expand UI/UX direction into concrete tokens + mockup data + page rules
   → agent implements    adapt the golden template locally (mock data by default)
   → buildable review    audit structure, features, guardrails, and (optionally) the build
   → agent fixes issues
 ```
 
-Buildable guides product structure but leaves implementation to your agent and your repo conventions.
+The recommended flow is **Plan > Design > Build > Review**. `plan` is the top-down phase map: it chooses the archetype/template, asks product-direction questions when the prompt is vague, includes compact `appSpec.designSystem`, and can write `.buildable/phase-plan.md` with `--write`. `design` deepens that into concrete UI/UX tokens, page rules, and realistic mockup-data guidance. `design` is interchangeable: use it before planning to explore direction, after planning to sharpen the UI, during implementation for a specific page/component, or before review as a polish brief.
 
 ## Quick start
 
@@ -86,7 +89,9 @@ Buildable guides product structure but leaves implementation to your agent and y
 npm install
 npm link
 buildable check
-buildable plan "Build me a task manager"
+buildable plan "Build me a task manager" --write
+buildable plan "Use this screenshot for a CRM" --file ./crm-mockup.png --write
+buildable design "Build me a task manager"
 buildable generate "Build me a task manager"
 cd taskflow
 buildable review
@@ -96,7 +101,7 @@ Prefer not to link a global command? Run through Node:
 
 ```bash
 node ./bin/buildable.mjs check
-node ./bin/buildable.mjs plan "Build me a mobile habit tracker"
+node ./bin/buildable.mjs plan "Build me a mobile habit tracker" --write
 ```
 
 See [docs/install.md](docs/install.md) for Codex Desktop, Claude Code, Cursor, and CLI setup notes.
@@ -117,6 +122,7 @@ This auto-discovers the planner, web-builder, mobile-builder, and reviewer skill
 | Command | What it does |
 | --- | --- |
 | `/buildable-plan` | Classify a prompt and print an app spec |
+| `/buildable-design` | Create a UI/UX design brief from a prompt or current app spec |
 | `/buildable-generate` | Copy a runnable starter or write a plan pack |
 | `/buildable-review` | Audit a prototype (`--build` runs typecheck/build) |
 | `/buildable-preview` | Optional: render the running app, screenshot it, catch runtime errors |
@@ -128,37 +134,79 @@ Use the slash commands in `.cursor/commands/` plus the rule at `.cursor/rules/bu
 
 ### Codex
 
-Load `.codex-plugin/plugin.json`.
+Load `.codex-plugin/plugin.json` when your Codex surface supports local plugins/skills. For desktop or tool clients that cannot run project slash commands directly, register the MCP bridge shown below.
 
 ## CLI commands
 
 | Command | Purpose |
 | --- | --- |
-| `buildable plan "<prompt>"` | Classify a prompt and print the app spec as JSON |
+| `buildable plan "<prompt>" [--file <path>] [--write]` | Classify a prompt, preserve explicit screenshots/files as `appSpec.referenceInputs`, ask product-direction questions when needed, and print a top-down phase plan/app spec as JSON (`--write` saves `.buildable/phase-plan.md/json`) |
+| `buildable design "<prompt>" [--page <surface>] [--write]` | Produce a UI/UX-only brief with concrete tokens, mockup-data guidance, and page/component rules; can use the current app spec |
 | `buildable generate "<prompt>" [--out <dir>]` | Copy a runnable starter; defaults to a folder from the app name (`--plan-pack` for planned, `--name "X"` to brand, `--augment` to plan into an existing app) |
 | `buildable review [path] [--build]` | Audit the current app by default; optional path reviews another folder, optional `--build` runs typecheck/build |
 | `buildable preview [path] --url <url>` | Optional: render the running app in a headless browser; screenshot + catch runtime errors |
 | `buildable init [--existing]` | Create `.buildable` config for a workspace |
+| `buildable mcp` | Start the optional Buildable MCP stdio bridge for desktop/agent clients |
 | `buildable check` | Verify local assets, adapters, and template references |
 | `buildable list` | List archetypes and runnable/planned template status |
 | `buildable eval [--compare]` | Score classification, efficiency, and spec quality (`--compare` vs a raw prompt) |
 
-`plan` emits an `enhancedPrompt` and `appSpec` with the selected archetype, target, stack, template, references, expected features, acceptance criteria, and no-hosted-feature guardrails. Matching uses compact tags in `core/archetype-registry.json`, so the agent classifies against one small registry instead of reading every archetype file.
+`plan` emits an `enhancedPrompt` and `appSpec` with the selected archetype, target, stack, template, design system, references, expected features, acceptance criteria, explicit user `referenceInputs`, and no-hosted-feature guardrails. Matching uses compact tags in `core/archetype-registry.json`, so the agent classifies against one small registry instead of reading every archetype file.
 
 ### Three local workflows
 
 - **`init`** — make a workspace Buildable-aware. Use `--existing` inside an app to profile the repo without overwriting code.
+- **`design`** — create a UI/UX-only design brief with realistic mockup-data guidance. Use it after `plan`, before `generate`, or mid-session for a page like `--page login`. It suggests the next `buildable generate` command, but agents should first ask whether the user is satisfied with the design direction.
 - **`generate`** — create a runnable starter, or a `--plan-pack` instruction pack for planned templates. If `--out` is omitted, Buildable creates a folder from the app name.
 - **`review`** — judge and improve the result against the app spec and local-first guardrails.
 
 ### Plan vs generate
 
-- **Use `plan` when you want direction first.** It classifies the prompt, selects the archetype/template, lists the exact references the agent should load, and asks questions only for architecture-changing choices.
+- **Use `plan` when you want direction first.** It classifies the prompt, selects the archetype/template, lists the exact references the agent should load, outlines phases, and asks questions for product-direction or architecture-changing choices.
+- **Use `--file`, `--reference`, or `--screenshot` when the user gives examples.** Buildable stores those paths in `appSpec.referenceInputs` so the agent can inspect only the explicit screenshots/files plus `appSpec.references`.
+- **Use `design` when you want UI/UX direction sharpened.** It turns the selected `designSystem` into concrete colors, typography, spacing, motion, component emphasis, anti-patterns, and mockup-data guidance. It can run from a prompt or from an existing `buildable-app-spec.json`. It does not create backend, database, auth, payment, or deployment decisions.
 - **Use `generate` when you want local files created.** It runs the same planning step, then copies the selected runnable starter or writes a plan pack. Agents like Claude, Codex, and Cursor can execute from `plan`, but `generate` saves them from recreating the starter structure by hand.
 
 ### Review
 
-`buildable review` audits the app spec, structure, and local-first guardrails. Add `--build` only when you also want it to run installed typecheck/build scripts. This is the core check after generating or editing an app.
+`buildable review` audits the app spec, source representation, local-first guardrails, responsive-layout risk, accessibility signals, and state coverage. Add `--build` only when you also want it to run installed typecheck/build scripts. It is a static/local quality gate, not a replacement for manual QA, browser screenshots, or real device/simulator checks when visuals matter.
+
+## Slash Commands and MCP
+
+Buildable is command-first. Use the lightest integration your agent surface supports:
+
+- **Terminal / CLI:** run `buildable plan`, `buildable design`, `buildable generate`, `buildable review`, and the other commands above.
+- **Project slash commands/rules:** Claude Code uses `/buildable-*`; Cursor uses `.cursor/commands/` and `.cursor/rules/buildable.mdc`; Codex can load the plugin manifest when local plugins are supported.
+- **MCP bridge:** use `buildable mcp` only for desktop or agent tool clients that cannot run those project commands directly. The client sees local tools named `buildable_plan`, `buildable_design`, `buildable_generate`, `buildable_review`, `buildable_init`, `buildable_list`, `buildable_check`, `buildable_eval`, and `buildable_preview`.
+
+MCP does not load the whole Buildable brain. Each tool calls the same CLI engine, which returns a compact plan/spec and the exact `appSpec.references` the agent should inspect. Keep `BUILDABLE_WORKSPACE` pointed at the app folder you want the desktop client to work in.
+
+Example local MCP config:
+
+```json
+{
+  "mcpServers": {
+    "buildable": {
+      "command": "node",
+      "args": ["/absolute/path/to/buildable-plugin-skills/bin/buildable-mcp.mjs"],
+      "env": {
+        "BUILDABLE_WORKSPACE": "/absolute/path/to/your-app"
+      }
+    }
+  }
+}
+```
+
+Use that shape in Claude Desktop's local MCP settings, Cursor's `.cursor/mcp.json` / `~/.cursor/mcp.json`, or the equivalent Codex MCP config. For Codex config TOML, the same server is typically:
+
+```toml
+[mcp_servers.buildable]
+command = "node"
+args = ["/absolute/path/to/buildable-plugin-skills/bin/buildable-mcp.mjs"]
+env = { BUILDABLE_WORKSPACE = "/absolute/path/to/your-app" }
+```
+
+This makes the same Buildable actions available in desktop apps, but the UI may show them as tools instead of slash commands. If a desktop app already supports project slash commands or a local plugin install, prefer that; use MCP as the compatibility bridge.
 
 <details>
 <summary><strong>Optional: visual preview</strong> (for headless/CI or agents without a screenshot tool)</summary>
@@ -179,6 +227,8 @@ Golden templates are Buildable's approved starting points. They come in two leve
 
 - **Runnable starters** copy real, build-verified source into the user's local folder.
 - **Planned template packs** do not copy app source yet; they write a scoped `IMPLEMENTATION_PLAN.md`, `buildable-app-spec.json`, and reference list so Claude, Codex, Cursor, or another agent can implement the app without reading every template.
+
+Only templates marked `✅ runnable` are copied by `buildable generate` without extra flags. Templates marked `📝 planned` need `buildable generate "<prompt>" --plan-pack`; that writes instructions and specs, not runnable source.
 
 ### What it generates
 
@@ -231,7 +281,7 @@ buildable review
 # Existing: profile the app and get guidance without overwriting code
 cd my-existing-app
 buildable init --existing
-buildable plan "Add a booking workflow to this app"
+buildable plan "Add a booking workflow to this app" --write
 buildable review
 ```
 
@@ -240,12 +290,14 @@ buildable review
 Buildable applies three levels of guidance so it reduces blank-page ambiguity without overstepping.
 
 - **Defaults (applied automatically)** — task managers get create/edit/delete/complete/reopen; dashboards get metrics, charts/tables, filters, empty states; forms get labels and validation; prototypes get meaningful sample data; local/mock data is the default.
-- **Recommendations (agent may adapt)** — task priority/due dates/tags, CRM stage summaries, dashboard date ranges, mobile-first touch layouts.
-- **Ask first (never decided silently)** — auth, database/persistence, payments, collaboration/roles, external APIs, notifications, maps/camera/device permissions, deployment. `buildable generate` pauses when these appear in a prompt unless you force it.
+- **Design system (applied automatically)** — every plan includes `appSpec.designSystem`: visual tone, palette intent, typography mood, density, layout rules, component rules, motion, accessibility, and anti-patterns. Run `buildable design` only when you want a deeper UI/UX brief.
+- **Mockup data (applied automatically)** — every plan includes `appSpec.mockData`: 6-10 realistic local records per entity, domain-specific values, edge cases, and populated/empty/filtered/loading/error states so the design can be judged honestly before backend work exists.
+- **Recommendations (agent may adapt)** — task priority/due dates/tags, CRM stage summaries, dashboard date ranges, mobile-first touch layouts, and product-specific UI choices.
+- **Ask first (never decided silently)** — unclear product direction, auth, database/persistence, payments, collaboration/roles, external APIs, notifications, maps/camera/device permissions, deployment. `buildable plan "I have a restaurant"` asks what kind of restaurant product to build; `buildable generate` pauses when architecture-changing choices appear in a prompt unless you force it.
 
 ## Token efficiency
 
-Agents load only the references a prompt needs (the `appSpec.referenceLoadingContract`), never the whole repo. Across the golden prompts, each plan loads **~7% of the bundled-brain reference bytes — about 93% less than loading the whole brain** — while still specifying, on average, **6 features, 9 typed entity fields, and 4 acceptance criteria** that a raw prompt gives you none of. (This measures Buildable's *bundled context*, not your total Claude/Codex session tokens.) Prove it yourself:
+Agents load only the references a prompt needs (the `appSpec.referenceLoadingContract`), never the whole repo. Across the golden prompts, each plan loads **~9% of the bundled-brain reference bytes — about 91% less than loading the whole brain** — while still specifying, on average, **6 features, 9 typed entity fields, and 4 acceptance criteria** that a raw prompt gives you none of. (This measures Buildable's *bundled context*, not your total Claude/Codex session tokens.) Prove it yourself:
 
 ```bash
 buildable eval --compare

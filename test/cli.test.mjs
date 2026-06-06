@@ -7,6 +7,7 @@ import { spawnSync } from "node:child_process";
 
 const root = new URL("..", import.meta.url).pathname;
 const cli = join(root, "bin/buildable.mjs");
+const mcp = join(root, "bin/buildable-mcp.mjs");
 
 function run(args, options = {}) {
   return spawnSync(process.execPath, [cli, ...args], {
@@ -28,7 +29,8 @@ test("plan emits documented app spec fields", () => {
   assert.equal(typeof payload.enhancedPrompt, "string");
   assert.match(payload.enhancedPrompt, /local-first web task-manager prototype/);
   assert.match(payload.enhancedPrompt, /Do not add/);
-  assert.match(payload.enhancedPrompt, /modern UI quality guidance/);
+  assert.match(payload.enhancedPrompt, /Design system: Focused productivity/);
+  assert.match(payload.enhancedPrompt, /UI\/UX rules:/);
   assert.match(payload.enhancedPrompt, /do not load all templates/i);
   assert.match(payload.enhancedPrompt, /load only appSpec\.references/i);
 
@@ -42,11 +44,14 @@ test("plan emits documented app spec fields", () => {
     "entities",
     "features",
     "sampleData",
+    "mockData",
     "style",
+    "designSystem",
     "template",
     "templateStatus",
     "generationMode",
     "references",
+    "referenceInputs",
     "referenceLoadingContract",
     "mustNotInclude",
     "acceptanceCriteria",
@@ -64,13 +69,140 @@ test("plan emits documented app spec fields", () => {
   assert.equal(spec.localOnly, true);
   assert.equal(spec.questionsNeeded, false);
   assert.deepEqual(spec.questions, []);
+  assert.equal(spec.mockData.strategy, "realistic-local-seed-data");
+  assert.ok(spec.mockData.rules.some((rule) => rule.includes("domain-specific")));
+  assert.ok(spec.mockData.entities.some((entity) => entity.name === "Task" && entity.minimumRecords >= 6));
+  assert.equal(spec.designSystem.profile, "focused-productivity");
+  assert.equal(spec.designSystem.styleName, "Focused productivity");
+  assert.equal(spec.designSystem.palette.primary, "slate");
+  assert.equal(spec.designSystem.visualTone, "calm, direct, repeat-use product UI");
+  assert.ok(spec.designSystem.typography.mood);
+  assert.ok(spec.designSystem.layoutRules.some((rule) => rule.includes("core workflow")));
+  assert.ok(spec.designSystem.componentRules.some((rule) => rule.includes("status chips")));
+  assert.ok(spec.designSystem.accessibility.includes("focus-visible states"));
   assert.ok(spec.references.includes("knowledge/design-playbooks/ui-quality.md"));
+  assert.ok(spec.references.includes("knowledge/design-playbooks/design-system-selection.md"));
+  assert.deepEqual(spec.referenceInputs, []);
   assert.deepEqual(spec.referenceLoadingContract, [
     "Do not load all templates.",
     "Run buildable plan.",
     "Load only appSpec.references.",
     "Load starter source only for the selected template."
   ]);
+  assert.ok(Array.isArray(payload.phasePlan));
+  assert.ok(payload.phasePlan.some((phase) => phase.id === "design"));
+  assert.ok(payload.phasePlan.some((phase) => phase.id === "mock-data"));
+  assert.match(payload.planMarkdown, /# Buildable Phase Plan/);
+  assert.match(payload.planMarkdown, /Mock Data Guidance/);
+});
+
+test("plan preserves explicit user reference files without reading everything", () => {
+  const workspace = mkdtempSync(join(tmpdir(), "buildable-reference-inputs-"));
+  const screenshot = join(workspace, "crm-mockup.png");
+  const requirements = join(workspace, "requirements.md");
+  writeFileSync(screenshot, "not a real png but enough for metadata\n");
+  writeFileSync(requirements, "# Requirements\nUse a dense leads table.\n");
+
+  const payload = jsonFrom(run([
+    "plan",
+    "Build a CRM from these references",
+    "--screenshot",
+    screenshot,
+    "--file",
+    requirements,
+    "--write"
+  ], { cwd: workspace }));
+
+  assert.equal(payload.appSpec.referenceInputs.length, 2);
+  const screenshotInput = payload.appSpec.referenceInputs.find((input) => input.path === screenshot);
+  const requirementsInput = payload.appSpec.referenceInputs.find((input) => input.path === requirements);
+  assert.equal(screenshotInput.kind, "screenshot");
+  assert.equal(screenshotInput.exists, true);
+  assert.match(screenshotInput.inspectInstruction, /Inspect visually/);
+  assert.equal(requirementsInput.kind, "document");
+  assert.match(payload.enhancedPrompt, /User reference inputs:/);
+  assert.match(payload.planMarkdown, /User Reference Inputs/);
+  assert.match(readFileSync(join(workspace, ".buildable/phase-plan.md"), "utf8"), /crm-mockup\.png/);
+});
+
+test("plan routes UI/UX design systems by archetype and target", () => {
+  const crm = jsonFrom(run(["plan", "Build me a CRM dashboard"]));
+  assert.equal(crm.appSpec.designSystem.profile, "operator-dashboard");
+  assert.equal(crm.appSpec.designSystem.density, "dense");
+  assert.ok(crm.appSpec.designSystem.layoutRules.some((rule) => rule.includes("sortable lists")));
+
+  const mobile = jsonFrom(run(["plan", "Build me a mobile habit tracker"]));
+  assert.equal(mobile.appSpec.target, "mobile");
+  assert.equal(mobile.appSpec.designSystem.profile, "mobile-utility");
+  assert.equal(mobile.appSpec.designSystem.density, "thumb-friendly");
+  assert.ok(mobile.appSpec.designSystem.componentRules.some((rule) => rule.includes("44px")));
+});
+
+test("design emits an interchangeable UI/UX brief from a prompt", () => {
+  const payload = jsonFrom(run(["design", "CRM website with dark mode", "--json"]));
+
+  assert.equal(payload.recommendedWorkflow, "Plan > Design > Build > Review");
+  assert.equal(payload.scope, "ui-ux-only");
+  assert.match(payload.boundary, /front-end UI\/UX direction only/);
+  assert.ok(payload.nonGoals.includes("no backend implementation"));
+  assert.ok(payload.nonGoals.includes("no database or persistence decision"));
+  assert.equal(payload.nextSuggestedCommand, 'buildable generate "CRM website with dark mode"');
+  assert.match(payload.satisfactionQuestion, /Are you satisfied with this UI\/UX direction/);
+  assert.equal(payload.mockDataGuidance.strategy, "realistic-local-seed-data");
+  assert.ok(payload.mockDataGuidance.entities.some((entity) => entity.name === "Lead"));
+  assert.equal(payload.app.archetype, "crm");
+  assert.equal(payload.app.target, "web");
+  assert.equal(payload.designSystem.profile, "operator-dashboard");
+  assert.equal(payload.designTokens.colors.background, "#020617");
+  assert.ok(payload.uiRules.some((rule) => rule.includes("tables")));
+  assert.ok(payload.references.includes("knowledge/design-playbooks/design-system-selection.md"));
+  assert.match(payload.handoffPrompt, /Design the LeadDesk crm app/);
+  assert.match(payload.handoffPrompt, /UI\/UX-only design brief/);
+  assert.match(payload.handoffPrompt, /do not create backend services/i);
+  assert.match(payload.handoffPrompt, /primary #818CF8/);
+});
+
+test("plan asks product-direction questions for vague business prompts", () => {
+  const restaurant = jsonFrom(run(["plan", "I have a restaurant"]));
+
+  assert.equal(restaurant.classification.archetype, "restaurant");
+  assert.equal(restaurant.classification.clarificationNeeded, true);
+  assert.equal(restaurant.appSpec.questionsNeeded, true);
+  assert.ok(restaurant.appSpec.questions.some((question) => question.includes("informational website")));
+  assert.equal(restaurant.phasePlan.find((phase) => phase.id === "clarify")?.status, "required");
+  assert.equal(restaurant.phasePlan.find((phase) => phase.id === "mock-data")?.status, "blocked-until-clarified");
+  assert.equal(restaurant.phasePlan.find((phase) => phase.id === "design")?.status, "blocked-until-clarified");
+  assert.match(restaurant.enhancedPrompt, /Pause before design\/generation/);
+
+  const clearRestaurant = jsonFrom(run(["plan", "Build a restaurant menu website"]));
+  assert.equal(clearRestaurant.classification.archetype, "restaurant");
+  assert.equal(clearRestaurant.classification.clarificationNeeded, false);
+});
+
+test("plan --write creates a markdown phase plan", () => {
+  const workspace = mkdtempSync(join(tmpdir(), "buildable-plan-write-"));
+  const payload = jsonFrom(run(["plan", "Build me a CRM website", "--write"], { cwd: workspace }));
+
+  assert.equal(payload.written.markdown, ".buildable/phase-plan.md");
+  assert.ok(existsSync(join(workspace, ".buildable/phase-plan.md")));
+  assert.ok(existsSync(join(workspace, ".buildable/phase-plan.json")));
+  assert.match(readFileSync(join(workspace, ".buildable/phase-plan.md"), "utf8"), /Plan > Design > Build > Review/);
+});
+
+test("design can run mid-session from an existing app spec and write a brief", () => {
+  const workspace = mkdtempSync(join(tmpdir(), "buildable-design-"));
+  const out = join(workspace, "taskflow");
+
+  jsonFrom(run(["generate", "Build me a task manager", "--out", out, "--json"], { cwd: workspace }));
+  const payload = jsonFrom(run(["design", "design this login page too", "--page", "login", "--write", "--json"], { cwd: out }));
+
+  assert.equal(payload.source, "app-spec");
+  assert.equal(payload.app.archetype, "task-manager");
+  assert.equal(payload.focus, "login");
+  assert.equal(payload.written.json, ".buildable/design-brief.json");
+  assert.ok(existsSync(join(out, ".buildable/design-brief.json")));
+  assert.ok(existsSync(join(out, ".buildable/design-brief.md")));
+  assert.match(readFileSync(join(out, ".buildable/design-brief.md"), "utf8"), /focus: login/);
 });
 
 test("plan asks questions for architecture-changing prompts", () => {
@@ -81,7 +213,7 @@ test("plan asks questions for architecture-changing prompts", () => {
   assert.equal(payload.appSpec.questionsNeeded, true);
   assert.ok(payload.appSpec.questions.some((question) => question.includes("auth")));
   assert.ok(payload.appSpec.questions.some((question) => question.includes("payments")));
-  assert.match(payload.enhancedPrompt, /Pause before generation/);
+  assert.match(payload.enhancedPrompt, /Pause before design\/generation/);
 });
 
 test("subscription tracker does not ask billing unless payments are explicit", () => {
@@ -106,6 +238,29 @@ test("tag classifier uses phrase boundaries instead of substring matches", () =>
 
   assert.equal(payload.appSpec.archetype, "onboarding-checklist");
   assert.notEqual(payload.appSpec.archetype, "survey-form");
+});
+
+test("tag classifier handles confusing overlap prompts without broad scans", () => {
+  const restaurantDashboard = jsonFrom(run(["plan", "Build a restaurant staff scheduling dashboard"]));
+  assert.equal(restaurantDashboard.appSpec.target, "web");
+  assert.equal(restaurantDashboard.appSpec.archetype, "dashboard");
+  assert.equal(restaurantDashboard.appSpec.questionsNeeded, false);
+  assert.ok(restaurantDashboard.appSpec.references.includes("knowledge/archetypes/dashboard.md"));
+  assert.ok(!restaurantDashboard.appSpec.references.includes("knowledge/archetypes/restaurant.md"));
+
+  const realEstateCrm = jsonFrom(run(["plan", "Build a real estate CRM for agents"]));
+  assert.equal(realEstateCrm.appSpec.archetype, "real-estate");
+  assert.notEqual(realEstateCrm.appSpec.archetype, "crm");
+  assert.ok(realEstateCrm.appSpec.references.includes("knowledge/archetypes/real-estate.md"));
+
+  const productFeedback = jsonFrom(run(["plan", "Build a product feedback board"]));
+  assert.equal(productFeedback.appSpec.archetype, "product-feedback");
+  assert.notEqual(productFeedback.appSpec.archetype, "survey-form");
+
+  const mobileExpense = jsonFrom(run(["plan", "Build a mobile expense tracker for receipts"]));
+  assert.equal(mobileExpense.appSpec.target, "mobile");
+  assert.equal(mobileExpense.appSpec.archetype, "expense-tracker");
+  assert.equal(mobileExpense.appSpec.template, "templates/mobile/expense-tracker/template-spec.json");
 });
 
 test("generate pauses when architecture questions are required", () => {
@@ -222,6 +377,50 @@ test("review defaults to the current app workspace", () => {
   assert.ok(existsSync(join(out, ".buildable/review-report.md")));
 });
 
+test("mcp server exposes Buildable commands as tools", () => {
+  const input = [
+    JSON.stringify({
+      jsonrpc: "2.0",
+      id: 1,
+      method: "initialize",
+      params: {
+        protocolVersion: "2024-11-05",
+        capabilities: {},
+        clientInfo: { name: "buildable-test", version: "0.0.0" }
+      }
+    }),
+    JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized", params: {} }),
+    JSON.stringify({ jsonrpc: "2.0", id: 2, method: "tools/list", params: {} }),
+    JSON.stringify({
+      jsonrpc: "2.0",
+      id: 3,
+      method: "tools/call",
+      params: {
+        name: "buildable_plan",
+        arguments: { prompt: "Build me a mobile habit tracker", workspace: root, files: ["./README.md"] }
+      }
+    })
+  ].join("\n") + "\n";
+
+  const result = spawnSync(process.execPath, [mcp], {
+    cwd: root,
+    encoding: "utf8",
+    input
+  });
+  assert.equal(result.status, 0, result.stderr);
+
+  const messages = result.stdout.trim().split("\n").map((line) => JSON.parse(line));
+  assert.equal(messages.find((message) => message.id === 1)?.result.serverInfo.name, "buildable");
+  assert.ok(messages.find((message) => message.id === 2)?.result.tools.some((tool) => tool.name === "buildable_plan"));
+  assert.ok(messages.find((message) => message.id === 2)?.result.tools.some((tool) => tool.name === "buildable_design"));
+
+  const call = messages.find((message) => message.id === 3);
+  assert.equal(call.result.isError, false);
+  assert.equal(call.result.structuredContent.result.appSpec.archetype, "habit-tracker");
+  assert.equal(call.result.structuredContent.result.appSpec.target, "mobile");
+  assert.equal(call.result.structuredContent.result.appSpec.referenceInputs[0].path, "./README.md");
+});
+
 test("generate brands a runnable starter via --name", () => {
   const workspace = mkdtempSync(join(tmpdir(), "buildable-name-"));
   const out = join(workspace, "app");
@@ -282,6 +481,12 @@ test("generate writes plan-only instruction packs for planned templates when req
   assert.ok(existsSync(join(out, "IMPLEMENTATION_PLAN.md")));
   assert.ok(existsSync(join(out, "buildable-app-spec.json")));
   assert.ok(!existsSync(join(out, "package.json")));
+
+  const review = run(["review", out, "--json"], { cwd: workspace });
+  assert.notEqual(review.status, 0);
+  const report = JSON.parse(review.stdout);
+  assert.equal(report.ok, false);
+  assert.ok(!report.warnings.some((warning) => warning.includes("Non-local-first term") && warning.includes("IMPLEMENTATION_PLAN.md")));
 });
 
 test("generate writes dedicated mobile planned packs when requested", () => {
@@ -494,7 +699,7 @@ test("codex manifest exposes reference roots and docs explain available vs loade
 });
 
 test("copied Cursor commands are portable outside the Buildable repo", () => {
-  for (const command of ["plan", "generate", "review", "preview"]) {
+  for (const command of ["plan", "design", "generate", "review", "preview", "init"]) {
     const text = readFileSync(join(root, `.cursor/commands/buildable-${command}.md`), "utf8");
     assert.match(text, /buildable /, `${command} should prefer the global buildable command`);
     assert.match(text, /BUILDABLE_ROOT/, `${command} should document the checkout fallback`);
@@ -564,7 +769,7 @@ test("check validates Claude plugin packaging", () => {
   const marketplace = JSON.parse(readFileSync(join(root, ".claude-plugin/marketplace.json"), "utf8"));
   assert.ok(marketplace.plugins.some((plugin) => plugin.name === "buildable"));
 
-  for (const command of ["plan", "generate", "review", "init", "preview"]) {
+  for (const command of ["plan", "design", "generate", "review", "init", "preview"]) {
     assert.ok(existsSync(join(root, `commands/buildable-${command}.md`)), `command ${command}`);
   }
 });

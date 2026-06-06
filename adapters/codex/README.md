@@ -11,6 +11,19 @@ The Codex adapter packages Buildable as a local plugin with bundled skills, temp
 
 Codex should read from this checkout and generate into the user's local workspace. Buildable does not require a hosted template registry, telemetry endpoint, cloud preview service, or managed database.
 
+## Desktop / MCP Setup
+
+For Codex surfaces that support local MCP tools, register the bundled server:
+
+```toml
+[mcp_servers.buildable]
+command = "node"
+args = ["/absolute/path/to/buildable-plugin-skills/bin/buildable-mcp.mjs"]
+env = { BUILDABLE_WORKSPACE = "/absolute/path/to/your-app" }
+```
+
+This exposes `buildable_plan`, `buildable_design`, `buildable_generate`, `buildable_review`, `buildable_init`, `buildable_list`, `buildable_check`, `buildable_eval`, and `buildable_preview` as tool calls. They are the same engine as the CLI commands, but Codex may display them as tools instead of slash commands.
+
 ## Exposed Assets
 
 - expose planner, web-builder, mobile-builder, and reviewer skills
@@ -23,7 +36,9 @@ Codex should read from this checkout and generate into the user's local workspac
 - `buildable help`
 - `buildable list`
 - `buildable check`
-- `buildable plan "<prompt>"`
+- `buildable plan "<prompt>" --write`
+- `buildable design "<prompt>"`
 - `buildable generate "<prompt>"`
 - `buildable review`
 - `buildable preview --url http://localhost:3000`
+- `buildable mcp`

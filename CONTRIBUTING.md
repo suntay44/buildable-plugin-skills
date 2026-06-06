@@ -8,7 +8,8 @@ The flow is:
 2. **Golden templates** are the approved Buildable starting points for those archetypes.
 3. **Runnable starters** copy real app source into the user's local folder.
 4. **Planned template packs** provide an app spec and implementation plan when a full runnable starter does not exist yet.
-5. **UI/UX playbooks** give the selected agent design and quality guidance without loading the whole repository.
+5. **Design system profiles** add compact visual direction to `appSpec.designSystem`.
+6. **UI/UX playbooks** give the selected agent design and quality guidance without loading the whole repository.
 
 ## Archetypes
 
@@ -100,6 +101,7 @@ Agents should load only the playbooks referenced by `appSpec.references`.
 
 ### Design Playbooks
 
+- `knowledge/design-playbooks/design-system-selection.md`
 - `knowledge/design-playbooks/admin-dashboard.md`
 - `knowledge/design-playbooks/mobile-utility.md`
 - `knowledge/design-playbooks/modern-saas.md`

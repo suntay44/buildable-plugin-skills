@@ -38,10 +38,13 @@ test("web starters pin Tailwind v3 and avoid the v4 PostCSS break", () => {
     const tailwind = pkg.devDependencies?.tailwindcss ?? "";
     // Tailwind v4 moved its PostCSS plugin and config model, which breaks the
     // @tailwind directives + tailwind.config.ts these starters use.
-    assert.match(tailwind, /^[\^~]?3\./, `${starter} must pin tailwindcss v3, got "${tailwind}"`);
+    assert.match(tailwind, /^3\./, `${starter} must pin exact tailwindcss v3, got "${tailwind}"`);
 
-    for (const dep of ["typescript", "postcss", "autoprefixer"]) {
-      assert.notEqual(pkg.devDependencies?.[dep], "latest", `${starter} must pin ${dep}, not "latest"`);
+    for (const section of ["dependencies", "devDependencies"]) {
+      for (const [name, version] of Object.entries(pkg[section] ?? {})) {
+        assert.notEqual(version, "latest", `${starter} must pin ${name}, not "latest"`);
+        assert.doesNotMatch(version, /^\^/, `${starter} must avoid caret ranges for ${name}, got "${version}"`);
+      }
     }
 
     const postcss = read(`${starter}/postcss.config.js`);
@@ -105,6 +108,13 @@ test("mobile starters pin NativeWind exactly and keep the className augmentation
     assert.match(envTypes, /className\?: string/, `${starter} augmentation must declare className`);
 
     const tailwind = pkg.devDependencies?.tailwindcss ?? "";
-    assert.match(tailwind, /^[\^~]?3\./, `${starter} must pin tailwindcss v3, got "${tailwind}"`);
+    assert.match(tailwind, /^3\./, `${starter} must pin exact tailwindcss v3, got "${tailwind}"`);
+
+    for (const section of ["dependencies", "devDependencies"]) {
+      for (const [name, version] of Object.entries(pkg[section] ?? {})) {
+        assert.notEqual(version, "latest", `${starter} must pin ${name}, not "latest"`);
+        assert.doesNotMatch(version, /^\^/, `${starter} must avoid caret ranges for ${name}, got "${version}"`);
+      }
+    }
   }
 });

@@ -36,11 +36,12 @@ Mandatory order:
 
 1. Read the app spec.
 2. If `questionsNeeded` is true, ask the user before generating.
-3. Load only the references listed in the app spec.
-4. If the template is `generic-app`, use the selected archetype reference to shape screens and entities instead of loading unrelated mobile templates.
-5. Generate touch-first screens and local state.
-6. Validate navigation, touch targets, and state coverage.
-7. Run `buildable review` from the selected app workspace when the CLI is available.
+3. Apply `appSpec.designSystem` for visual tone, density, palette intent, touch layout rules, component rules, accessibility, and anti-patterns.
+4. Load only the references listed in the app spec.
+5. If the template is `generic-app`, use the selected archetype reference to shape screens and entities instead of loading unrelated mobile templates.
+6. Generate touch-first screens and local state.
+7. Validate navigation, touch targets, and state coverage.
+8. Run `buildable review` from the selected app workspace when the CLI is available.
 
 ## Build Order
 

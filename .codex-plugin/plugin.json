@@ -3,7 +3,7 @@
   "name": "buildable",
   "display_name": "Buildable",
   "version": "0.1.0",
-  "description": "Local-first AI app builder brain with archetypes, templates, skills, and review rubrics for generating polished prototypes.",
+  "description": "Local-first AI app builder brain with archetypes, design-system guidance, templates, skills, and review rubrics for generating polished prototypes.",
   "author": "Buildable contributors",
   "license": "MIT",
   "skills": [
@@ -26,6 +26,8 @@
   ],
   "resources": [
     "../bin/buildable.mjs",
+    "../bin/buildable-mcp.mjs",
+    "../.mcp.json",
     "../cli/README.md",
     "../docs/install.md",
     "../core/app-spec-schema.md",
@@ -34,7 +36,9 @@
     "../core/classifier.md",
     "../core/template-spec-schema.md",
     "../core/archetype-registry.json",
+    "../core/design-system-registry.json",
     "../core/activation-policy.md",
+    "../core/reference-inputs.mjs",
     "../core/reference-loading-contract.md",
     "../core/schemas/app-spec.schema.json",
     "../core/schemas/archetype-registry.schema.json",

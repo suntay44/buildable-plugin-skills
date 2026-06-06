@@ -1,0 +1,254 @@
+{
+  "version": "0.1.0",
+  "loadingRule": "Use this registry only to select a compact designSystem for the app spec. Do not load every UI/UX playbook.",
+  "profiles": [
+    {
+      "id": "focused-productivity",
+      "matches": ["task-manager", "notes", "time-tracker", "project-management", "calendar-planner", "onboarding-checklist"],
+      "target": "web",
+      "styleName": "Focused productivity",
+      "visualTone": "calm, direct, repeat-use product UI",
+      "palette": {
+        "intent": "neutral surfaces with blue primary actions and status accents",
+        "primary": "slate",
+        "accent": "blue",
+        "status": ["emerald", "amber", "rose"]
+      },
+      "typography": {
+        "mood": "clear system sans",
+        "scale": "compact product scale"
+      },
+      "density": "compact",
+      "layoutRules": [
+        "make the core workflow visible in the first viewport",
+        "keep filters and primary actions near the list they affect",
+        "use stable rows or cards that do not shift when states change"
+      ],
+      "componentRules": [
+        "include clear create/edit/delete or complete actions",
+        "show status chips with text labels, not color alone",
+        "include useful empty and filtered-empty states"
+      ],
+      "motion": "subtle 150-200ms state transitions",
+      "accessibility": ["visible labels", "focus-visible states", "keyboard reachable actions"],
+      "avoid": ["marketing hero layout inside the app", "decorative cards with no workflow value", "one-note blue palette"]
+    },
+    {
+      "id": "operator-dashboard",
+      "matches": ["crm", "dashboard", "ecommerce-admin", "invoice-manager", "support-helpdesk", "admin-panel", "inventory-manager", "asset-tracker", "hiring-tracker", "bug-tracker", "personal-finance"],
+      "target": "web",
+      "styleName": "Operator dashboard",
+      "visualTone": "dense, scannable, confident operations UI",
+      "palette": {
+        "intent": "quiet neutral base with restrained accent color and semantic status tokens",
+        "primary": "zinc",
+        "accent": "indigo",
+        "status": ["emerald", "amber", "red", "sky"]
+      },
+      "typography": {
+        "mood": "legible product sans",
+        "scale": "small headings, readable tables"
+      },
+      "density": "dense",
+      "layoutRules": [
+        "prioritize sortable lists, summaries, and detail panels over oversized hero sections",
+        "keep metrics, filters, and tables aligned to a predictable grid",
+        "make comparison and triage possible without opening every item"
+      ],
+      "componentRules": [
+        "use tables or kanban lanes when they improve scanning",
+        "pair every metric with context or delta",
+        "make destructive actions secondary and clearly labeled"
+      ],
+      "motion": "minimal feedback-only transitions",
+      "accessibility": ["table headers", "focus-visible states", "text labels for status"],
+      "avoid": ["large marketing hero", "card-only dashboard with weak hierarchy", "hidden primary actions"]
+    },
+    {
+      "id": "modern-saas",
+      "matches": ["landing-page", "portfolio", "documentation-site", "newsletter", "podcast-site", "video-library", "knowledge-base"],
+      "target": "web",
+      "styleName": "Modern SaaS and content",
+      "visualTone": "polished, editorial, clear conversion path",
+      "palette": {
+        "intent": "high-contrast neutral typography with one confident brand accent",
+        "primary": "neutral",
+        "accent": "violet or sky",
+        "status": ["emerald", "amber"]
+      },
+      "typography": {
+        "mood": "crisp marketing sans with readable body copy",
+        "scale": "expressive hero, restrained section headings"
+      },
+      "density": "comfortable",
+      "layoutRules": [
+        "make the product or offer obvious in the first viewport",
+        "leave a hint of the next section visible on landing pages",
+        "use full-width sections instead of nested card sections"
+      ],
+      "componentRules": [
+        "use concrete product screenshots or real content placeholders",
+        "make CTAs visually clear and repeated where useful",
+        "include responsive navigation and footer states"
+      ],
+      "motion": "subtle entrance or hover feedback only when it supports comprehension",
+      "accessibility": ["semantic headings", "sufficient text contrast", "descriptive link text"],
+      "avoid": ["abstract gradient-only hero", "generic stock-like visuals", "nested cards"]
+    },
+    {
+      "id": "marketplace-catalog",
+      "matches": ["marketplace", "real-estate", "job-board", "directory-site", "membership-directory", "client-portal"],
+      "target": "web",
+      "styleName": "Marketplace catalog",
+      "visualTone": "browseable, trustworthy, comparison-friendly",
+      "palette": {
+        "intent": "warm neutral surfaces with clear filters and trust/status accents",
+        "primary": "stone",
+        "accent": "teal",
+        "status": ["emerald", "amber", "rose"]
+      },
+      "typography": {
+        "mood": "readable commercial sans",
+        "scale": "compact cards with strong listing titles"
+      },
+      "density": "comfortable",
+      "layoutRules": [
+        "make search, filters, results count, and sort controls visible together",
+        "support card and detail comparison without losing context",
+        "keep inquiry or apply actions obvious but not pushy"
+      ],
+      "componentRules": [
+        "include filters with active-filter chips",
+        "show meaningful listing metadata",
+        "include saved, empty, and filtered-empty states"
+      ],
+      "motion": "light hover and selection feedback",
+      "accessibility": ["labeled filters", "keyboard reachable cards", "non-color-only badges"],
+      "avoid": ["unbounded card grids", "filters hidden behind unclear controls", "placeholder-only listings"]
+    },
+    {
+      "id": "mobile-utility",
+      "matches": ["habit-tracker", "booking", "expense-tracker", "fitness-tracker", "meal-planner", "subscription-tracker", "maintenance-request", "field-service"],
+      "target": "mobile",
+      "styleName": "Mobile utility",
+      "visualTone": "fast, thumb-friendly, reassuring",
+      "palette": {
+        "intent": "light surfaces, strong primary action, distinct success/warning/error states",
+        "primary": "neutral",
+        "accent": "blue or emerald",
+        "status": ["emerald", "amber", "red"]
+      },
+      "typography": {
+        "mood": "native-feeling system sans",
+        "scale": "large enough for glanceable mobile use"
+      },
+      "density": "thumb-friendly",
+      "layoutRules": [
+        "place the main action within thumb reach",
+        "keep screens focused on one job at a time",
+        "respect safe areas and avoid cramped fixed heights"
+      ],
+      "componentRules": [
+        "use segmented controls or tabs for simple modes",
+        "make tap targets at least 44px",
+        "show confirmation, empty, loading, and error states"
+      ],
+      "motion": "native-feeling quick feedback with reduced-motion tolerance",
+      "accessibility": ["large tap targets", "accessible labels", "screen-reader friendly state text"],
+      "avoid": ["desktop tables on mobile", "tiny icon-only controls without labels", "bottom actions hidden behind keyboard"]
+    },
+    {
+      "id": "conversation-mobile",
+      "matches": ["chat-app"],
+      "target": "mobile",
+      "styleName": "Conversation mobile",
+      "visualTone": "clear, calm, message-first",
+      "palette": {
+        "intent": "neutral chat surfaces with distinct sent/received message treatments",
+        "primary": "neutral",
+        "accent": "sky",
+        "status": ["emerald", "amber"]
+      },
+      "typography": {
+        "mood": "comfortable native sans",
+        "scale": "message-readable mobile scale"
+      },
+      "density": "comfortable",
+      "layoutRules": [
+        "keep conversation history, composer, and send action always understandable",
+        "handle keyboard-safe layout",
+        "make empty and loading conversations useful"
+      ],
+      "componentRules": [
+        "differentiate sent and received messages accessibly",
+        "include timestamps or status where relevant",
+        "make attachments or extra actions secondary unless requested"
+      ],
+      "motion": "quick send/receive state feedback",
+      "accessibility": ["accessible message labels", "large composer controls", "readable contrast"],
+      "avoid": ["overdecorated message bubbles", "unclear send state", "keyboard overlap"]
+    },
+    {
+      "id": "hospitality-service",
+      "matches": ["restaurant", "event-planner", "travel-planner", "recipe-app", "clinic-intake", "property-management"],
+      "target": "web",
+      "styleName": "Hospitality and service",
+      "visualTone": "warm, informative, action-oriented",
+      "palette": {
+        "intent": "inviting neutral base with appetite/service-friendly accents",
+        "primary": "neutral",
+        "accent": "teal or amber",
+        "status": ["emerald", "amber", "rose"]
+      },
+      "typography": {
+        "mood": "friendly sans with clear body copy",
+        "scale": "comfortable content scale"
+      },
+      "density": "comfortable",
+      "layoutRules": [
+        "put key decisions and booking/contact actions near relevant content",
+        "make hours, location, pricing, or schedule details scannable",
+        "support mobile-first browsing"
+      ],
+      "componentRules": [
+        "use grouped sections for menu, itinerary, agenda, or intake steps",
+        "show validation and confirmation states",
+        "include practical details before decorative content"
+      ],
+      "motion": "subtle affordance feedback",
+      "accessibility": ["clear form labels", "readable contrast", "keyboard reachable CTAs"],
+      "avoid": ["atmosphere-only imagery", "hidden contact actions", "decorative text over unreadable media"]
+    },
+    {
+      "id": "community-content",
+      "matches": ["blog-cms", "learning-platform", "survey-form", "community-forum", "file-manager", "media-gallery", "social-link-bio", "donation-page", "volunteer-management", "product-feedback"],
+      "target": "web",
+      "styleName": "Community and content product",
+      "visualTone": "organized, inviting, contribution-friendly",
+      "palette": {
+        "intent": "neutral content surfaces with clear contribution and moderation accents",
+        "primary": "slate",
+        "accent": "cyan or violet",
+        "status": ["emerald", "amber", "rose"]
+      },
+      "typography": {
+        "mood": "readable content sans",
+        "scale": "body-first with clear section hierarchy"
+      },
+      "density": "comfortable",
+      "layoutRules": [
+        "separate creation, browsing, and review workflows clearly",
+        "make content hierarchy and metadata easy to scan",
+        "include meaningful empty states that suggest the first contribution"
+      ],
+      "componentRules": [
+        "use forms with validation and success feedback",
+        "show content status or category chips",
+        "support search or filtering for larger collections"
+      ],
+      "motion": "subtle state transitions only",
+      "accessibility": ["semantic headings", "labeled form fields", "descriptive action text"],
+      "avoid": ["wall-of-cards layouts", "unlabeled icon actions", "empty generic placeholder copy"]
+    }
+  ]
+}

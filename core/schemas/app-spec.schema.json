@@ -13,11 +13,14 @@
     "entities",
     "features",
     "sampleData",
+    "mockData",
     "style",
+    "designSystem",
     "template",
     "templateStatus",
     "generationMode",
     "references",
+    "referenceInputs",
     "referenceLoadingContract",
     "mustNotInclude",
     "acceptanceCriteria",
@@ -46,11 +49,95 @@
     },
     "features": { "type": "array", "minItems": 1 },
     "sampleData": { "type": "string", "minLength": 1 },
+    "mockData": {
+      "type": "object",
+      "required": ["strategy", "recordsPerEntity", "rules", "entities", "requiredStates"],
+      "properties": {
+        "strategy": { "type": "string", "minLength": 1 },
+        "recordsPerEntity": { "type": "string", "minLength": 1 },
+        "rules": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "entities": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["name", "minimumRecords", "fieldsToPopulate"],
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "minimumRecords": { "type": "number", "minimum": 1 },
+              "fieldsToPopulate": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        },
+        "requiredStates": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+      }
+    },
     "style": { "type": "string", "minLength": 1 },
+    "designSystem": {
+      "type": "object",
+      "required": [
+        "profile",
+        "styleName",
+        "visualTone",
+        "palette",
+        "typography",
+        "density",
+        "layoutRules",
+        "componentRules",
+        "motion",
+        "accessibility",
+        "avoid"
+      ],
+      "properties": {
+        "profile": { "type": "string", "minLength": 1 },
+        "styleName": { "type": "string", "minLength": 1 },
+        "visualTone": { "type": "string", "minLength": 1 },
+        "palette": {
+          "type": "object",
+          "required": ["intent"],
+          "properties": {
+            "intent": { "type": "string", "minLength": 1 },
+            "primary": { "type": "string" },
+            "accent": { "type": "string" },
+            "status": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "typography": {
+          "type": "object",
+          "required": ["mood"],
+          "properties": {
+            "mood": { "type": "string", "minLength": 1 },
+            "scale": { "type": "string" }
+          }
+        },
+        "density": { "type": "string", "minLength": 1 },
+        "layoutRules": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "componentRules": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "motion": { "type": "string", "minLength": 1 },
+        "accessibility": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "avoid": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+      }
+    },
     "template": { "type": "string", "minLength": 1 },
     "templateStatus": { "enum": ["planned", "starter", "runnable"] },
     "generationMode": { "enum": ["runnable-starter", "plan-only"] },
     "references": { "type": "array", "items": { "type": "string" } },
+    "referenceInputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "absolutePath", "name", "kind", "exists", "inspectInstruction"],
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "absolutePath": { "type": "string", "minLength": 1 },
+          "name": { "type": "string", "minLength": 1 },
+          "kind": { "enum": ["image", "screenshot", "document", "source", "file"] },
+          "exists": { "type": "boolean" },
+          "sizeBytes": { "type": ["number", "null"] },
+          "inspectInstruction": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
     "referenceLoadingContract": {
       "type": "array",
       "prefixItems": [

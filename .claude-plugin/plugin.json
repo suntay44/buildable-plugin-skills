@@ -1,7 +1,7 @@
 {
   "name": "buildable",
   "version": "0.1.0",
-  "description": "Local product-structure compiler and quality gate for your coding agent. A prompt becomes the right archetype, a runnable build-verified starter, and a reviewed result (build, layout, accessibility, state coverage, local-first), loading only the references each prompt needs. Pairs with design plugins like Frontend Design.",
+  "description": "Local product-structure compiler, compact UI/UX brain, and quality gate for your coding agent. A prompt becomes the right archetype, selected design system, runnable build-verified starter, and reviewed result while loading only the references each prompt needs.",
   "author": {
     "name": "Buildable contributors"
   },

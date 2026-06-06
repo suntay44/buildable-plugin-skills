@@ -1,10 +1,11 @@
 {
   "name": "@buildable/local-builder",
   "version": "0.1.0",
-  "description": "Local product-structure compiler + quality gate for coding agents (Claude Code, Codex, Cursor): prompt to a runnable, build-verified starter to a reviewed result. Pairs with design plugins.",
+  "description": "Local product-structure compiler, compact UI/UX brain, and quality gate for coding agents (Claude Code, Codex, Cursor).",
   "type": "module",
   "bin": {
-    "buildable": "./bin/buildable.mjs"
+    "buildable": "./bin/buildable.mjs",
+    "buildable-mcp": "./bin/buildable-mcp.mjs"
   },
   "scripts": {
     "plan": "node ./bin/buildable.mjs plan",
@@ -22,6 +23,7 @@
     "README.md",
     "CONTRIBUTING.md",
     "CHANGELOG.md",
+    ".mcp.json",
     "docs/install.md",
     "bin/",
     "cli/",
