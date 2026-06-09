@@ -81,7 +81,7 @@ user prompt
   → agent fixes issues
 ```
 
-The recommended flow is **Plan > Design > Build > Review**. `plan` is the top-down phase map: it chooses the archetype/template, asks product-direction questions when the prompt is vague, includes compact `appSpec.designSystem`, and can write `.buildable/phase-plan.md` with `--write`. `design` deepens that into concrete UI/UX tokens, page rules, and realistic mockup-data guidance. `design` is interchangeable: use it before planning to explore direction, after planning to sharpen the UI, during implementation for a specific page/component, or before review as a polish brief.
+The recommended flow is **Plan > Design > Build > Review**. `plan` is the top-down phase map: it chooses the archetype/template, asks product-direction questions when the prompt is vague, includes compact `appSpec.designSystem`, and can write `.buildable/phase-plan.md` with `--write`. After planning, the agent should ask whether the user is satisfied. If not, stay in Buildable Planner and revise the saved plan; if yes, hand off to Buildable Web Builder or Buildable Mobile Builder, which reads the saved plan/spec and loads only the selected references. `design` deepens the plan into concrete UI/UX tokens, page rules, and realistic mockup-data guidance. `design` is interchangeable: use it before planning to explore direction, after planning to sharpen the UI, during implementation for a specific page/component, or before review as a polish brief.
 
 ## Quick start
 
@@ -156,6 +156,7 @@ Load `.codex-plugin/plugin.json` when your Codex surface supports local plugins/
 ### Three local workflows
 
 - **`init`** — make a workspace Buildable-aware. Use `--existing` inside an app to profile the repo without overwriting code.
+- **`plan`** — create or revise the product direction. If the user is not satisfied, keep using Planner with a revision prompt like `Buildable Planner: keep this direction, but make reminders stronger`. If satisfied, hand off to the target builder.
 - **`design`** — create a UI/UX-only design brief with realistic mockup-data guidance. Use it after `plan`, before `generate`, or mid-session for a page like `--page login`. It suggests the next `buildable generate` command, but agents should first ask whether the user is satisfied with the design direction.
 - **`generate`** — create a runnable starter, or a `--plan-pack` instruction pack for planned templates. If `--out` is omitted, Buildable creates a folder from the app name.
 - **`review`** — judge and improve the result against the app spec and local-first guardrails.
@@ -163,6 +164,7 @@ Load `.codex-plugin/plugin.json` when your Codex surface supports local plugins/
 ### Plan vs generate
 
 - **Use `plan` when you want direction first.** It classifies the prompt, selects the archetype/template, lists the exact references the agent should load, outlines phases, and asks questions for product-direction or architecture-changing choices.
+- **Revise in Planner until the direction feels right.** The planner should ask "Are you satisfied with this plan?" If no, revise the saved `.buildable/phase-plan.md/json`; if yes, continue with Buildable Web Builder or Buildable Mobile Builder using the saved plan/spec.
 - **Use `--file`, `--reference`, or `--screenshot` when the user gives examples.** Buildable stores those paths in `appSpec.referenceInputs` so the agent can inspect only the explicit screenshots/files plus `appSpec.references`.
 - **Use `design` when you want UI/UX direction sharpened.** It turns the selected `designSystem` into concrete colors, typography, spacing, motion, component emphasis, anti-patterns, and mockup-data guidance. It can run from a prompt or from an existing `buildable-app-spec.json`. It does not create backend, database, auth, payment, or deployment decisions.
 - **Use `generate` when you want local files created.** It runs the same planning step, then copies the selected runnable starter or writes a plan pack. Agents like Claude, Codex, and Cursor can execute from `plan`, but `generate` saves them from recreating the starter structure by hand.

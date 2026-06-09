@@ -23,3 +23,5 @@ Run Buildable planning for the request: **$ARGUMENTS**
 3. If `appSpec.questionsNeeded` is true, ask the user the listed product-direction or architecture questions before running design or generate. For vague business prompts like "I have a restaurant", clarify whether the user wants an informational site/menu, ordering/reservations, or management/inventory first.
 
 4. Summarize the plan for the user: archetype, target, stack, selected design system, mock-data approach, phases, screens, key features, explicit user reference inputs, and which bundled references you will load next. Do not start writing app code yet unless the user asked you to build.
+
+5. End with this lightweight checkpoint: ask whether the user is satisfied with the plan. If not, tell them to continue in Buildable Planner with a revision prompt and update the saved `.buildable/phase-plan.md/json`. If yes, offer the correct next builder skill for the target: Buildable Web Builder for web or Buildable Mobile Builder for mobile. The builder should read the saved plan/spec, load only `appSpec.references`, and load starter source only for the selected template.

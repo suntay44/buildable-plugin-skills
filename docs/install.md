@@ -187,6 +187,8 @@ For any agent:
 user prompt
 -> buildable plan
 -> ask product-direction questions when needed
+-> ask whether the user is satisfied with the plan
+-> if not satisfied, revise with Buildable Planner and update the saved phase plan
 -> buildable design after direction is clear
 -> use enhancedPrompt + appSpec as implementation context
 -> buildable generate when starting fresh, or agent adapts existing app

@@ -48,6 +48,9 @@ Use `knowledge/INDEX.md` and `templates/INDEX.md` only for discovery when the CL
 10. Produce an app spec using `core/app-spec-schema.md`.
 11. Include a phase plan: clarify if needed, plan, mock data, design, build, review.
 12. Include explicit non-goals to prevent hosted feature drift.
+13. End with a short satisfaction checkpoint:
+   - If the user is not satisfied, ask them to stay in Buildable Planner and revise the saved plan with a prompt such as "Buildable Planner: keep this direction, but make the reminder features stronger."
+   - If the user is satisfied, suggest the correct next skill for the target: Buildable Web Builder for web or Buildable Mobile Builder for mobile. The builder must read the saved `.buildable/phase-plan.json` or app spec, then load only `appSpec.references` and the selected starter source.
 
 ## Reference Selection
 
@@ -71,3 +74,4 @@ Return:
 - references the builder should load next
 - explicit `appSpec.referenceInputs` the builder should inspect
 - questions only if required by policy or vague product direction
+- one short next-step question: "Are you satisfied with this plan? If not, continue with Buildable Planner to revise it. If yes, continue with Buildable Web Builder/Mobile Builder using the saved plan."

@@ -17,7 +17,7 @@ Use only when the user is building or adapting a native mobile app/prototype. Do
 
 Mandatory order:
 
-1. Read the app spec.
+1. Read the saved planner output first: `.buildable/phase-plan.json` when present, otherwise `buildable-app-spec.json`.
 2. Load only `appSpec.references`.
 3. Load current project files only as needed for the requested change.
 4. Do not load web templates or unrelated mobile archetypes.
@@ -34,7 +34,7 @@ Mandatory order:
 
 ## Workflow
 
-1. Read the app spec.
+1. Read the saved plan/app spec from the planner handoff.
 2. If `questionsNeeded` is true, ask the user before generating.
 3. Apply `appSpec.designSystem` for visual tone, density, palette intent, touch layout rules, component rules, accessibility, and anti-patterns.
 4. Load only the references listed in the app spec.

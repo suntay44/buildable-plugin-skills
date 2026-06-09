@@ -17,7 +17,7 @@ Use only when the user is building or adapting a web app/prototype. Do not activ
 
 Mandatory order:
 
-1. Read the app spec.
+1. Read the saved planner output first: `.buildable/phase-plan.json` when present, otherwise `buildable-app-spec.json`.
 2. Load only `appSpec.references`.
 3. Load current project files only as needed for the requested change.
 4. Do not load all templates.
@@ -33,7 +33,7 @@ Mandatory order:
 
 ## Workflow
 
-1. Read the app spec.
+1. Read the saved plan/app spec from the planner handoff.
 2. If `questionsNeeded` is true, ask the user before generating.
 3. For fresh starts, prefer `buildable generate "<prompt>"` when a runnable template exists. Add `--out <dir>` only when the user requested a specific folder.
 4. Apply `appSpec.designSystem` for visual tone, density, palette intent, layout rules, component rules, accessibility, and anti-patterns.

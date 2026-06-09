@@ -67,6 +67,8 @@ buildable plan "Build a mobile habit tracker" --write
 
 Use `plan` when the user wants direction before app files are created. It is the no-code prompting layer: classify, choose the right references, identify questions, outline the phases, then let Claude, Codex, Cursor, or another agent continue from the spec. Add `--write` to save `.buildable/phase-plan.json` and `.buildable/phase-plan.md` in the current workspace.
 
+After showing a plan, agents should ask whether the user is satisfied. If not, keep using Buildable Planner and revise the saved plan from the user's next prompt, for example: `Buildable Planner: keep this direction, but make reminders stronger`. If yes, continue with Buildable Web Builder or Buildable Mobile Builder. The builder should read the saved plan/spec, then load only `appSpec.references`, explicit `appSpec.referenceInputs`, and the selected starter source.
+
 When a user includes a screenshot, spec document, or existing file as a reference, pass it explicitly:
 
 ```bash
