@@ -118,3 +118,17 @@ test("mobile starters pin NativeWind exactly and keep the className augmentation
     }
   }
 });
+
+test("mobile starter fragments import React for Expo typecheck", () => {
+  for (const starter of mobileStarters) {
+    const appEntry = `${starter}/app/index.tsx`;
+    const source = read(appEntry);
+    if (source.includes("<>") || source.includes("<React.Fragment")) {
+      assert.match(
+        source,
+        /^import React(?:,|\s+from)/m,
+        `${appEntry} uses a JSX fragment and must import React for Expo's typecheck`
+      );
+    }
+  }
+});
