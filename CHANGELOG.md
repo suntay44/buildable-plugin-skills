@@ -9,6 +9,8 @@ Unreleased section here and syncs the version across every plugin manifest.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-06-10
+
 ### Added
 
 - Broader local-first guardrail scan in `buildable review` (and `--strict`): aligned with the ask-vs-build policy, it now flags hosted/BaaS/auth/payment terms (supabase, firebase, postgres, prisma, stripe, next-auth, oauth, login, vercel, …), matched as whole tokens.
@@ -37,5 +39,6 @@ Unreleased section here and syncs the version across every plugin manifest.
 - `buildable eval` scores classification fixtures and context-load efficiency (~90% of context tokens saved per plan).
 - Starter config single-source sync (`npm run sync:starters`) with a drift guard, version-pin guard tests, and a CI workflow that builds every runnable starter.
 
-[Unreleased]: https://github.com/suntay44/buildable-plugin-skills/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/suntay44/buildable-plugin-skills/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/suntay44/buildable-plugin-skills/releases/tag/v0.2.0
 [0.1.0]: https://github.com/suntay44/buildable-plugin-skills/releases/tag/v0.1.0
