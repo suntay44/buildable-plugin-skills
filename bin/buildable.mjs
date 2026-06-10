@@ -6,6 +6,19 @@ import { createRequire } from "node:module";
 import { spawnSync } from "node:child_process";
 import { referenceInputsFromArgs as buildReferenceInputsFromArgs } from "../core/reference-inputs.mjs";
 
+// Never surface a raw Node stack trace to users. Set DEBUG=1 to see the full trace.
+function reportFatal(error) {
+  const message = error instanceof Error ? error.message : String(error);
+  console.error(`buildable: ${message}`);
+  if (process.env.DEBUG && error instanceof Error && error.stack) {
+    console.error(error.stack);
+  }
+  console.error('Run "buildable help" for usage, or re-run with DEBUG=1 for details.');
+  process.exit(1);
+}
+process.on("uncaughtException", reportFatal);
+process.on("unhandledRejection", reportFatal);
+
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const command = process.argv[2];
 const parsedArgs = parseArgs(process.argv.slice(3));
