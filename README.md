@@ -12,6 +12,7 @@ It does **not** replace your agent or run as a hosted platform. It is a file-bas
 
 <br />
 
+[![CI](https://github.com/suntay44/buildable-plugin-skills/actions/workflows/ci.yml/badge.svg)](https://github.com/suntay44/buildable-plugin-skills/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Works with Claude Code](https://img.shields.io/badge/Claude%20Code-Plugin-darkorange)](https://claude.ai/code)
 [![Works with Codex](https://img.shields.io/badge/Codex-Plugin-blue)](https://chatgpt.com/codex)

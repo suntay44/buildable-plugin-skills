@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or usage help
+    url: https://github.com/suntay44/buildable-plugin-skills/discussions
+    about: Ask how to install or use Buildable with Claude Code, Codex, or Cursor.
+  - name: Security vulnerability
+    url: https://github.com/suntay44/buildable-plugin-skills/security/advisories/new
+    about: Report security issues privately, not as a public issue.

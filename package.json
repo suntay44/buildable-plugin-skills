@@ -23,6 +23,8 @@
     "README.md",
     "CONTRIBUTING.md",
     "CHANGELOG.md",
+    "CODE_OF_CONDUCT.md",
+    "SECURITY.md",
     ".mcp.json",
     "docs/install.md",
     "bin/",
