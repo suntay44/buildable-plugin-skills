@@ -624,6 +624,51 @@ test("review grades accessibility and state coverage", () => {
   assert.ok(flagged.warnings.some((w) => w.includes("missing a <label> or aria-label")));
 });
 
+test("review design-tokens passes clean starters and warns on palette sprawl", () => {
+  const workspace = mkdtempSync(join(tmpdir(), "buildable-tokens-"));
+  const out = join(workspace, "app");
+  run(["generate", "Build me a SaaS analytics dashboard", "--out", out, "--json"], { cwd: workspace });
+
+  // A single shared surface tint (bg-[#f7f8fb]) is fine; the shipped starter passes.
+  const clean = jsonFrom(run(["review", out, "--json"], { cwd: workspace }));
+  assert.equal(clean.checks.find((check) => check.name === "design-tokens").status, "pass");
+
+  // Palette sprawl (multiple raw bracket hexes + inline style hex) is flagged, non-blocking.
+  writeFileSync(
+    join(out, "components/sprawl.tsx"),
+    'export function Sprawl() { return <div className="bg-[#123456] text-[#abcdef] border-[#999999]" style={{ color: "#ff0000" }}>x</div>; }\n'
+  );
+  const flagged = jsonFrom(run(["review", out, "--json"], { cwd: workspace }));
+  assert.equal(flagged.ok, true);
+  assert.equal(flagged.checks.find((check) => check.name === "design-tokens").status, "warn");
+  assert.ok(flagged.warnings.some((w) => w.includes("bypass the token palette")));
+});
+
+test("design layers a specialized rubric by surface profile", () => {
+  const cases = [
+    ["Build me a SaaS analytics dashboard", "knowledge/quality-rubrics/data-dense.md"],
+    ["Build me a todo app", "knowledge/quality-rubrics/forms-auth.md"],
+    ["Build me a landing page for a startup", "knowledge/quality-rubrics/content-marketing.md"]
+  ];
+  for (const [prompt, rubric] of cases) {
+    const payload = jsonFrom(run(["design", prompt, "--json"]));
+    assert.ok(payload.references.includes("knowledge/quality-rubrics/web-app.md"), `${prompt} keeps base rubric`);
+    assert.ok(payload.references.includes(rubric), `${prompt} layers ${rubric}`);
+  }
+});
+
+test("design-system registry exposes a foundations token contract", () => {
+  const registry = JSON.parse(readFileSync(join(root, "core/design-system-registry.json"), "utf8"));
+  const f = registry.foundations;
+  assert.ok(f && typeof f === "object", "foundations object present");
+  for (const key of ["spacingScale", "typeScale", "radiusScale", "motion", "color", "accessibility", "tokenUsageContract"]) {
+    assert.ok(f[key] !== undefined && f[key] !== null, `foundations.${key} present`);
+  }
+  assert.ok(Array.isArray(f.tokenUsageContract) && f.tokenUsageContract.length > 0, "tokenUsageContract non-empty");
+  // check validates the registry, so a well-formed foundations block keeps check green.
+  assert.equal(run(["check", "--json"]).status, 0);
+});
+
 test("review --strict fails on local-first guardrail drift", () => {
   const workspace = mkdtempSync(join(tmpdir(), "buildable-strict-"));
   const out = join(workspace, "app");

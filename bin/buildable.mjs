@@ -860,6 +860,20 @@ function validateDesignSystemRegistry(registry) {
     return ["core/design-system-registry.json: profiles must be a non-empty array"];
   }
 
+  const foundations = registry.foundations;
+  if (!foundations || typeof foundations !== "object") {
+    issues.push("core/design-system-registry.json: foundations object is required");
+  } else {
+    for (const key of ["spacingScale", "typeScale", "radiusScale", "motion", "color", "accessibility", "tokenUsageContract"]) {
+      if (foundations[key] === undefined || foundations[key] === null) {
+        issues.push(`core/design-system-registry.json: foundations.${key} is required`);
+      }
+    }
+    if (!Array.isArray(foundations.tokenUsageContract) || foundations.tokenUsageContract.length === 0) {
+      issues.push("core/design-system-registry.json: foundations.tokenUsageContract must be a non-empty array");
+    }
+  }
+
   for (const profile of registry.profiles) {
     const label = profile?.id ? `core/design-system-registry.json:${profile.id}` : "core/design-system-registry.json:<missing-id>";
 
@@ -1708,6 +1722,35 @@ function designTokensFor(designSystem, prompt) {
   };
 }
 
+// Specialized quality rubric per design profile, layered on top of the base web/mobile rubric.
+const surfaceRubricByProfile = {
+  "focused-productivity": "knowledge/quality-rubrics/forms-auth.md",
+  "operator-dashboard": "knowledge/quality-rubrics/data-dense.md",
+  "marketplace-catalog": "knowledge/quality-rubrics/data-dense.md",
+  "modern-saas": "knowledge/quality-rubrics/content-marketing.md",
+  "community-content": "knowledge/quality-rubrics/content-marketing.md",
+  "hospitality-service": "knowledge/quality-rubrics/content-marketing.md"
+};
+
+function surfaceRubricFor(designSystem) {
+  return surfaceRubricByProfile[designSystem?.profile] ?? null;
+}
+
+// Flag components that bypass the token palette: inline-style hex, or 2+ distinct raw hex
+// values in arbitrary Tailwind brackets (palette sprawl). A single shared surface tint is fine.
+function designTokenRisks(file, relPath) {
+  if (!/\.(tsx|jsx)$/.test(file)) return [];
+  const text = readFileSync(file, "utf8");
+  const bracketHex = [...new Set((text.match(/(?:bg|text|border|ring|fill|stroke|from|via|to|shadow|outline|decoration)-\[#[0-9a-fA-F]{3,8}\]/g) ?? []))];
+  const inlineHex = text.match(/style=(?:\{\{[^}]*#[0-9a-fA-F]{3,8}[^}]*\}\}|"[^"]*#[0-9a-fA-F]{3,8}[^"]*")/g) ?? [];
+  const risks = [];
+  if (inlineHex.length > 0 || bracketHex.length >= 2) {
+    const sample = (inlineHex.length > 0 ? ["inline style hex"] : []).concat(bracketHex.slice(0, 3)).join(", ");
+    risks.push(`${relPath}: hard-coded colors bypass the token palette (${sample}); drive color from theme tokens. See core/design-system-registry.json foundations.tokenUsageContract.`);
+  }
+  return risks;
+}
+
 function pageFocusFor(prompt) {
   const explicit = parsedArgs.values.page;
   if (explicit) return explicit;
@@ -1760,6 +1803,10 @@ ${colorLines}
 - body: ${brief.designTokens.typography.body}
 - scale: ${brief.designTokens.typography.scale}
 - line height: ${brief.designTokens.typography.lineHeight}
+
+## Token Usage Rules
+
+${(designSystemRegistry.foundations?.tokenUsageContract ?? []).map((rule) => `- ${rule}`).join("\n")}
 
 ## UI Rules
 
@@ -1824,8 +1871,9 @@ function designBriefFor(prompt, appSpec = null) {
     ...(appSpec?.references ?? plan.appSpec.references ?? []),
     "knowledge/design-playbooks/design-system-selection.md",
     "knowledge/design-playbooks/ui-quality.md",
-    plan.appSpec.target === "mobile" ? "knowledge/quality-rubrics/mobile-app.md" : "knowledge/quality-rubrics/web-app.md"
-  ]);
+    plan.appSpec.target === "mobile" ? "knowledge/quality-rubrics/mobile-app.md" : "knowledge/quality-rubrics/web-app.md",
+    surfaceRubricFor(designSystem)
+  ].filter(Boolean));
   const uiRules = uniqueValues([
     ...designSystem.layoutRules,
     ...designSystem.componentRules,
@@ -2338,6 +2386,17 @@ function review() {
         : `${layoutRisks.length} grid(s) pair a fixed track with a bare fr unit; use minmax(0,1fr). See knowledge/ui-patterns/responsive-layouts.md.`
   });
   for (const risk of layoutRisks) warnings.push(risk);
+
+  const tokenRisks = implementationFiles.flatMap((file) => designTokenRisks(file, relative(target, file)));
+  checks.push({
+    name: "design-tokens",
+    status: tokenRisks.length === 0 ? "pass" : "warn",
+    message:
+      tokenRisks.length === 0
+        ? "Components drive color from theme tokens."
+        : `${tokenRisks.length} file(s) hard-code colors instead of theme tokens. See core/design-system-registry.json foundations.tokenUsageContract.`
+  });
+  for (const risk of tokenRisks) warnings.push(risk);
 
   // Accessibility + state-coverage heuristics (graded, non-blocking warnings).
   const controlCount = (implementationText.match(/<input\b|<select\b|<textarea\b/g) ?? []).length;

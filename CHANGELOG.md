@@ -9,6 +9,13 @@ Unreleased section here and syncs the version across every plugin manifest.
 
 ## [Unreleased]
 
+### Added
+
+- Design token foundations in `core/design-system-registry.json`: shared spacing, type, radius, elevation, and motion scales, accessibility contrast targets, and a token-usage contract that `buildable check` now validates.
+- `buildable review` `design-tokens` check: warns when components bypass the theme palette (inline-style hex or 2+ raw bracket-hex colors in one file), while allowing a single shared surface tint.
+- Three surface-specific quality rubrics — `content-marketing`, `data-dense`, and `forms-auth` — layered onto the base rubric by `buildable design` based on the selected design profile.
+- `buildable design` brief now emits the token-usage contract so agents build from named tokens, not ad-hoc values.
+
 ## [0.2.0] - 2026-06-10
 
 ### Added
