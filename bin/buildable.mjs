@@ -1471,6 +1471,21 @@ Do not add accounts, billing, cloud previews, managed databases, telemetry, or h
 
 const designTokenPresets = {
   "focused-productivity": {
+    darkColors: {
+      background: "#020617",
+      surface: "#0F172A",
+      surfaceMuted: "#1E293B",
+      foreground: "#F8FAFC",
+      mutedForeground: "#94A3B8",
+      primary: "#60A5FA",
+      primaryForeground: "#0F172A",
+      accent: "#2DD4BF",
+      border: "#334155",
+      success: "#34D399",
+      warning: "#FBBF24",
+      danger: "#F87171",
+      focus: "#60A5FA"
+    },
     colors: {
       background: "#F8FAFC",
       surface: "#FFFFFF",
@@ -1541,6 +1556,21 @@ const designTokenPresets = {
     componentEmphasis: ["metric cards", "tables", "filters", "status badges", "detail panels"]
   },
   "modern-saas": {
+    darkColors: {
+      background: "#0B1120",
+      surface: "#111827",
+      surfaceMuted: "#1E293B",
+      foreground: "#F8FAFC",
+      mutedForeground: "#94A3B8",
+      primary: "#818CF8",
+      primaryForeground: "#0F172A",
+      accent: "#22D3EE",
+      border: "#1F2937",
+      success: "#34D399",
+      warning: "#FBBF24",
+      danger: "#F87171",
+      focus: "#818CF8"
+    },
     colors: {
       background: "#FFFFFF",
       surface: "#F8FAFC",
@@ -1568,6 +1598,21 @@ const designTokenPresets = {
     componentEmphasis: ["hero", "CTA groups", "feature sections", "social proof", "responsive nav"]
   },
   "marketplace-catalog": {
+    darkColors: {
+      background: "#1C1917",
+      surface: "#292524",
+      surfaceMuted: "#231F1D",
+      foreground: "#FAFAF9",
+      mutedForeground: "#A8A29E",
+      primary: "#2DD4BF",
+      primaryForeground: "#1C1917",
+      accent: "#FB923C",
+      border: "#44403C",
+      success: "#34D399",
+      warning: "#FBBF24",
+      danger: "#F87171",
+      focus: "#2DD4BF"
+    },
     colors: {
       background: "#FAFAF9",
       surface: "#FFFFFF",
@@ -1595,6 +1640,21 @@ const designTokenPresets = {
     componentEmphasis: ["search", "filter chips", "listing cards", "metadata rows", "detail/inquiry panels"]
   },
   "mobile-utility": {
+    darkColors: {
+      background: "#020617",
+      surface: "#0F172A",
+      surfaceMuted: "#1E293B",
+      foreground: "#F8FAFC",
+      mutedForeground: "#94A3B8",
+      primary: "#60A5FA",
+      primaryForeground: "#0F172A",
+      accent: "#34D399",
+      border: "#334155",
+      success: "#34D399",
+      warning: "#FBBF24",
+      danger: "#F87171",
+      focus: "#60A5FA"
+    },
     colors: {
       background: "#F8FAFC",
       surface: "#FFFFFF",
@@ -1622,6 +1682,21 @@ const designTokenPresets = {
     componentEmphasis: ["bottom actions", "segmented controls", "large tap targets", "safe-area spacing", "state feedback"]
   },
   "conversation-mobile": {
+    darkColors: {
+      background: "#020617",
+      surface: "#0F172A",
+      surfaceMuted: "#0C4A6E",
+      foreground: "#F8FAFC",
+      mutedForeground: "#94A3B8",
+      primary: "#38BDF8",
+      primaryForeground: "#0F172A",
+      accent: "#7DD3FC",
+      border: "#1E3A5F",
+      success: "#34D399",
+      warning: "#FBBF24",
+      danger: "#F87171",
+      focus: "#38BDF8"
+    },
     colors: {
       background: "#F8FAFC",
       surface: "#FFFFFF",
@@ -1649,6 +1724,21 @@ const designTokenPresets = {
     componentEmphasis: ["message bubbles", "composer", "send button", "timestamps", "keyboard-safe layout"]
   },
   "hospitality-service": {
+    darkColors: {
+      background: "#1C1917",
+      surface: "#292524",
+      surfaceMuted: "#231F1D",
+      foreground: "#FAF7F2",
+      mutedForeground: "#A8A29E",
+      primary: "#2DD4BF",
+      primaryForeground: "#1C1917",
+      accent: "#FBBF24",
+      border: "#44403C",
+      success: "#34D399",
+      warning: "#FBBF24",
+      danger: "#F87171",
+      focus: "#2DD4BF"
+    },
     colors: {
       background: "#FFFBF5",
       surface: "#FFFFFF",
@@ -1676,6 +1766,21 @@ const designTokenPresets = {
     componentEmphasis: ["booking/contact CTA", "service/menu sections", "hours/location", "confirmation states"]
   },
   "community-content": {
+    darkColors: {
+      background: "#020617",
+      surface: "#0F172A",
+      surfaceMuted: "#1E293B",
+      foreground: "#F8FAFC",
+      mutedForeground: "#94A3B8",
+      primary: "#22D3EE",
+      primaryForeground: "#0F172A",
+      accent: "#A78BFA",
+      border: "#334155",
+      success: "#34D399",
+      warning: "#FBBF24",
+      danger: "#F87171",
+      focus: "#22D3EE"
+    },
     colors: {
       background: "#F8FAFC",
       surface: "#FFFFFF",
@@ -1706,9 +1811,14 @@ const designTokenPresets = {
 
 function designTokensFor(designSystem, prompt) {
   const preset = designTokenPresets[designSystem.profile] ?? designTokenPresets["focused-productivity"];
-  const wantsDark = /\bdark\b|\bdark mode\b/i.test(prompt) && preset.darkColors;
+  // Dark mode is requested by an explicit --dark flag or a "dark"/"dark mode" prompt cue.
+  // Every profile now ships a complete darkColors set, so this never silently falls back.
+  const wantsDark = Boolean((flags.has("--dark") || /\bdark\b|\bdark mode\b/i.test(prompt)) && preset.darkColors);
   return {
+    theme: wantsDark ? "dark" : "light",
     colors: wantsDark ? preset.darkColors : preset.colors,
+    colorsLight: preset.colors,
+    colorsDark: preset.darkColors,
     typography: preset.typography,
     spacing: preset.spacing,
     radius: preset.radius,
@@ -1759,7 +1869,8 @@ function pageFocusFor(prompt) {
 }
 
 function designBriefMarkdown(brief) {
-  const colorLines = Object.entries(brief.designTokens.colors).map(([key, value]) => `- ${key}: ${value}`).join("\n");
+  const colorLines = Object.entries(brief.designTokens.colorsLight ?? brief.designTokens.colors).map(([key, value]) => `- ${key}: ${value}`).join("\n");
+  const darkColorLines = Object.entries(brief.designTokens.colorsDark ?? {}).map(([key, value]) => `- ${key}: ${value}`).join("\n");
   return `# Buildable Design Brief
 
 Prompt:
@@ -1795,7 +1906,15 @@ ${brief.nonGoals.map((goal) => `- ${goal}`).join("\n")}
 
 ## Color Tokens
 
+Active theme: ${brief.designTokens.theme}. Both token sets are provided so you can wire a light/dark toggle; map them to CSS variables or your theme config rather than hard-coding hex.
+
+### Light
+
 ${colorLines}
+
+### Dark
+
+${darkColorLines}
 
 ## Typography
 

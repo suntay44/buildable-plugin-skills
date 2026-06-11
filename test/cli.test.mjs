@@ -669,6 +669,42 @@ test("design-system registry exposes a foundations token contract", () => {
   assert.equal(run(["check", "--json"]).status, 0);
 });
 
+test("every design profile ships a complete dark palette", () => {
+  const COLOR_KEYS = [
+    "background", "surface", "surfaceMuted", "foreground", "mutedForeground",
+    "primary", "primaryForeground", "accent", "border", "success", "warning", "danger", "focus"
+  ];
+  const prompts = [
+    "Build me a todo app",
+    "Build me a CRM",
+    "Build me a landing page for a startup",
+    "Build me a marketplace for local services",
+    "Build me a mobile habit tracker",
+    "Build me a mobile chat app",
+    "Build me a restaurant website",
+    "Build me a blog"
+  ];
+  const seen = new Set();
+  for (const prompt of prompts) {
+    const light = jsonFrom(run(["design", prompt, "--json"]));
+    const dark = jsonFrom(run(["design", prompt, "--dark", "--json"]));
+    const profile = light.designSystem.profile;
+    seen.add(profile);
+
+    assert.equal(dark.designTokens.theme, "dark", `${profile} --dark sets theme`);
+    for (const key of COLOR_KEYS) {
+      assert.ok(dark.designTokens.colorsDark?.[key], `${profile} dark.${key} present`);
+    }
+    // --dark swaps the active palette to the dark set, which differs from light.
+    assert.equal(dark.designTokens.colors.background, dark.designTokens.colorsDark.background);
+    assert.notEqual(light.designTokens.colors.background, dark.designTokens.colors.background, `${profile} dark differs from light`);
+    // The default (light) brief still exposes both sets so an agent can wire a toggle.
+    assert.equal(light.designTokens.theme, "light");
+    assert.ok(light.designTokens.colorsLight?.background && light.designTokens.colorsDark?.background, `${profile} exposes both palettes`);
+  }
+  assert.ok(seen.size >= 8, `covered ${seen.size} distinct profiles, expected >= 8`);
+});
+
 test("review --strict fails on local-first guardrail drift", () => {
   const workspace = mkdtempSync(join(tmpdir(), "buildable-strict-"));
   const out = join(workspace, "app");

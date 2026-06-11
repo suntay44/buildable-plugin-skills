@@ -15,6 +15,7 @@ Unreleased section here and syncs the version across every plugin manifest.
 - `buildable review` `design-tokens` check: warns when components bypass the theme palette (inline-style hex or 2+ raw bracket-hex colors in one file), while allowing a single shared surface tint.
 - Three surface-specific quality rubrics — `content-marketing`, `data-dense`, and `forms-auth` — layered onto the base rubric by `buildable design` based on the selected design profile.
 - `buildable design` brief now emits the token-usage contract so agents build from named tokens, not ad-hoc values.
+- Dark-mode palettes for every design profile (previously only one). `buildable design --dark` (or a "dark mode" prompt) activates the dark theme, and every brief now ships both light and dark token sets plus a `theme` label so agents can wire a light/dark toggle. A test guarantees no profile ships an incomplete dark palette.
 
 ## [0.2.0] - 2026-06-10
 

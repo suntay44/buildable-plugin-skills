@@ -12,7 +12,7 @@ Create a Buildable design brief for: **$ARGUMENTS**
    buildable design "$ARGUMENTS" 2>/dev/null || node "${CLAUDE_PLUGIN_ROOT:-.}/bin/buildable.mjs" design "$ARGUMENTS"
    ```
 
-   Use `--page "login"` or similar when the user asks for a specific page/component. Add `--write` only when the user wants the brief saved into the current app workspace.
+   Use `--page "login"` or similar when the user asks for a specific page/component. Add `--dark` (or say "dark mode" in the prompt) to make the dark palette the active theme. Add `--write` only when the user wants the brief saved into the current app workspace.
 
 2. If a `buildable-app-spec.json` exists, treat it as the app context. Otherwise, let `design` classify the prompt.
 
