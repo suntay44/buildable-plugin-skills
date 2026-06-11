@@ -128,6 +128,13 @@ Agents should load only the playbooks referenced by `appSpec.references`.
 - `knowledge/quality-rubrics/data-dense.md`
 - `knowledge/quality-rubrics/forms-auth.md`
 
+### Data Layer
+
+Loaded only when a prompt asks to save, persist, or remember data. Keeps persistence local-first and vendor-neutral behind a repository seam.
+
+- `knowledge/data-layer/persistence-ladder.md`
+- `knowledge/data-layer/repository-pattern.md`
+
 ## How To Contribute
 
 1. Add concrete builder intelligence: an archetype, template, UI pattern, rubric, fixture prompt, or generated reference notes.

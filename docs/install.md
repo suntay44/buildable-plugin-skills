@@ -219,3 +219,5 @@ The same rule is emitted in every plan as `appSpec.referenceLoadingContract`.
 Buildable should reduce ambiguity, not hide major decisions.
 
 Use defaults for common product expectations such as filters, empty states, realistic mock data, responsive layout, and accessible forms. When users provide screenshots/files, preserve them as explicit references and inspect only those files. Ask or wait for explicit user direction before choosing vague product intent or adding auth, databases, payments, collaboration, external APIs, notifications, maps, camera access, or deployment.
+
+When a user does ask to save, persist, or remember data, Buildable opts into the local-first persistence ladder (`knowledge/data-layer/`): default to local browser/file storage behind a vendor-neutral repository seam, and add a hosted database only when the user names one — kept behind the same seam so the app still runs locally. `buildable review` allows the backend recorded on the spec while still flagging un-named hosted vendors.
