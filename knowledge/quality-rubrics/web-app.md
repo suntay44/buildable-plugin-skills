@@ -10,7 +10,7 @@ Score each category from 0 to 3.
 - `State Coverage`: handles empty, active, edited, deleted, and filtered states. `buildable review` warns (`state-coverage`) when the archetype declares an empty/filtered state that is missing from the source.
 - `Responsiveness`: works on mobile and desktop without overlap or overflow. Follow `knowledge/ui-patterns/responsive-layouts.md` — pair fixed grid tracks with `minmax(0,1fr)` (never a bare `1fr`), add `min-w-0` to children holding tables/long text, and stack sidebar content instead of using viewport-keyed multi-column grids inside it.
 - `Accessibility`: labels, keyboard-friendly controls, focus states, contrast. `buildable review` warns (`accessible-forms`, `focus-styles`) on unlabeled controls or missing `focus-visible` styles.
-- `Visual Quality`: hierarchy, spacing, modern product feel, non-generic UI.
+- `Visual Quality`: hierarchy, spacing, modern product feel, non-generic UI, built from the `foundations` token scales in `core/design-system-registry.json`. `buildable review` warns (`design-tokens`) when components hard-code colors instead of using theme tokens.
 - `Code Quality`: clear structure, typed data, simple state, no unnecessary backend.
 - `Local-First`: no hosted assumptions, secrets, accounts, billing, or deployment.
 

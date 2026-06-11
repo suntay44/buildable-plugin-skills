@@ -1,6 +1,50 @@
 {
   "version": "0.1.0",
   "loadingRule": "Use this registry only to select a compact designSystem for the app spec. Do not load every UI/UX playbook.",
+  "foundations": {
+    "description": "Universal, profile-independent scales every Buildable app builds from. Per-profile color values are emitted by `buildable design`; these are the shared scales plus the token-usage contract the reviewer enforces.",
+    "spacingScale": {
+      "base": "4px",
+      "steps": [4, 8, 12, 16, 20, 24, 32, 40, 48, 64],
+      "rule": "Compose spacing from these steps; avoid arbitrary off-scale pixel values."
+    },
+    "typeScale": {
+      "steps": [12, 14, 16, 18, 20, 24, 30, 36, 48, 60],
+      "lineHeight": { "heading": "1.1-1.3", "body": "1.5-1.7" },
+      "weights": [400, 500, 600],
+      "rule": "Establish hierarchy with size and two to three weights, not weight spam."
+    },
+    "radiusScale": {
+      "controls": "6-8px",
+      "cards": "8-12px",
+      "pills": "9999px",
+      "rule": "Pick one control radius and one card radius per app and stay consistent."
+    },
+    "elevation": {
+      "levels": ["border-only", "subtle shadow on hover/focus", "one raised level for overlays"],
+      "rule": "Prefer borders and tonal surfaces over heavy shadows."
+    },
+    "motion": {
+      "durations": { "fast": "120-160ms", "default": "180-220ms", "slow": "240-300ms" },
+      "easing": "ease-out on enter, ease-in on exit",
+      "rule": "Respect prefers-reduced-motion and never block interaction on animation."
+    },
+    "color": {
+      "semanticRoles": ["background", "surface", "surfaceMuted", "foreground", "mutedForeground", "primary", "primaryForeground", "accent", "border", "success", "warning", "danger", "focus"],
+      "rule": "Drive every color from a named theme token; do not hard-code raw hex in components."
+    },
+    "accessibility": {
+      "contrast": { "bodyText": "4.5:1", "largeText": "3:1", "uiBorders": "3:1" },
+      "focusVisible": "every interactive control has a visible focus-visible style",
+      "tapTarget": "44px minimum on touch surfaces"
+    },
+    "tokenUsageContract": [
+      "Define colors, spacing, radius, and type as theme tokens (Tailwind theme / CSS variables), then reference them by name.",
+      "Do not hard-code raw hex colors or scatter arbitrary bracket values (bg-[#0ea5e9], p-[7px]) across components.",
+      "Keep one spacing scale, one type scale, and one or two radii across the whole app.",
+      "buildable review (design-tokens) warns when components bypass the token system."
+    ]
+  },
   "profiles": [
     {
       "id": "focused-productivity",

@@ -124,6 +124,9 @@ Agents should load only the playbooks referenced by `appSpec.references`.
 
 - `knowledge/quality-rubrics/web-app.md`
 - `knowledge/quality-rubrics/mobile-app.md`
+- `knowledge/quality-rubrics/content-marketing.md`
+- `knowledge/quality-rubrics/data-dense.md`
+- `knowledge/quality-rubrics/forms-auth.md`
 
 ## How To Contribute
 
