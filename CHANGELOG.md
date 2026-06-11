@@ -16,6 +16,8 @@ Unreleased section here and syncs the version across every plugin manifest.
 - Three surface-specific quality rubrics — `content-marketing`, `data-dense`, and `forms-auth` — layered onto the base rubric by `buildable design` based on the selected design profile.
 - `buildable design` brief now emits the token-usage contract so agents build from named tokens, not ad-hoc values.
 - Dark-mode palettes for every design profile (previously only one). `buildable design --dark` (or a "dark mode" prompt) activates the dark theme, and every brief now ships both light and dark token sets plus a `theme` label so agents can wire a light/dark toggle. A test guarantees no profile ships an incomplete dark palette.
+- Local-first persistence ladder: a new `knowledge/data-layer/` pack (persistence ladder + repository seam). When a prompt asks to save/persist/remember data, the plan opts into local-default persistence (`appSpec.persistence`), adds the data-layer references, and instructs the agent to keep storage behind a vendor-neutral repository seam. A user who names a backend (e.g. Supabase) is allowed that one vendor behind the seam.
+- `buildable review` `persistence-seam` check: when persistence is requested, warns on raw storage calls that are not behind a repository seam. The local-first guardrail is now graceful — it allows the backend the user opted into (recorded on the spec) while still flagging un-named hosted vendors, and points drift messages to the seam.
 
 ## [0.2.0] - 2026-06-10
 

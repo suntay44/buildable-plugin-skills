@@ -624,6 +624,9 @@ function enhancedPromptFor(originalPrompt, appSpec) {
     designPromptLine(appSpec.designSystem),
     designRulesLine(appSpec.designSystem),
     `Mock data guidance: ${appSpec.mockData.recordsPerEntity} realistic local records per entity; include populated, empty, filtered-empty, loading/saving, and validation/error states.`,
+    appSpec.persistence?.requested
+      ? `Persistence requested: ${appSpec.persistence.rule} Follow knowledge/data-layer/persistence-ladder.md and put storage behind the repository seam in knowledge/data-layer/repository-pattern.md.`
+      : null,
     `Reference loading contract: ${referenceLoadingContract.join(" ")}`,
     referenceInputs,
     `Do not add: ${guardrails}.`,
@@ -639,6 +642,30 @@ function readJson(path) {
 
 function writeJson(path, value) {
   writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`);
+}
+
+// Local-first persistence is opt-in: only when the prompt asks to save/persist/remember data.
+// Default to the lowest local rung behind the repository seam; a hosted backend is allowed only
+// when the user names one (recorded as userNamedBackend so review can allow that one vendor).
+// Strong, unambiguous persistence signals.
+const persistenceStrongCue = /\b(persist(?:s|ed|ing|ence)?|databases?|local\s?storage|indexeddb|sqlite|offline|survives? (?:a )?(?:refresh|reload)|don'?t lose)\b/i;
+// A save/store/keep/remember verb close to a data-ish object (avoids "save time", "save money").
+const persistenceVerbObjectCue = /\b(sav(?:e|es|ed|ing)|stor(?:e|es|ed|ing)|keep(?:s|ing)?|remember(?:s|ing)?)\b[^.?!]{0,24}\b(data|state|changes|progress|work|tasks?|records?|items?|notes?|entries|leads?|history|settings|between sessions|across sessions)\b/i;
+const namedBackendCue = /\b(supabase|firebase|firestore|postgres|postgresql|mysql|mongodb|planetscale|dynamodb|prisma)\b/i;
+
+function persistenceFor(prompt) {
+  if (!persistenceStrongCue.test(prompt) && !persistenceVerbObjectCue.test(prompt)) return null;
+  const named = namedBackendCue.exec(prompt);
+  return {
+    requested: true,
+    defaultLayer: "browser-local",
+    vendorNeutral: true,
+    userNamedBackend: named ? named[1].toLowerCase() : null,
+    references: ["knowledge/data-layer/persistence-ladder.md", "knowledge/data-layer/repository-pattern.md"],
+    rule: named
+      ? `User named ${named[1].toLowerCase()}: place it at the remote rung behind the repository seam so the app still runs locally and stays swappable.`
+      : "Default to local browser/file storage behind a repository seam; do not add a hosted database unless the user names one."
+  };
 }
 
 function specFor(prompt, options = {}) {
@@ -662,6 +689,24 @@ function specFor(prompt, options = {}) {
     references.push(designSelectionReference);
   }
 
+  const persistence = persistenceFor(prompt);
+  if (persistence) {
+    for (const ref of persistence.references) {
+      if (existsSync(join(root, ref)) && !references.includes(ref)) references.push(ref);
+    }
+  }
+
+  // Default guardrails forbid unrequested databases. If the user named a backend, allow that one
+  // vendor (behind the seam) by dropping the blanket managed-database ban for this spec.
+  const mustNotInclude = [
+    "auth unless requested",
+    "billing",
+    "cloud previews",
+    persistence?.userNamedBackend ? null : "managed databases",
+    "hosted deployment",
+    "telemetry"
+  ].filter(Boolean);
+
   const appSpec = {
       name: appNameFor(classification.archetype),
       target,
@@ -683,15 +728,9 @@ function specFor(prompt, options = {}) {
       referenceInputs: options.referenceInputs ?? [],
       referenceLoadingContract,
       dataMode: templateSpec.stack?.data ?? "local-state",
+      persistence,
       starter: templateSpec.starter,
-      mustNotInclude: [
-        "auth unless requested",
-        "billing",
-        "cloud previews",
-        "managed databases",
-        "hosted deployment",
-        "telemetry"
-      ],
+      mustNotInclude,
       acceptanceCriteria: defaults.acceptanceCriteria,
       localOnly: true,
       questionsNeeded: classification.questionsNeeded,
@@ -2474,6 +2513,7 @@ function review() {
     );
   }
 
+  const allowedBackend = appSpec?.persistence?.userNamedBackend ?? null;
   for (const file of textFiles) {
     if (
       file.endsWith("BUILDABLE_NOTES.md") ||
@@ -2485,9 +2525,14 @@ function review() {
     }
     const text = readFileSync(file, "utf8").toLowerCase();
     for (const term of localFirstDriftTerms) {
+      // The user can opt into one named backend; that vendor is allowed (behind the seam).
+      if (allowedBackend && term === allowedBackend) continue;
       // Whole-token match so "stripe" doesn't flag "striped", "login" doesn't flag "blogin", etc.
       if (hasTagPhrase(text, term)) {
-        const message = `Non-local-first term "${term}" appears in ${relative(target, file)}.`;
+        const seamHint = appSpec?.persistence?.requested
+          ? " If this is the requested data layer, keep it behind the repository seam (knowledge/data-layer/repository-pattern.md)."
+          : "";
+        const message = `Non-local-first term "${term}" appears in ${relative(target, file)}.${seamHint}`;
         // --strict turns local-first guardrail drift into a blocking failure.
         if (flags.has("--strict")) issues.push(message);
         else warnings.push(message);
@@ -2516,6 +2561,23 @@ function review() {
         : `${tokenRisks.length} file(s) hard-code colors instead of theme tokens. See core/design-system-registry.json foundations.tokenUsageContract.`
   });
   for (const risk of tokenRisks) warnings.push(risk);
+
+  // When persistence was requested, nudge toward a repository seam rather than ad-hoc storage calls.
+  if (appSpec?.persistence?.requested) {
+    const hasSeam = /\brepositor(?:y|ies)\b|\badapter\b|createLocalRepository|createRemoteRepository|interface\s+\w*Repository/i.test(implementationText);
+    const hasStorage = /localstorage|indexeddb|asyncstorage|sqlite/i.test(implementationText);
+    checks.push({
+      name: "persistence-seam",
+      status: hasSeam || !hasStorage ? "pass" : "warn",
+      message:
+        hasSeam
+          ? "Persistence is routed through a repository seam."
+          : hasStorage
+            ? "Storage calls found without a repository seam; wrap them so the storage rung stays swappable. See knowledge/data-layer/repository-pattern.md."
+            : "Persistence requested; implement it behind the repository seam. See knowledge/data-layer/persistence-ladder.md."
+    });
+    if (hasStorage && !hasSeam) warnings.push("Storage calls are not behind a repository seam. See knowledge/data-layer/repository-pattern.md.");
+  }
 
   // Accessibility + state-coverage heuristics (graded, non-blocking warnings).
   const controlCount = (implementationText.match(/<input\b|<select\b|<textarea\b/g) ?? []).length;

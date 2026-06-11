@@ -705,6 +705,53 @@ test("every design profile ships a complete dark palette", () => {
   assert.ok(seen.size >= 8, `covered ${seen.size} distinct profiles, expected >= 8`);
 });
 
+test("plan opts into local-first persistence only when asked", () => {
+  const asked = jsonFrom(run(["plan", "Build me a todo app that saves my data", "--json"]));
+  assert.equal(asked.appSpec.persistence?.requested, true);
+  assert.equal(asked.appSpec.persistence.userNamedBackend, null);
+  assert.ok(asked.appSpec.references.includes("knowledge/data-layer/persistence-ladder.md"));
+  assert.ok(asked.appSpec.references.includes("knowledge/data-layer/repository-pattern.md"));
+  assert.match(asked.enhancedPrompt, /Persistence requested/);
+
+  const plain = jsonFrom(run(["plan", "Build me a todo app", "--json"]));
+  assert.equal(plain.appSpec.persistence, null);
+  assert.ok(!plain.appSpec.references.some((r) => r.includes("data-layer")));
+
+  // A marketing "save money" phrase is not a persistence ask.
+  const decoy = jsonFrom(run(["plan", "Build me a landing page to save money on ads", "--json"]));
+  assert.equal(decoy.appSpec.persistence, null);
+});
+
+test("persistence allows a user-named backend behind the seam, still flags others", () => {
+  const workspace = mkdtempSync(join(tmpdir(), "buildable-persist-"));
+  const out = join(workspace, "app");
+  run(["generate", "Build me a CRM that saves leads to my Supabase", "--out", out, "--force", "--json"], { cwd: workspace });
+
+  const spec = JSON.parse(readFileSync(join(out, "buildable-app-spec.json"), "utf8"));
+  assert.equal(spec.persistence.userNamedBackend, "supabase");
+  assert.ok(!spec.mustNotInclude.includes("managed databases"), "named backend drops the blanket ban");
+
+  writeFileSync(join(out, "components/backend.tsx"), 'export const a = "uses supabase as the user backend";\n');
+  writeFileSync(join(out, "components/extra.tsx"), 'export const b = "also wires firebase";\n');
+  const report = JSON.parse(run(["review", out, "--strict", "--json"], { cwd: workspace }).stdout);
+  const all = [...report.issues, ...report.warnings].join("\n");
+  assert.ok(!all.includes('"supabase"'), "user-named backend is allowed");
+  assert.ok(all.includes('"firebase"'), "an un-named backend is still flagged");
+});
+
+test("review warns when persistence has storage calls without a seam", () => {
+  const workspace = mkdtempSync(join(tmpdir(), "buildable-seam-"));
+  const out = join(workspace, "app");
+  run(["generate", "Build me a todo app that saves my data", "--out", out, "--json"], { cwd: workspace });
+
+  // Storage primitive with no repository wrapper.
+  writeFileSync(join(out, "components/store.tsx"), 'export function save(v) { localStorage.setItem("k", v); }\n');
+  const report = jsonFrom(run(["review", out, "--json"], { cwd: workspace }));
+  const seam = report.checks.find((c) => c.name === "persistence-seam");
+  assert.equal(seam.status, "warn");
+  assert.ok(report.warnings.some((w) => w.includes("repository seam")));
+});
+
 test("review --strict fails on local-first guardrail drift", () => {
   const workspace = mkdtempSync(join(tmpdir(), "buildable-strict-"));
   const out = join(workspace, "app");
