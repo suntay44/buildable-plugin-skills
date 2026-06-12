@@ -15,7 +15,8 @@
     "components/note-editor.tsx",
     "components/note-list.tsx",
     "lib/sample-notes.ts",
-    "types/note.ts"
+    "types/note.ts",
+    "lib/repository.ts"
   ],
   "references": [
     "knowledge/archetypes/notes.md",
@@ -28,6 +29,7 @@
     "knowledge/design-playbooks/productivity.md",
     "knowledge/design-playbooks/ui-quality.md",
     "knowledge/quality-rubrics/web-app.md",
-    "templates/web/notes/TEMPLATE_PLAN.md"
+    "templates/web/notes/TEMPLATE_PLAN.md",
+    "knowledge/data-layer/repository-pattern.md"
   ]
 }

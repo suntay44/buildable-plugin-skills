@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { NoteEditor } from "@/components/note-editor";
 import { NoteList } from "@/components/note-list";
 import { NoteSidebar } from "@/components/note-sidebar";
 import { collectionsOf, createNoteId, filterNotes, tagsOf, today } from "@/lib/note-utils";
+import { createLocalRepository } from "@/lib/repository";
 import { sampleNotes } from "@/lib/sample-notes";
 import type { Note, NoteFilters } from "@/types/note";
 
@@ -14,10 +15,26 @@ const defaultFilters: NoteFilters = {
   query: ""
 };
 
+// Storage sits behind the repository seam; swapping this factory is the only
+// change needed to move the app up or down the persistence ladder.
+const notesRepository = createLocalRepository<Note>("buildable-notes", sampleNotes);
+
 export default function Home() {
   const [notes, setNotes] = useState<Note[]>(sampleNotes);
   const [filters, setFilters] = useState<NoteFilters>(defaultFilters);
   const [selectedId, setSelectedId] = useState<string | null>(sampleNotes[0]?.id ?? null);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    const stored = notesRepository.load();
+    setNotes(stored);
+    setSelectedId((current) => current ?? stored[0]?.id ?? null);
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (hydrated) notesRepository.saveAll(notes);
+  }, [notes, hydrated]);
 
   const visibleNotes = useMemo(() => filterNotes(notes, filters), [notes, filters]);
   const collections = useMemo(() => collectionsOf(notes), [notes]);
