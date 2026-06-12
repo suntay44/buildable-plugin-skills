@@ -38,6 +38,10 @@ jobs:
           - { name: marketplace, prompt: "Build me a marketplace for local services" }
           - { name: notes, prompt: "Build me a notes app" }
           - { name: ecommerce-admin, prompt: "Build me an ecommerce admin to manage products and orders" }
+          - { name: landing-page, prompt: "Build me a landing page for my startup" }
+          - { name: portfolio, prompt: "Build me a portfolio website to showcase my work" }
+          - { name: blog-cms, prompt: "Build me a blog with a CMS editor" }
+          - { name: recipe-app, prompt: "Build me a recipe app with ingredient search" }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

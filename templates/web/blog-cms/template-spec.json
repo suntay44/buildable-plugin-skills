@@ -1,0 +1,34 @@
+{
+  "name": "web-blog-cms",
+  "target": "web",
+  "archetype": "blog-cms",
+  "stack": {
+    "framework": "Next.js",
+    "language": "TypeScript",
+    "styling": "Tailwind CSS",
+    "data": "local-state"
+  },
+  "status": "runnable",
+  "starter": "templates/web/blog-cms/starter",
+  "expectedFiles": [
+    "app/page.tsx",
+    "components/post-list.tsx",
+    "components/post-editor.tsx",
+    "lib/sample-posts.ts",
+    "types/post.ts"
+  ],
+  "references": [
+    "knowledge/archetypes/blog-cms.md",
+    "knowledge/data-models/blog-cms.md",
+    "knowledge/screen-graphs/blog-cms.md",
+    "knowledge/ui-patterns/forms.md",
+    "knowledge/ui-patterns/filters.md",
+    "knowledge/ui-patterns/empty-states.md",
+    "knowledge/ui-patterns/responsive-layouts.md",
+    "knowledge/design-playbooks/productivity.md",
+    "knowledge/design-playbooks/ui-quality.md",
+    "knowledge/quality-rubrics/web-app.md",
+    "knowledge/quality-rubrics/content-marketing.md",
+    "templates/web/blog-cms/TEMPLATE_PLAN.md"
+  ]
+}

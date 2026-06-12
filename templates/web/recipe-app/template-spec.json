@@ -1,0 +1,33 @@
+{
+  "name": "web-recipe-app",
+  "target": "web",
+  "archetype": "recipe-app",
+  "stack": {
+    "framework": "Next.js",
+    "language": "TypeScript",
+    "styling": "Tailwind CSS",
+    "data": "local-state"
+  },
+  "status": "runnable",
+  "starter": "templates/web/recipe-app/starter",
+  "expectedFiles": [
+    "app/page.tsx",
+    "components/recipe-card.tsx",
+    "components/recipe-detail.tsx",
+    "lib/sample-recipes.ts",
+    "types/recipe.ts"
+  ],
+  "references": [
+    "knowledge/archetypes/recipe-app.md",
+    "knowledge/data-models/recipe-app.md",
+    "knowledge/screen-graphs/recipe-app.md",
+    "knowledge/ui-patterns/filters.md",
+    "knowledge/ui-patterns/empty-states.md",
+    "knowledge/ui-patterns/responsive-layouts.md",
+    "knowledge/design-playbooks/modern-saas.md",
+    "knowledge/design-playbooks/ui-quality.md",
+    "knowledge/quality-rubrics/web-app.md",
+    "knowledge/quality-rubrics/content-marketing.md",
+    "templates/web/recipe-app/TEMPLATE_PLAN.md"
+  ]
+}

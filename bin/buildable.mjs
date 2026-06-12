@@ -339,7 +339,9 @@ function inferredFieldsFor(archetype, entityName, registered) {
     Note: ["title", "body", "tags", "updatedAt"],
     Order: ["number", "customerName", "status", "total"],
     Place: ["name", "location", "notes", "category"],
+    Post: ["title", "slug", "excerpt", "body", "author", "category", "status", "publishedAt"],
     Product: ["name", "sku", "price", "stock", "status"],
+    Recipe: ["name", "description", "category", "ingredients", "steps", "prepMinutes", "servings", "dietTags", "saved"],
     Project: ["title", "description", "status", "dueDate"],
     Question: ["label", "type", "required", "options"],
     Response: ["submittedAt", "answers", "status"],
@@ -423,6 +425,71 @@ function defaultsFor(archetype) {
       sampleData: "meaningful",
       style: "modern marketplace",
       acceptanceCriteria: ["browse screen is populated", "filters work", "inquiry state is visible", "no hosted services are required"]
+    },
+    "landing-page": {
+      screens: [{ id: "home", purpose: "Single scroll page: hero, features, social proof, pricing, FAQ, closing CTA" }],
+      entities: [{ name: "Section", fields: ["id", "kind", "title", "subtitle", "ctaLabel", "ctaHref", "order"] }],
+      features: ["hero", "features", "social proof", "pricing", "faq", "closing cta", "responsive nav"],
+      sampleData: "meaningful",
+      style: "modern marketing website",
+      acceptanceCriteria: [
+        "the offer and primary CTA are obvious in the first viewport",
+        "exactly one pricing tier is highlighted",
+        "nav collapses to an accessible menu on mobile",
+        "copy is concrete product copy, no placeholder text",
+        "no hosted services are required"
+      ]
+    },
+    portfolio: {
+      screens: [
+        { id: "home", purpose: "Hero, featured work, about, contact CTA" },
+        { id: "work", purpose: "Project grid with tag filter and case study previews" }
+      ],
+      entities: [{ name: "Project", fields: ["id", "title", "summary", "role", "year", "tags", "featured"] }],
+      features: ["project grid", "tag filter", "case study preview", "about section", "contact cta", "filtered empty state"],
+      sampleData: "meaningful",
+      style: "editorial portfolio",
+      acceptanceCriteria: [
+        "hero states who and what within the first viewport",
+        "projects filter by tag with a filtered-empty state",
+        "project summaries are concrete outcomes",
+        "contact CTA is reachable from hero and footer",
+        "no hosted services are required"
+      ]
+    },
+    "blog-cms": {
+      screens: [
+        { id: "post-list", purpose: "Browse, search, and filter posts by status and category" },
+        { id: "post-editor", purpose: "Create and edit a post with metadata and status" }
+      ],
+      entities: [{ name: "Post", fields: ["id", "title", "slug", "excerpt", "body", "author", "category", "tags", "status", "publishedAt", "updatedAt"] }],
+      features: ["create post", "edit post", "publish post", "filter drafts", "search posts", "empty state"],
+      sampleData: "meaningful",
+      style: "content product",
+      acceptanceCriteria: [
+        "post list distinguishes drafts from published",
+        "editor round-trips title, body, and metadata",
+        "search and status filter combine",
+        "empty and filtered-empty states exist",
+        "no hosted services are required"
+      ]
+    },
+    "recipe-app": {
+      screens: [
+        { id: "recipe-list", purpose: "Browse recipe cards with search and category/diet filters" },
+        { id: "recipe-detail", purpose: "Ingredients, ordered steps, servings, and save action" }
+      ],
+      entities: [{ name: "Recipe", fields: ["id", "name", "description", "category", "ingredients", "steps", "prepMinutes", "cookMinutes", "servings", "dietTags", "saved"] }],
+      features: ["recipe cards", "ingredient search", "category filter", "diet filter", "detail view", "save recipe", "filtered empty state"],
+      sampleData: "meaningful",
+      style: "content app",
+      acceptanceCriteria: [
+        "cards read well without photos",
+        "search matches ingredients, not just titles",
+        "saved view has its own empty state",
+        "detail steps are numbered and scannable",
+        "no hosted services are required"
+      ]
     }
   };
 

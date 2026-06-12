@@ -174,7 +174,7 @@ Use `generate` when the user wants Buildable to create the local starting point 
 
 Current runnable starter coverage:
 
-- runnable web: `templates/web/task-manager`, `templates/web/crm`, `templates/web/dashboard`, `templates/web/marketplace`, `templates/web/notes`, `templates/web/ecommerce-admin`
+- runnable web: `templates/web/task-manager`, `templates/web/crm`, `templates/web/dashboard`, `templates/web/marketplace`, `templates/web/notes`, `templates/web/ecommerce-admin`, `templates/web/landing-page`, `templates/web/portfolio`, `templates/web/blog-cms`, `templates/web/recipe-app`
 - runnable mobile: `templates/mobile/habit-tracker`, `templates/mobile/booking`, `templates/mobile/task-manager`
 - planned instruction packs: `templates/web/generic-app`, `templates/mobile/generic-app`, plus dedicated mobile packs for expense tracker, travel planner, fitness tracker, meal planner, chat app, subscription tracker, maintenance request, and field service
 

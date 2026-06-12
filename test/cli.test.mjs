@@ -551,8 +551,8 @@ test("generate --augment plans into an existing app without copying source", () 
 
 test("generate refuses planned templates without explicit plan-pack flag", () => {
   const workspace = mkdtempSync(join(tmpdir(), "buildable-planned-"));
-  const out = join(workspace, "recipes");
-  const result = run(["generate", "Build me a recipe app", "--out", out, "--json"], { cwd: workspace });
+  const out = join(workspace, "expenses");
+  const result = run(["generate", "Build me a mobile expense tracker", "--out", out, "--json"], { cwd: workspace });
 
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /not runnable yet/);
@@ -562,8 +562,8 @@ test("generate refuses planned templates without explicit plan-pack flag", () =>
 
 test("generate writes plan-only instruction packs for planned templates when requested", () => {
   const workspace = mkdtempSync(join(tmpdir(), "buildable-plan-pack-"));
-  const out = join(workspace, "recipes");
-  const result = run(["generate", "Build me a recipe app", "--out", out, "--plan-pack", "--json"], { cwd: workspace });
+  const out = join(workspace, "expenses");
+  const result = run(["generate", "Build me a mobile expense tracker", "--out", out, "--plan-pack", "--json"], { cwd: workspace });
   const payload = jsonFrom(result);
 
   assert.equal(payload.runnable, false);

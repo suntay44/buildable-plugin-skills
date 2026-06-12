@@ -307,6 +307,10 @@ Real, unedited output — each rendered straight from a single prompt against it
 | `templates/web/marketplace` | web | ✅ runnable |
 | `templates/web/notes` | web | ✅ runnable |
 | `templates/web/ecommerce-admin` | web | ✅ runnable |
+| `templates/web/landing-page` | web | ✅ runnable |
+| `templates/web/portfolio` | web | ✅ runnable |
+| `templates/web/blog-cms` | web | ✅ runnable |
+| `templates/web/recipe-app` | web | ✅ runnable |
 | `templates/mobile/habit-tracker` | mobile | ✅ runnable |
 | `templates/mobile/booking` | mobile | ✅ runnable |
 | `templates/mobile/task-manager` | mobile | ✅ runnable |
@@ -372,7 +376,7 @@ Buildable V1 does **not** include billing, builder accounts, cloud previews, man
 ```txt
 core/           Prompt classification, app spec, workflow, ask-vs-build policy
 knowledge/      Archetypes, data models, screen graphs, UI patterns, playbooks, rubrics
-templates/      Golden templates (9 runnable starters + 10 planned specs)
+templates/      Golden templates (13 runnable starters + 10 planned specs)
 skills/         Agent skills: planner, web-builder, mobile-builder, reviewer
 commands/       Claude Code slash commands
 adapters/       Codex, Claude, Cursor integration notes

@@ -75,6 +75,10 @@ Golden templates are Buildable's approved starting points. Runnable templates co
 - `templates/web/marketplace`
 - `templates/web/notes`
 - `templates/web/ecommerce-admin`
+- `templates/web/landing-page`
+- `templates/web/portfolio`
+- `templates/web/blog-cms`
+- `templates/web/recipe-app`
 
 ### Runnable Mobile Starters
 

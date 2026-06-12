@@ -113,7 +113,7 @@ If `--out` is omitted, Buildable creates a folder from the app name (e.g. `TaskF
 Planned template (no runnable starter yet):
 
 ```bash
-buildable generate "Build me a recipe app" --plan-pack
+buildable generate "Build me a mobile expense tracker" --plan-pack
 ```
 
 This writes local implementation instructions, not runnable app source. Only `✅ runnable` templates copy starter code; `📝 planned` templates intentionally stay plan-only until a starter exists.

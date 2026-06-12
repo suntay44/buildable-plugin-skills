@@ -1,0 +1,32 @@
+{
+  "name": "web-landing-page",
+  "target": "web",
+  "archetype": "landing-page",
+  "stack": {
+    "framework": "Next.js",
+    "language": "TypeScript",
+    "styling": "Tailwind CSS",
+    "data": "local-state"
+  },
+  "status": "runnable",
+  "starter": "templates/web/landing-page/starter",
+  "expectedFiles": [
+    "app/page.tsx",
+    "components/site-nav.tsx",
+    "components/pricing-tiers.tsx",
+    "lib/sample-content.ts",
+    "types/content.ts"
+  ],
+  "references": [
+    "knowledge/archetypes/landing-page.md",
+    "knowledge/data-models/landing-page.md",
+    "knowledge/screen-graphs/landing-page.md",
+    "knowledge/ui-patterns/navigation.md",
+    "knowledge/ui-patterns/responsive-layouts.md",
+    "knowledge/design-playbooks/modern-saas.md",
+    "knowledge/design-playbooks/ui-quality.md",
+    "knowledge/quality-rubrics/web-app.md",
+    "knowledge/quality-rubrics/content-marketing.md",
+    "templates/web/landing-page/TEMPLATE_PLAN.md"
+  ]
+}

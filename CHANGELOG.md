@@ -11,6 +11,9 @@ Unreleased section here and syncs the version across every plugin manifest.
 
 ### Added
 
+- Four new runnable web golden starters — `landing-page` (single-scroll SaaS marketing page with responsive nav, pricing, FAQ), `portfolio` (filterable project grid with case-study previews), `blog-cms` (two-pane post list + editor with draft/scheduled/published workflow), and `recipe-app` (ingredient search, category/diet filters, saved view, detail steps) — each build-verified, wired into config sync, CI, and eval fixtures, and passing `review --strict` with zero warnings. Runnable coverage: 9 → 13.
+- Deep knowledge (data models + screen graphs) for `landing-page`, `portfolio`, and `recipe-app`; dedicated plan defaults (screens, entities, features, acceptance criteria) for all four new archetypes; `Post` and `Recipe` entity field inference.
+
 - Design token foundations in `core/design-system-registry.json`: shared spacing, type, radius, elevation, and motion scales, accessibility contrast targets, and a token-usage contract that `buildable check` now validates.
 - `buildable review` `design-tokens` check: warns when components bypass the theme palette (inline-style hex or 2+ raw bracket-hex colors in one file), while allowing a single shared surface tint.
 - Three surface-specific quality rubrics — `content-marketing`, `data-dense`, and `forms-auth` — layered onto the base rubric by `buildable design` based on the selected design profile.
