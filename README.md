@@ -297,6 +297,10 @@ Real, unedited output — each rendered straight from a single prompt against it
     <td width="50%"><img src="docs/screenshots/web-dashboard.png" alt="Generated SaaS dashboard"><br><sub><code>buildable generate "Build me a SaaS analytics dashboard"</code></sub></td>
     <td width="50%"><img src="docs/screenshots/web-marketplace.png" alt="Generated services marketplace"><br><sub><code>buildable generate "Build me a marketplace for local services"</code></sub></td>
   </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/web-notes.png" alt="Generated notes workspace"><br><sub><code>buildable generate "Build me a notes app for organizing ideas"</code></sub></td>
+    <td width="50%"><img src="docs/screenshots/web-ecommerce-admin.png" alt="Generated ecommerce admin"><br><sub><code>buildable generate "Build me an ecommerce admin to manage products and orders"</code></sub></td>
+  </tr>
 </table>
 
 | Template | Target | Status |
