@@ -1,0 +1,34 @@
+{
+  "name": "web-inventory-manager",
+  "target": "web",
+  "archetype": "inventory-manager",
+  "stack": {
+    "framework": "Next.js",
+    "language": "TypeScript",
+    "styling": "Tailwind CSS",
+    "data": "local-state"
+  },
+  "status": "runnable",
+  "starter": "templates/web/inventory-manager/starter",
+  "expectedFiles": [
+    "app/page.tsx",
+    "components/inventory-table.tsx",
+    "components/inventory-summary.tsx",
+    "lib/sample-items.ts",
+    "types/item.ts"
+  ],
+  "references": [
+    "knowledge/archetypes/inventory-manager.md",
+    "knowledge/data-models/inventory-manager.md",
+    "knowledge/screen-graphs/inventory-manager.md",
+    "knowledge/ui-patterns/tables.md",
+    "knowledge/ui-patterns/filters.md",
+    "knowledge/ui-patterns/empty-states.md",
+    "knowledge/ui-patterns/responsive-layouts.md",
+    "knowledge/design-playbooks/admin-dashboard.md",
+    "knowledge/design-playbooks/ui-quality.md",
+    "knowledge/quality-rubrics/web-app.md",
+    "knowledge/quality-rubrics/data-dense.md",
+    "templates/web/inventory-manager/TEMPLATE_PLAN.md"
+  ]
+}

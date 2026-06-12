@@ -70,6 +70,16 @@
       "prompt": "Build me a recipe app with ingredient search",
       "archetype": "recipe-app",
       "target": "web"
+    },
+    {
+      "prompt": "Build me a job board with apply forms",
+      "archetype": "job-board",
+      "target": "web"
+    },
+    {
+      "prompt": "Build me an inventory manager with low-stock alerts",
+      "archetype": "inventory-manager",
+      "target": "web"
     }
   ]
 }

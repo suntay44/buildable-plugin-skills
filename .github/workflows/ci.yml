@@ -42,6 +42,8 @@ jobs:
           - { name: portfolio, prompt: "Build me a portfolio website to showcase my work" }
           - { name: blog-cms, prompt: "Build me a blog with a CMS editor" }
           - { name: recipe-app, prompt: "Build me a recipe app with ingredient search" }
+          - { name: job-board, prompt: "Build me a job board with apply forms" }
+          - { name: inventory-manager, prompt: "Build me an inventory manager with low-stock alerts" }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

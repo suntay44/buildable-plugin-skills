@@ -328,6 +328,7 @@ function inferredFieldsFor(archetype, entityName, registered) {
     Conversation: ["title", "participants", "lastMessageAt", "unreadCount"],
     Course: ["title", "description", "progress", "status"],
     Event: ["title", "date", "location", "status"],
+    InventoryItem: ["name", "sku", "category", "quantity", "reorderLevel", "unitCost", "location"],
     Invoice: ["number", "clientName", "amount", "status", "dueDate"],
     Job: ["title", "company", "location", "status", "postedAt"],
     Lead: ["name", "company", "email", "stage", "value", "nextAction"],
@@ -488,6 +489,40 @@ function defaultsFor(archetype) {
         "search matches ingredients, not just titles",
         "saved view has its own empty state",
         "detail steps are numbered and scannable",
+        "no hosted services are required"
+      ]
+    },
+    "job-board": {
+      screens: [
+        { id: "jobs", purpose: "Browse, search, and filter job postings by type, location, and remote" },
+        { id: "job-detail", purpose: "Job detail with apply form and confirmation" }
+      ],
+      entities: [{ name: "Job", fields: ["id", "title", "company", "location", "type", "remote", "salaryLabel", "description", "tags", "postedAt"] }],
+      features: ["job list", "search jobs", "filter by type", "filter remote", "view detail", "save job", "apply with confirmation", "filtered empty state"],
+      sampleData: "meaningful",
+      style: "marketplace dashboard",
+      acceptanceCriteria: [
+        "job list is populated and newest-first",
+        "type / remote filters combine with search",
+        "filtered-empty state has a clear-filters action",
+        "apply flow shows a confirmation state",
+        "no hosted services are required"
+      ]
+    },
+    "inventory-manager": {
+      screens: [
+        { id: "inventory", purpose: "Stock table with category/location filters, low-stock highlighting, and quantity adjustment" },
+        { id: "item-detail", purpose: "Item detail with receive/consume quantity adjustment" }
+      ],
+      entities: [{ name: "InventoryItem", fields: ["id", "name", "sku", "category", "quantity", "reorderLevel", "unitCost", "location", "updatedAt"] }],
+      features: ["stock table", "search items", "category filter", "low-stock view", "adjust quantity", "total inventory value", "filtered empty state"],
+      sampleData: "meaningful",
+      style: "operations dashboard",
+      acceptanceCriteria: [
+        "stock table is populated with quantities and value",
+        "low-stock items are highlighted and filterable",
+        "receive / consume adjusts quantity and updates totals",
+        "filtered-empty state exists",
         "no hosted services are required"
       ]
     }

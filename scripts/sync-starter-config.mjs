@@ -20,7 +20,9 @@ const targets = [
   "templates/web/landing-page/starter",
   "templates/web/portfolio/starter",
   "templates/web/blog-cms/starter",
-  "templates/web/recipe-app/starter"
+  "templates/web/recipe-app/starter",
+  "templates/web/job-board/starter",
+  "templates/web/inventory-manager/starter"
 ];
 const sharedFiles = ["tsconfig.json", "postcss.config.js", "next.config.js", "next-env.d.ts"];
 
