@@ -1033,7 +1033,7 @@ function authFor(prompt, args = parsedArgs) {
     defaultMode: userNamedProvider ? "provider-behind-seam" : "local-mock",
     vendorNeutral: true,
     userNamedProvider,
-    references: ["knowledge/auth/auth-shape.md", "knowledge/auth/auth-seam.md"],
+    references: ["knowledge/auth/auth-shape.md", "knowledge/auth/auth-seam.md", "knowledge/ui-patterns/auth-screens.md"],
     states: ["signed-out", "signing-in", "authenticated", "error", "signed-out-after-timeout"],
     rule: userNamedProvider
       ? `User named ${userNamedProvider}: keep provider calls behind the auth seam and keep a local/mock auth adapter for development.`

@@ -5,7 +5,7 @@ Use for landing pages, portfolios, blogs/CMS, documentation, newsletters, and ho
 ## Categories
 
 - `Message Clarity`: the offer, product, or purpose is obvious in the first viewport without scrolling.
-- `Conversion Path`: a primary call to action is visible, repeated where useful, and unmistakable.
+- `Conversion Path`: a primary call to action is visible, repeated where useful, and unmistakable. Pricing surfaces follow `knowledge/ui-patterns/pricing-tables.md` (one highlighted tier, concrete feature lists, display-only prices).
 - `Visual Hierarchy`: one expressive heading scale, restrained section headings, generous whitespace — built from the `typeScale` and `spacingScale`, not ad-hoc sizes.
 - `Content Realism`: concrete copy, real-looking product shots or content placeholders — never lorem ipsum or empty hero shells.
 - `Section Rhythm`: full-width sections with consistent vertical spacing; avoid nested card-in-card shells.

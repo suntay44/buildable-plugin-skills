@@ -115,13 +115,16 @@ Agents should load only the playbooks referenced by `appSpec.references`.
 ### UI Patterns
 
 - `knowledge/ui-patterns/action-bars.md`
+- `knowledge/ui-patterns/auth-screens.md`
 - `knowledge/ui-patterns/charts.md`
 - `knowledge/ui-patterns/empty-states.md`
 - `knowledge/ui-patterns/filters.md`
 - `knowledge/ui-patterns/forms.md`
 - `knowledge/ui-patterns/modals.md`
 - `knowledge/ui-patterns/navigation.md`
+- `knowledge/ui-patterns/pricing-tables.md`
 - `knowledge/ui-patterns/responsive-layouts.md`
+- `knowledge/ui-patterns/settings-layouts.md`
 - `knowledge/ui-patterns/tables.md`
 
 ### Quality Rubrics

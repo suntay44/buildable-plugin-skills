@@ -9,7 +9,7 @@ Use for create/edit workflows, multi-step flows, intake forms, surveys, and sign
 - `Submission States`: idle, submitting, success, and error states are all handled — no dead button after submit.
 - `Field Layout`: logical grouping and order, spacing from the `spacingScale`, single-column on narrow viewports; comfortable 44px touch targets.
 - `Focus & Keyboard`: visible focus-visible styles, sensible tab order, Enter submits where expected. Warned by `focus-styles`.
-- `Auth Shape (when present)`: local/mock auth by default — session model and protected-route structure without wiring a hosted provider unless explicitly requested.
+- `Auth Shape (when present)`: local/mock auth by default — session model and protected-route structure without wiring a hosted provider unless explicitly requested. Screens follow `knowledge/ui-patterns/auth-screens.md` (demo-user shortcut, submitting/error states, seam-only provider access).
 - `Token Discipline`: inputs, borders, and focus rings use named tokens, not raw hex. `buildable review` warns (`design-tokens`) on palette bypass.
 - `Forgiveness`: destructive or irreversible actions confirm; users can recover from mistakes.
 - `Local-First`: no hosted auth, no third-party form backend, no captcha service unless explicitly requested.
