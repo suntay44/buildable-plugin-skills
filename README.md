@@ -189,7 +189,7 @@ Load `.codex-plugin/plugin.json` when your Codex surface supports local plugins/
 | Command | Purpose |
 | --- | --- |
 | `buildable plan "<prompt>" [--file <path>] [--with-auth] [--no-write]` | Create or revise the audit-first decision files: `.buildable/phase-plan.md/json/toon`. It classifies the prompt, preserves explicit screenshots/files, asks blocking product questions when needed, adds optional refinement questions with defaults, and selects only the references the agent should load. |
-| `buildable design "<prompt>" [--page <surface>] [--write]` | Produce a UI/UX-only brief with concrete tokens, mockup-data guidance, and page/component rules; can use the current app spec |
+| `buildable design "<prompt>" [--page <surface>] [--dark] [--write]` | Produce a UI/UX-only brief with concrete tokens (every profile ships light **and** dark palettes; `--dark` activates the dark theme), mockup-data guidance, and page/component rules; can use the current app spec |
 | `buildable generate "<prompt>" [--out <dir>]` | Create local project files from the saved plan. Runnable templates copy starter source; `--plan-pack` writes implementation files for planned templates; `--augment` writes guidance into an existing app. |
 | `buildable review [path] [--build]` | Audit the current app by default; optional path reviews another folder, optional `--build` runs typecheck/build |
 | `buildable preview [path] --url <url>` | Optional: render the running app in a headless browser; screenshot + catch runtime errors |
@@ -221,7 +221,9 @@ Load `.codex-plugin/plugin.json` when your Codex surface supports local plugins/
 
 ### Review
 
-`buildable review` audits the app spec, source representation, local-first guardrails, responsive-layout risk, accessibility signals, and state coverage. Add `--build` only when you also want it to run installed typecheck/build scripts. It is a static/local quality gate, not a replacement for manual QA, browser screenshots, or real device/simulator checks when visuals matter.
+`buildable review` audits the app spec, source representation, local-first guardrails, responsive-layout risk, accessibility signals, state coverage, **design-token discipline** (components that hard-code colors instead of using theme tokens get flagged), and — when persistence was requested — whether storage sits behind the repository seam. Add `--build` only when you also want it to run installed typecheck/build scripts. It is a static/local quality gate, not a replacement for manual QA, browser screenshots, or real device/simulator checks when visuals matter.
+
+Design quality is graded against surface-specific rubrics, not taste: every plan loads the base web/mobile rubric plus a specialized one (`content-marketing`, `data-dense`, or `forms-auth`) selected by the app's design profile, backed by the shared token scales in `core/design-system-registry.json` (`foundations`). This is the part a hosted builder can't give you: design quality as an enforceable, local gate.
 
 ## Slash Commands and MCP
 
@@ -347,6 +349,7 @@ Buildable applies three levels of guidance so it reduces blank-page ambiguity wi
 - **Recommendations (agent may adapt)** — task priority/due dates/tags, CRM stage summaries, dashboard date ranges, mobile-first touch layouts, and product-specific UI choices.
 - **Ask first (never decided silently)** — unclear product direction, auth, database/persistence, payments, collaboration/roles, external APIs, notifications, maps/camera/device permissions, deployment. `buildable plan "I have a restaurant"` asks what kind of restaurant product to build; `buildable generate` pauses when architecture-changing choices appear in a prompt unless you force it.
 - **Auth shape (opt-in)** — when the user explicitly asks for login/accounts or passes `--with-auth`, Buildable adds `appSpec.auth` and auth references. The default is local/mock auth behind a seam; named providers are treated as swappable adapters, not screen-level dependencies.
+- **Persistence ladder (opt-in)** — when the user asks to save/persist/remember data, Buildable adds `appSpec.persistence` and the `knowledge/data-layer/` references: default to local browser/file storage behind a vendor-neutral repository seam, climbing to a hosted database only when the user names one — and `buildable review` then allows that one vendor while still flagging others.
 
 ## Token efficiency
 
