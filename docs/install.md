@@ -22,8 +22,8 @@ npm link
 buildable check
 buildable list
 buildable eval
-buildable plan "Build me a lightweight CRM" --write
-buildable plan "Use this screenshot for the CRM" --file ./crm-mockup.png --write
+buildable plan "Build me a lightweight CRM"
+buildable plan "Use this screenshot for the CRM" --file ./crm-mockup.png
 buildable generate "Build me a todo app"
 cd taskflow
 buildable review --build
@@ -33,7 +33,7 @@ Without a global command:
 
 ```bash
 node ./bin/buildable.mjs check
-node ./bin/buildable.mjs plan "Build me a mobile booking app" --write
+node ./bin/buildable.mjs plan "Build me a mobile booking app"
 node ./bin/buildable.mjs init --existing
 ```
 
@@ -123,7 +123,7 @@ Existing app:
 ```bash
 cd my-existing-app
 buildable init --existing
-buildable plan "Add a task manager workflow to this app" --write
+buildable plan "Add a task manager workflow to this app"
 buildable review
 ```
 
@@ -161,7 +161,7 @@ Instructions-only setup:
 
 1. Copy or symlink `adapters/claude/CLAUDE.md` into the Claude Code project context you want to use, or paste its contents into that project's Claude instructions.
 2. Keep this repository available locally so Claude can read `core/`, `knowledge/`, `templates/`, `skills/`, and `evals/`.
-3. Run `buildable plan "<prompt>" --write` when you want an explicit phase plan and app spec before code generation.
+3. Run `buildable plan "<prompt>"` when you want an explicit phase plan and app spec before code generation. It saves `.buildable/phase-plan.md/json/toon` by default.
 4. After Claude edits or generates a prototype, `cd` into the app and run `buildable review` (add `--build` to run typecheck/build, `--strict` to fail on local-first drift). Reviewing a different folder by path — `buildable review <app-path>` — also works.
 
 Claude should use mock/local data by default and avoid accounts, billing, hosted previews, telemetry, managed databases, and deployment features unless you explicitly request them.
@@ -174,7 +174,7 @@ Local setup:
 
 1. Open this repository in Cursor, or copy `.cursor/rules/buildable.mdc` and `.cursor/commands/` into another local app workspace that should use Buildable.
 2. Keep the Buildable checkout nearby and reference its `core/`, `knowledge/`, `templates/`, and `skills/` paths in your prompt. If you copy the commands into another workspace and do not globally link `buildable`, set `BUILDABLE_ROOT=/path/to/buildable`.
-3. Run `buildable plan "<prompt>" --write` for a concrete phase plan Cursor can follow before generating code.
+3. Run `buildable plan "<prompt>"` for a concrete phase plan Cursor can follow before generating code. It saves `.buildable/phase-plan.md/json/toon` by default.
 4. After Cursor edits or generates a prototype, `cd` into the app and run `buildable review` (passing a path also works for another folder).
 
 The rule is scoped to prompt-to-prototype work and should not push Cursor toward hosted builder features.
@@ -221,3 +221,5 @@ Buildable should reduce ambiguity, not hide major decisions.
 Use defaults for common product expectations such as filters, empty states, realistic mock data, responsive layout, and accessible forms. When users provide screenshots/files, preserve them as explicit references and inspect only those files. Ask or wait for explicit user direction before choosing vague product intent or adding auth, databases, payments, collaboration, external APIs, notifications, maps, camera access, or deployment.
 
 When a user does ask to save, persist, or remember data, Buildable opts into the local-first persistence ladder (`knowledge/data-layer/`): default to local browser/file storage behind a vendor-neutral repository seam, and add a hosted database only when the user names one — kept behind the same seam so the app still runs locally. `buildable review` allows the backend recorded on the spec while still flagging un-named hosted vendors.
+
+When a user explicitly asks for login, accounts, protected routes, or passes `--with-auth`, Buildable opts into auth-as-a-shape (`knowledge/auth/`): local/mock sessions by default, demo users, signed-out/signed-in/error states, protected UI shape, and a swappable auth seam. A named provider is allowed only when the user names it, and `buildable review` expects provider calls to stay behind that seam.

@@ -130,7 +130,33 @@ The app spec is the build contract between planner, builder, reviewer, and fixer
     "layout works on mobile and desktop"
   ],
   "questionsNeeded": false,
-  "questions": []
+  "questions": [],
+  "planAudit": {
+    "mode": "audit-first",
+    "instruction": "Builders must read this plan before editing.",
+    "checks": [
+      {
+        "id": "scope",
+        "status": "ready",
+        "gate": "Scope is concrete enough to generate."
+      }
+    ],
+    "failurePolicy": ["If scope is blocked, ask appSpec.questions before generating."]
+  },
+  "promptRefinement": {
+    "mode": "optional",
+    "instruction": "Ask up to two optional questions if the user seems undecided; otherwise proceed with defaults.",
+    "assumptions": ["Prototype stays local-first with realistic mock data."],
+    "optionalQuestions": [
+      {
+        "id": "audience",
+        "question": "Who is the first real user?",
+        "why": "This changes navigation, copy, density, and sample data.",
+        "defaultAnswer": "An internal operator using it repeatedly."
+      }
+    ],
+    "nextPromptExample": "Keep this plan, but make the first workflow sharper."
+  }
 }
 ```
 
@@ -140,12 +166,15 @@ The app spec is the build contract between planner, builder, reviewer, and fixer
 - Include `designSystem` so builders get compact UI/UX direction without loading every design playbook.
 - Include `mockData` so design and build phases use realistic local seed data, not generic placeholders.
 - Include `referenceInputs` when users attach screenshots, documents, or files. Keep them separate from bundled `references`; agents should inspect only those explicit user files plus `appSpec.references`.
+- Include `auth` only when the user asks for auth/login/accounts or uses an explicit auth flag. Default to local/mock auth shape behind an auth seam; record a named provider only when the user names one.
 - Prefer local/mock data until the prompt explicitly asks for persistence, accounts, collaboration, or integration.
 - Include `referenceLoadingContract` so agents keep Buildable context loading lightweight.
 - Include `mustNotInclude` to prevent hosted-platform drift.
 - Include `templateStatus` and `generationMode` so builders know whether `generate` produced runnable code or a plan-only instruction pack.
 - Entity fields should be concrete enough for builders and reviewers to recognize the domain model in source files.
 - Set `questionsNeeded` when architecture-changing choices require user direction.
+- Include `planAudit` so builders and reviewers treat the plan as an audit-first contract before writing code. Checks should cover scope, template status, references, mock data, UI/UX, local-first guardrails, auth/persistence, and review.
+- Include `promptRefinement` so agents can ask useful no-code-builder-style follow-up questions without blocking every clear prompt. Blocking questions still live in `questions`; optional refinement questions should include defaults so the user can proceed quickly.
 - Acceptance criteria should be testable by a reviewer.
 
 ## Machine Schema

@@ -26,8 +26,9 @@ node ./bin/buildable.mjs check
 buildable help
 buildable list
 buildable list --json
-buildable plan "build me a todo app" --write
-buildable plan "use this screenshot for a CRM" --file ./crm-mockup.png --write
+buildable plan "build me a todo app"
+buildable plan "build me a todo app" --with-auth
+buildable plan "use this screenshot for a CRM" --file ./crm-mockup.png
 buildable design "build me a CRM website"
 buildable design "design this login page" --page login --write
 buildable init --existing
@@ -49,9 +50,11 @@ buildable check --json
 - selected target platform and archetype
 - stack, template spec path, template status, and generation mode
 - expected screens, entities, features, sample data, and acceptance criteria
+- `planAudit` with audit-first gates for scope, template, references, mock data, UI/UX, local-first rules, auth/persistence, and review
+- `promptRefinement` with assumptions, optional sharpening questions, and default answers
 - compact `designSystem` guidance with visual tone, palette intent, typography, density, layout/component rules, accessibility, and anti-patterns
 - `mockData` guidance for realistic local seed data, populated states, empty states, filtered-empty states, loading/saving states, and validation/error states
-- `phasePlan` and `planMarkdown` for the recommended Plan > Design > Build > Review flow
+- `phasePlan` and `planMarkdown` for the recommended Plan > Design > Generate > Review flow
 - `referenceInputs` for explicit user screenshots/files passed with `--file`, `--reference`, or `--screenshot`
 - local reference files for the agent to read next
 - no-hosted-features guardrails
@@ -59,21 +62,23 @@ buildable check --json
 Archetype classification is tag-routed through `core/archetype-registry.json`; agents should not scan every file in `knowledge/archetypes/`.
 If the prompt is too vague to choose product direction, `plan` asks first. For example, `buildable plan "I have a restaurant"` should clarify whether the user wants an informational website/menu, ordering or reservations, or an inventory/management system before design or generation.
 
+Auth is opt-in but no longer means "pick a hosted provider." `buildable plan "Build a CRM with login"` or `--with-auth` adds `appSpec.auth`, `knowledge/auth/auth-shape.md`, and `knowledge/auth/auth-seam.md`. The default is local/mock auth with demo users, session states, protected-route shape, and an auth seam. If the user names a provider, keep it behind that seam and keep a local adapter for development.
+
 Example:
 
 ```bash
-buildable plan "Build a mobile habit tracker" --write
+buildable plan "Build a mobile habit tracker"
 ```
 
-Use `plan` when the user wants direction before app files are created. It is the no-code prompting layer: classify, choose the right references, identify questions, outline the phases, then let Claude, Codex, Cursor, or another agent continue from the spec. Add `--write` to save `.buildable/phase-plan.json` and `.buildable/phase-plan.md` in the current workspace.
+Use `plan` when the user wants direction before app files are created. It is the no-code prompting layer: classify, choose the right references, identify blocking questions, suggest optional refinement questions with defaults, outline the phases, then let Claude, Codex, Cursor, or another agent continue from the spec. It saves `.buildable/phase-plan.json`, `.buildable/phase-plan.md`, and compact `.buildable/phase-plan.toon` in the current workspace by default. Add `--no-write` only when you want terminal JSON without workspace files.
 
-After showing a plan, agents should ask whether the user is satisfied. If not, keep using Buildable Planner and revise the saved plan from the user's next prompt, for example: `Buildable Planner: keep this direction, but make reminders stronger`. If yes, continue with Buildable Web Builder or Buildable Mobile Builder. The builder should read the saved plan/spec, then load only `appSpec.references`, explicit `appSpec.referenceInputs`, and the selected starter source.
+After showing a plan, agents should ask blocking questions first when `questionsNeeded` is true. When the plan is otherwise clear, ask at most one or two `promptRefinement.optionalQuestions` if they would improve the result; otherwise state the defaults and continue. If the user is not satisfied, keep using Buildable Planner and revise the saved plan from the user's next prompt, for example: `Buildable Planner: keep this direction, but make reminders stronger`. If yes, continue with Buildable Web Builder or Buildable Mobile Builder. The builder should read the saved plan/spec, then load only `appSpec.references`, explicit `appSpec.referenceInputs`, and the selected starter source.
 
 When a user includes a screenshot, spec document, or existing file as a reference, pass it explicitly:
 
 ```bash
-buildable plan "Make a CRM from this screenshot" --screenshot ./crm.png --write
-buildable plan "Use this requirements doc" --file ./requirements.md --write
+buildable plan "Make a CRM from this screenshot" --screenshot ./crm.png
+buildable plan "Use this requirements doc" --file ./requirements.md
 ```
 
 Buildable stores these as `appSpec.referenceInputs`. Agents should inspect only those explicit files plus `appSpec.references`; Buildable does not paste large file contents into the plan.
@@ -82,7 +87,7 @@ Buildable stores these as `appSpec.referenceInputs`. Agents should inspect only 
 
 `buildable design` creates a UI/UX design brief with:
 
-- recommended workflow: `Plan > Design > Build > Review`
+- recommended workflow: `Plan > Design > Generate > Review`
 - selected app context from a prompt or the current `buildable-app-spec.json`
 - `scope: ui-ux-only`
 - explicit non-goals: no backend, database, auth, payments, hosted infrastructure, telemetry, or deployment
@@ -162,6 +167,8 @@ buildable review
 ```
 
 `generate` selects a template and writes `buildable-app-spec.json` plus `BUILDABLE_NOTES.md` for Codex, Claude, Cursor, or another local agent. If `--out` is omitted, it creates a folder from the app name, such as `TaskFlow` -> `./taskflow`. If the selected template is runnable, it copies starter files. If the selected template is planned, rerun with `--plan-pack` to write a plan-only `IMPLEMENTATION_PLAN.md` instruction pack instead of claiming runnable code exists. Planned packs are useful guidance, but they are not generated app source yet.
+
+When `.buildable/phase-plan.json` exists and the prompt matches, `generate` reuses that saved audit-first plan instead of re-planning. It also writes `.buildable/phase-plan.json` and `.buildable/phase-plan.toon` into the generated app so later sessions can load compact context from the app folder.
 
 Use `generate` when the user wants Buildable to create the local starting point instead of asking the agent to reproduce template structure from the plan alone.
 

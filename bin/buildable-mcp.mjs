@@ -19,7 +19,10 @@ const tools = [
         prompt: { type: "string", description: "The app idea prompt to plan." },
         workspace: { type: "string", description: "Optional project folder to run from. Defaults to BUILDABLE_WORKSPACE or current process cwd." },
         files: { type: "array", items: { type: "string" }, description: "Optional explicit user reference files or screenshots to preserve in appSpec.referenceInputs." },
-        write: { type: "boolean", description: "Write .buildable/phase-plan.json and .buildable/phase-plan.md into the workspace." }
+        withAuth: { type: "boolean", description: "Opt into Buildable's local/mock auth shape behind an auth seam." },
+        authProvider: { type: "string", description: "Optional user-named auth provider to keep behind the auth seam." },
+        write: { type: "boolean", description: "Deprecated compatibility flag; plan writes by default." },
+        noWrite: { type: "boolean", description: "Only return JSON; do not write .buildable/phase-plan files." }
       },
       required: ["prompt"],
       additionalProperties: false
@@ -38,6 +41,8 @@ const tools = [
         name: { type: "string", description: "Optional app name for branding generated starters." },
         planPack: { type: "boolean", description: "Write a plan-only pack for planned templates." },
         augment: { type: "boolean", description: "Plan into an existing app without copying starter source." },
+        withAuth: { type: "boolean", description: "Opt into Buildable's local/mock auth shape behind an auth seam." },
+        authProvider: { type: "string", description: "Optional user-named auth provider to keep behind the auth seam." },
         force: { type: "boolean", description: "Continue when questions or non-empty output would otherwise stop generation." }
       },
       required: ["prompt"],
@@ -137,7 +142,9 @@ function buildArgs(toolName, args = {}) {
     if (Array.isArray(args.files)) {
       for (const file of args.files) command.push("--file", file);
     }
-    if (args.write) command.push("--write");
+    if (args.withAuth) command.push("--with-auth");
+    if (args.authProvider) command.push("--with-auth-provider", args.authProvider);
+    if (args.noWrite) command.push("--no-write");
     return command;
   }
   if (toolName === "buildable_generate") {
@@ -149,6 +156,8 @@ function buildArgs(toolName, args = {}) {
     if (args.name) command.push("--name", args.name);
     if (args.planPack) command.push("--plan-pack");
     if (args.augment) command.push("--augment");
+    if (args.withAuth) command.push("--with-auth");
+    if (args.authProvider) command.push("--with-auth-provider", args.authProvider);
     if (args.force) command.push("--force");
     return command;
   }

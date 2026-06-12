@@ -51,7 +51,7 @@ const referenceLoadingContract = [
   "Load starter source only for the selected template."
 ];
 const askFirstRules = [
-  { pattern: /\b(auth|login|sign in|sign up|account|accounts|user management)\b/, question: "Do you want auth/accounts, or should this stay single-user and local-first for now?" },
+  { kind: "auth", pattern: /\b(auth|login|sign in|sign up|user account|user accounts|member account|member accounts|client account|client accounts|user management)\b/, question: "Do you want auth/accounts, or should this stay single-user and local-first for now?" },
   { pattern: /\b(database|db|postgres|supabase|firebase|mysql|sqlite|persistence|persisted)\b/, question: "Do you want a database, or should this use local/mock data for the prototype?" },
   { pattern: /\b(payment|payments|billing|stripe|checkout|payment collection|bank sync)\b/, question: "Do you want payments/billing included, or should they be left out of this prototype?" },
   { pattern: /\b(team|collaboration|collaborative|multi-user|roles|permissions)\b/, question: "Should this support teams/collaboration, or stay single-user for now?" },
@@ -84,8 +84,9 @@ function usage() {
 Local-first AI app builder brain for Codex Desktop, Claude Code, Cursor, and CLI workflows.
 
 Usage:
-  buildable plan "Build me a todo app" --write
-  buildable plan "Use this screenshot for a CRM" --file ./crm-mockup.png --write
+  buildable plan "Build me a todo app"
+  buildable plan "Build me a todo app" --with-auth
+  buildable plan "Use this screenshot for a CRM" --file ./crm-mockup.png
   buildable design "Build me a CRM website"
   buildable generate "Build me a todo app"
   buildable generate "Build me a lightweight CRM" --name "LeadDesk"
@@ -98,10 +99,11 @@ Usage:
 
 Commands:
   init [--existing]             Create .buildable config for a workspace.
-  plan <prompt> [--file <path>] [--write]
+  plan <prompt> [--file <path>] [--no-write]
                                 Classify a prompt and print a top-down local app spec as JSON.
                                 --file/--reference/--screenshot records explicit user references;
-                                --write also saves .buildable/phase-plan.md/json.
+                                --with-auth records local/mock auth shape; --with-auth-provider names a provider;
+                                saves .buildable/phase-plan.md/json/toon by default; --no-write only prints JSON.
   design [prompt] [--page <name>] [--write]
                                 Produce an interchangeable UI/UX design brief. Uses the current
                                 app spec when present, or classifies the prompt when not.
@@ -135,7 +137,7 @@ function parseArgs(rawArgs) {
     values: {},
     positionals: []
   };
-  const valueFlags = new Set(["--out", "--mode", "--name", "--url", "--page", "--target", "--spec", "--file", "--reference", "--screenshot"]);
+  const valueFlags = new Set(["--out", "--mode", "--name", "--url", "--page", "--target", "--spec", "--file", "--reference", "--screenshot", "--with-auth-provider"]);
   const multiValueFlags = new Set(["--file", "--reference", "--screenshot"]);
 
   function setValue(name, value) {
@@ -187,6 +189,33 @@ function referenceInputsFromArgs(args = parsedArgs, cwd = process.cwd()) {
   return buildReferenceInputsFromArgs(args, cwd);
 }
 
+const authIntentCue = /\b(auth|authentication|login|log in|sign in|sign-in|signin|sign up|sign-up|signup|user management|user accounts?|member accounts?|client accounts?|protected route|protected routes|session|sessions)\b/i;
+const authProviderCue = /\b(clerk|auth0|next-auth|nextauth|better-auth|lucia|supabase auth|firebase auth)\b/i;
+const authProviderFlags = [
+  ["--with-clerk", "clerk"],
+  ["--with-auth0", "auth0"],
+  ["--with-next-auth", "next-auth"],
+  ["--with-supabase-auth", "supabase auth"],
+  ["--with-firebase-auth", "firebase auth"]
+];
+
+function normalizedAuthProvider(value) {
+  if (!value) return null;
+  const normalized = String(value).trim().toLowerCase().replace(/_/g, "-");
+  if (!normalized) return null;
+  if (normalized === "nextauth") return "next-auth";
+  if (normalized === "supabase") return "supabase auth";
+  if (normalized === "firebase") return "firebase auth";
+  return normalized;
+}
+
+function authIntentFor(prompt, args = parsedArgs) {
+  const providerFlag = normalizedAuthProvider(args.values?.["with-auth-provider"]);
+  if (args.flags?.has("--with-auth") || args.flags?.has("--with-local-auth") || providerFlag) return true;
+  if (authProviderFlags.some(([flag]) => args.flags?.has(flag))) return true;
+  return authIntentCue.test(prompt) || authProviderCue.test(prompt);
+}
+
 function classify(prompt) {
   const normalized = prompt.toLowerCase();
   const requestedMobile = /\b(mobile|iphone|android|expo|react native)\b/.test(normalized);
@@ -202,7 +231,10 @@ function classify(prompt) {
   const explicitTarget = requestedMobile !== requestedWeb && (requestedMobile || requestedWeb);
   const target = explicitTarget ? (requestedMobile ? "mobile" : "web") : selected.defaultTarget;
 
-  const architectureQuestions = askFirstRules.filter((rule) => rule.pattern.test(normalized)).map((rule) => rule.question);
+  const architectureQuestions = askFirstRules
+    .filter((rule) => rule.pattern.test(normalized))
+    .filter((rule) => !(rule.kind === "auth" && authIntentFor(normalized)))
+    .map((rule) => rule.question);
   const directionQuestions = ambiguousIntentRules
     .filter((rule) => rule.pattern.test(normalized) && !rule.intentPattern.test(normalized))
     .map((rule) => rule.question);
@@ -491,8 +523,174 @@ function mockDataFor(defaults) {
   };
 }
 
+function promptHasAny(prompt, words) {
+  const normalized = prompt.toLowerCase();
+  return words.some((word) => hasTagPhrase(normalized, word));
+}
+
+function archetypeRefinementQuestion(archetype) {
+  const questions = {
+    "task-manager": {
+      id: "task_intelligence",
+      question: "Should this feel like a simple todo list, or a smart assistant that suggests what to do next?",
+      why: "This changes sorting, reminder behavior, and the first-screen hierarchy.",
+      defaultAnswer: "Smart assistant with Today, Next, Later, and Focus Mode."
+    },
+    crm: {
+      id: "pipeline_shape",
+      question: "Is this CRM for a solo workflow, a sales team pipeline, or a client-service follow-up system?",
+      why: "This changes stage labels, metrics, ownership fields, and dashboard density.",
+      defaultAnswer: "Sales team pipeline with leads, stages, next actions, and value summaries."
+    },
+    dashboard: {
+      id: "decision_loop",
+      question: "What decision should the dashboard help the user make in the first 30 seconds?",
+      why: "This decides the KPI order, chart types, filters, and empty states.",
+      defaultAnswer: "Show what changed, what needs attention, and what action to take next."
+    },
+    marketplace: {
+      id: "marketplace_side",
+      question: "Should the first prototype optimize for buyers discovering listings or sellers managing listings?",
+      why: "This changes navigation, primary screens, filters, and sample data.",
+      defaultAnswer: "Buyer discovery first, with enough seller data to make listings realistic."
+    },
+    notes: {
+      id: "organization_model",
+      question: "Should notes be organized by folders, tags, projects, or search-first capture?",
+      why: "This changes the sidebar, editor metadata, filters, and empty states.",
+      defaultAnswer: "Tags plus search-first capture."
+    },
+    "habit-tracker": {
+      id: "motivation_style",
+      question: "Should progress feel streak-based, goal-based, or gentle/non-punitive?",
+      why: "This changes stats, copy, reminders, and success states.",
+      defaultAnswer: "Gentle streaks with weekly progress and no shame-heavy overdue states."
+    },
+    booking: {
+      id: "booking_actor",
+      question: "Is the booking flow mainly for customers self-booking, staff managing appointments, or both?",
+      why: "This changes screens, availability data, calendar density, and confirmation states.",
+      defaultAnswer: "Customer self-booking with a compact staff overview."
+    },
+    "ecommerce-admin": {
+      id: "operations_focus",
+      question: "Should the admin prioritize product catalog work, order fulfillment, or inventory exceptions?",
+      why: "This changes the dashboard, table columns, filters, and action priority.",
+      defaultAnswer: "Order fulfillment first, with product and inventory summaries."
+    }
+  };
+  return questions[archetype] ?? {
+    id: "primary_workflow",
+    question: "What is the one workflow that must feel excellent in the first prototype?",
+    why: "This keeps the generated app focused instead of becoming a broad but shallow demo.",
+    defaultAnswer: "Make the first screen support the most common daily workflow end-to-end."
+  };
+}
+
+function promptRefinementFor(prompt, classification, defaults, appSpec) {
+  const optionalQuestions = [];
+
+  if (!promptHasAny(prompt, ["for customers", "for clients", "for students", "for teams", "for staff", "for admins", "for myself", "internal", "public"])) {
+    optionalQuestions.push({
+      id: "audience",
+      question: "Who is the first real user: you/internal staff, customers, clients, students, or a team?",
+      why: "This changes navigation, copy, density, sample data, and permissions assumptions.",
+      defaultAnswer: appSpec.target === "mobile" ? "A single owner using it repeatedly on mobile." : "An internal operator using it repeatedly on desktop and mobile."
+    });
+  }
+
+  optionalQuestions.push(archetypeRefinementQuestion(classification.archetype));
+
+  if ((appSpec.referenceInputs ?? []).length === 0) {
+    optionalQuestions.push({
+      id: "references",
+      question: "Do you have a screenshot, brand guide, existing app, or competitor example I should use as a reference?",
+      why: "Explicit references let the agent inspect only the files you choose instead of guessing visual/product direction.",
+      defaultAnswer: "No external references; use the selected Buildable design system and realistic mock data."
+    });
+  }
+
+  const trimmedQuestions = optionalQuestions.slice(0, 3);
+  return {
+    mode: classification.questionsNeeded ? "blocking-first" : "optional",
+    instruction: classification.questionsNeeded
+      ? "Ask blocking questions before design or generate. Then use optional questions only if the user wants to sharpen the plan."
+      : "Ask up to two optional questions if the user seems undecided; otherwise proceed with the defaults below.",
+    assumptions: [
+      `Prototype stays local-first with ${appSpec.dataMode} and realistic mock data.`,
+      `Use the ${appSpec.designSystem.styleName} design profile unless the user gives a stronger visual reference.`,
+      `${defaults.features[0]} is treated as the first critical workflow.`
+    ],
+    optionalQuestions: trimmedQuestions,
+    nextPromptExample: `Keep this plan, but ${trimmedQuestions[0]?.defaultAnswer ?? "make the primary workflow sharper"}.`
+  };
+}
+
+function planAuditFor(appSpec) {
+  const checks = [
+    {
+      id: "scope",
+      status: appSpec.questionsNeeded ? "blocked" : "ready",
+      gate: appSpec.questionsNeeded ? "Answer blocking questions before design or generate." : "Scope is concrete enough to generate."
+    },
+    {
+      id: "template",
+      status: appSpec.templateStatus === "runnable" ? "ready" : "plan-pack",
+      gate: appSpec.templateStatus === "runnable" ? "Runnable starter can be copied." : "Use --plan-pack; no runnable starter exists yet."
+    },
+    {
+      id: "references",
+      status: "ready",
+      gate: "Load only appSpec.references and explicit appSpec.referenceInputs."
+    },
+    {
+      id: "mock-data",
+      status: "ready",
+      gate: `${appSpec.mockData.recordsPerEntity} local records per entity plus populated, empty, filtered-empty, loading/saving, and error states.`
+    },
+    {
+      id: "ui-ux",
+      status: "ready",
+      gate: `Use ${appSpec.designSystem.styleName}; avoid ${appSpec.designSystem.avoid.slice(0, 2).join(" and ")}.`
+    },
+    {
+      id: "local-first",
+      status: "ready",
+      gate: `Do not add ${appSpec.mustNotInclude.join(", ")}.`
+    },
+    {
+      id: "auth",
+      status: appSpec.auth?.requested ? "requested" : "not-requested",
+      gate: appSpec.auth?.requested ? appSpec.auth.rule : "Do not add auth unless requested."
+    },
+    {
+      id: "persistence",
+      status: appSpec.persistence?.requested ? "requested" : "not-requested",
+      gate: appSpec.persistence?.requested ? appSpec.persistence.rule : "Keep data in local/mock state unless persistence is requested."
+    },
+    {
+      id: "review",
+      status: "required-after-generate",
+      gate: "Run buildable review and fix blocking issues before handoff."
+    }
+  ];
+
+  return {
+    mode: "audit-first",
+    instruction: "Builders must read this plan before editing. Treat failed or blocked audit checks as gates, not suggestions.",
+    checks,
+    failurePolicy: [
+      "If scope is blocked, ask appSpec.questions before generating.",
+      "If template is plan-pack, do not claim runnable source was generated.",
+      "If a named auth/backend provider appears outside its seam, fix before handoff.",
+      "If review fails, repair and rerun review."
+    ]
+  };
+}
+
 function phasePlanFor(plan) {
   const promptArg = JSON.stringify(plan.prompt);
+  const authArgs = authCommandArgsFor(plan.prompt, plan.appSpec.auth);
   const phases = [
     {
       id: "clarify",
@@ -507,7 +705,7 @@ function phasePlanFor(plan) {
       id: "plan",
       title: "Plan App Structure",
       status: "complete",
-      command: `buildable plan ${promptArg}`,
+      command: `buildable plan ${promptArg}${authArgs}`,
       goal: "Use the selected archetype, target, stack, screens, entities, features, references, guardrails, and compact design system."
     },
     {
@@ -529,8 +727,8 @@ function phasePlanFor(plan) {
       title: "Build Local Prototype",
       status: plan.appSpec.questionsNeeded ? "blocked-until-clarified" : "ready",
       command: plan.appSpec.templateStatus === "runnable"
-        ? `buildable generate ${promptArg}`
-        : `buildable generate ${promptArg} --plan-pack`,
+        ? `buildable generate ${promptArg}${authArgs}`
+        : `buildable generate ${promptArg}${authArgs} --plan-pack`,
       goal: "Generate or implement the local prototype using the selected template and design brief. Keep data local/mock by default."
     },
     {
@@ -545,6 +743,13 @@ function phasePlanFor(plan) {
   return phases;
 }
 
+function authCommandArgsFor(prompt, auth) {
+  if (!auth?.requested) return "";
+  if (auth.userNamedProvider && !authProviderCue.test(prompt)) return ` --with-auth-provider ${JSON.stringify(auth.userNamedProvider)}`;
+  if (!authIntentCue.test(prompt) && !authProviderCue.test(prompt)) return " --with-auth";
+  return "";
+}
+
 function planMarkdownFor(plan) {
   const phases = plan.phasePlan ?? phasePlanFor(plan);
   return `# Buildable Phase Plan
@@ -553,7 +758,7 @@ Prompt:
 
 ${plan.prompt}
 
-Recommended workflow: Plan > Design > Build > Review
+Recommended workflow: Plan > Design > Generate > Review
 
 ## Direction
 
@@ -567,6 +772,14 @@ Recommended workflow: Plan > Design > Build > Review
 ## Clarifying Questions
 
 ${plan.appSpec.questions.length ? plan.appSpec.questions.map((question) => `- ${question}`).join("\n") : "- None"}
+
+## Audit-First Build Contract
+
+${plan.appSpec.planAudit.checks.map((check) => `- ${check.id}: ${check.status} — ${check.gate}`).join("\n")}
+
+## Optional Refinement Questions
+
+${plan.appSpec.promptRefinement.optionalQuestions.length ? plan.appSpec.promptRefinement.optionalQuestions.map((entry) => `- ${entry.question}\n  - default: ${entry.defaultAnswer}`).join("\n") : "- None"}
 
 ## Design Included In Plan
 
@@ -584,7 +797,7 @@ Run \`buildable design ${JSON.stringify(plan.prompt)} --write\` only when you wa
 
 ${plan.appSpec.mockData.rules.map((rule) => `- ${rule}`).join("\n")}
 
-## User Reference Inputs
+${plan.appSpec.auth?.requested ? `## Auth Shape\n\n- ${plan.appSpec.auth.rule}\n- states: ${plan.appSpec.auth.states.join(", ")}\n\n` : ""}${plan.appSpec.persistence?.requested ? `## Persistence\n\n- ${plan.appSpec.persistence.rule}\n\n` : ""}## User Reference Inputs
 
 ${plan.appSpec.referenceInputs.length ? plan.appSpec.referenceInputs.map((input) => `- ${input.kind}: ${input.path}${input.exists ? "" : " (missing)"}`).join("\n") : "- None"}
 
@@ -603,6 +816,73 @@ ${phases.map((phase, index) => {
 
 ${plan.appSpec.referenceLoadingContract.map((rule) => `- ${rule}`).join("\n")}
 `;
+}
+
+function toonValue(value) {
+  if (value === null || value === undefined) return "";
+  return String(value).replace(/\r?\n/g, " ").replace(/,/g, ";").trim();
+}
+
+function toonList(name, values, indent = "") {
+  const items = values.map(toonValue);
+  return `${indent}${name}[${items.length}]: ${items.join(",")}`;
+}
+
+function toonTable(name, fields, rows, indent = "") {
+  const body = rows
+    .map((row) => `${indent}  ${fields.map((field) => toonValue(row[field])).join(",")}`)
+    .join("\n");
+  return `${indent}${name}[${rows.length}]{${fields.join(",")}}:${rows.length ? `\n${body}` : ""}`;
+}
+
+function planToonFor(plan) {
+  const spec = plan.appSpec;
+  const lines = [
+    "buildable_plan:",
+    `  format: toon-style-v1`,
+    `  source_of_truth: .buildable/phase-plan.json`,
+    `  prompt: ${toonValue(plan.prompt)}`,
+    `  workflow: Plan > Design > Generate > Review`,
+    "  app:",
+    `    name: ${toonValue(spec.name)}`,
+    `    target: ${toonValue(spec.target)}`,
+    `    archetype: ${toonValue(spec.archetype)}`,
+    `    template: ${toonValue(spec.template)}`,
+    `    templateStatus: ${toonValue(spec.templateStatus)}`,
+    `    generationMode: ${toonValue(spec.generationMode)}`,
+    "  stack:",
+    `    framework: ${toonValue(spec.stack.framework)}`,
+    `    language: ${toonValue(spec.stack.language)}`,
+    `    styling: ${toonValue(spec.stack.styling)}`,
+    `    data: ${toonValue(spec.stack.data ?? spec.dataMode)}`,
+    "  design:",
+    `    profile: ${toonValue(spec.designSystem.profile)}`,
+    `    styleName: ${toonValue(spec.designSystem.styleName)}`,
+    `    density: ${toonValue(spec.designSystem.density)}`,
+    `    tone: ${toonValue(spec.designSystem.visualTone)}`,
+    toonList("avoid", spec.designSystem.avoid, "    "),
+    "  audit:",
+    toonTable("checks", ["id", "status", "gate"], spec.planAudit.checks, "    "),
+    "  product:",
+    toonTable("screens", ["id", "purpose"], spec.screens, "    "),
+    toonTable("entities", ["name", "fields"], spec.entities.map((entity) => ({ name: entity.name, fields: (entity.fields ?? []).join("|") })), "    "),
+    toonList("features", spec.features, "    "),
+    toonList("acceptanceCriteria", spec.acceptanceCriteria, "    "),
+    "  mockData:",
+    `    recordsPerEntity: ${toonValue(spec.mockData.recordsPerEntity)}`,
+    toonTable("entities", ["name", "minimumRecords", "fields"], spec.mockData.entities.map((entity) => ({ name: entity.name, minimumRecords: entity.minimumRecords, fields: (entity.fieldsToPopulate ?? []).join("|") })), "    "),
+    toonList("requiredStates", spec.mockData.requiredStates, "    "),
+    "  questions:",
+    toonList("blocking", spec.questions, "    "),
+    toonTable("optional", ["id", "question", "defaultAnswer"], spec.promptRefinement.optionalQuestions, "    "),
+    "  loading:",
+    toonList("references", spec.references, "    "),
+    toonTable("referenceInputs", ["kind", "path", "exists"], spec.referenceInputs, "    "),
+    toonList("contract", spec.referenceLoadingContract, "    "),
+    "  guardrails:",
+    toonList("mustNotInclude", spec.mustNotInclude, "    ")
+  ];
+  return `${lines.join("\n")}\n`;
 }
 
 function enhancedPromptFor(originalPrompt, appSpec) {
@@ -627,11 +907,17 @@ function enhancedPromptFor(originalPrompt, appSpec) {
     appSpec.persistence?.requested
       ? `Persistence requested: ${appSpec.persistence.rule} Follow knowledge/data-layer/persistence-ladder.md and put storage behind the repository seam in knowledge/data-layer/repository-pattern.md.`
       : null,
+    appSpec.auth?.requested
+      ? `Auth requested: ${appSpec.auth.rule} Follow knowledge/auth/auth-shape.md and knowledge/auth/auth-seam.md; do not scatter provider SDK calls through screens.`
+      : null,
     `Reference loading contract: ${referenceLoadingContract.join(" ")}`,
     referenceInputs,
     `Do not add: ${guardrails}.`,
     "For existing apps, adapt to the current project conventions and do not overwrite unrelated user code.",
     appSpec.questionsNeeded ? "Pause before design/generation and ask the user the listed product-direction or architecture questions." : "Proceed without asking for visual taste preferences.",
+    appSpec.promptRefinement?.optionalQuestions?.length
+      ? `Optional refinement questions: ${appSpec.promptRefinement.optionalQuestions.map((entry) => entry.question).join(" ")} Use defaults if the user wants to proceed.`
+      : null,
     "After implementation, run Buildable review and fix blocking issues before final handoff."
   ].filter(Boolean).join("\n");
 }
@@ -668,6 +954,26 @@ function persistenceFor(prompt) {
   };
 }
 
+function authFor(prompt, args = parsedArgs) {
+  const providerFromFlag = normalizedAuthProvider(args.values?.["with-auth-provider"]);
+  const providerFromBooleanFlag = authProviderFlags.find(([flag]) => args.flags?.has(flag))?.[1] ?? null;
+  const providerFromPrompt = authProviderCue.exec(prompt)?.[1] ?? null;
+  const userNamedProvider = normalizedAuthProvider(providerFromFlag ?? providerFromBooleanFlag ?? providerFromPrompt);
+  const requested = Boolean(args.flags?.has("--with-auth") || args.flags?.has("--with-local-auth") || userNamedProvider || authIntentCue.test(prompt));
+  if (!requested) return null;
+  return {
+    requested: true,
+    defaultMode: userNamedProvider ? "provider-behind-seam" : "local-mock",
+    vendorNeutral: true,
+    userNamedProvider,
+    references: ["knowledge/auth/auth-shape.md", "knowledge/auth/auth-seam.md"],
+    states: ["signed-out", "signing-in", "authenticated", "error", "signed-out-after-timeout"],
+    rule: userNamedProvider
+      ? `User named ${userNamedProvider}: keep provider calls behind the auth seam and keep a local/mock auth adapter for development.`
+      : "Model auth locally first: session state, protected-route shape, sign-in/sign-out UI, and mock users behind an auth seam. Do not add a hosted provider unless the user names one."
+  };
+}
+
 function specFor(prompt, options = {}) {
   const classification = classify(prompt);
   const template = templateFor(classification);
@@ -695,11 +1001,17 @@ function specFor(prompt, options = {}) {
       if (existsSync(join(root, ref)) && !references.includes(ref)) references.push(ref);
     }
   }
+  const auth = authFor(prompt);
+  if (auth) {
+    for (const ref of auth.references) {
+      if (existsSync(join(root, ref)) && !references.includes(ref)) references.push(ref);
+    }
+  }
 
   // Default guardrails forbid unrequested databases. If the user named a backend, allow that one
   // vendor (behind the seam) by dropping the blanket managed-database ban for this spec.
   const mustNotInclude = [
-    "auth unless requested",
+    auth ? null : "auth unless requested",
     "billing",
     "cloud previews",
     persistence?.userNamedBackend ? null : "managed databases",
@@ -729,6 +1041,7 @@ function specFor(prompt, options = {}) {
       referenceLoadingContract,
       dataMode: templateSpec.stack?.data ?? "local-state",
       persistence,
+      auth,
       starter: templateSpec.starter,
       mustNotInclude,
       acceptanceCriteria: defaults.acceptanceCriteria,
@@ -739,12 +1052,19 @@ function specFor(prompt, options = {}) {
         ? "Load the listed references, then generate from the selected runnable starter."
         : "Load the listed references and use the selected template plan as an instruction pack; no runnable starter exists yet."
     };
+  appSpec.planAudit = planAuditFor(appSpec);
+  appSpec.promptRefinement = promptRefinementFor(prompt, classification, defaults, appSpec);
 
   const plan = {
+    artifactType: "buildable-phase-plan",
+    workflowStage: "decision",
+    commandRole: "plan",
+    planContractVersion: "audit-first-v1",
     prompt,
     classification,
     enhancedPrompt: enhancedPromptFor(prompt, appSpec),
-    appSpec
+    appSpec,
+    consumedBy: ["buildable design", "buildable generate", "buildable review"]
   };
   plan.phasePlan = phasePlanFor(plan);
   plan.planMarkdown = planMarkdownFor(plan);
@@ -753,7 +1073,7 @@ function specFor(prompt, options = {}) {
 
 function validateAppSpec(spec) {
   const issues = [];
-  const required = ["name", "target", "archetype", "complexity", "stack", "screens", "entities", "features", "sampleData", "mockData", "style", "designSystem", "template", "templateStatus", "generationMode", "references", "referenceInputs", "referenceLoadingContract", "mustNotInclude", "acceptanceCriteria", "questionsNeeded", "questions"];
+  const required = ["name", "target", "archetype", "complexity", "stack", "screens", "entities", "features", "sampleData", "mockData", "style", "designSystem", "template", "templateStatus", "generationMode", "references", "referenceInputs", "referenceLoadingContract", "mustNotInclude", "acceptanceCriteria", "questionsNeeded", "questions", "planAudit", "promptRefinement"];
 
   for (const field of required) {
     if (spec[field] === undefined || spec[field] === null) issues.push(`app spec missing ${field}`);
@@ -813,6 +1133,12 @@ function validateAppSpec(spec) {
   if (!Array.isArray(spec.acceptanceCriteria) || spec.acceptanceCriteria.length === 0) issues.push("app spec acceptanceCriteria must be a non-empty array");
   if (typeof spec.questionsNeeded !== "boolean") issues.push("app spec questionsNeeded must be a boolean");
   if (!Array.isArray(spec.questions)) issues.push("app spec questions must be an array");
+  if (!spec.planAudit || !Array.isArray(spec.planAudit.checks) || spec.planAudit.checks.length === 0) {
+    issues.push("app spec planAudit.checks must be a non-empty array");
+  }
+  if (!spec.promptRefinement || !Array.isArray(spec.promptRefinement.optionalQuestions)) {
+    issues.push("app spec promptRefinement.optionalQuestions must be an array");
+  }
 
   return issues;
 }
@@ -1039,6 +1365,8 @@ function check() {
     "core/schemas/template-spec.schema.json",
     "knowledge/archetypes/task-manager.md",
     "knowledge/design-playbooks/design-system-selection.md",
+    "knowledge/auth/auth-shape.md",
+    "knowledge/auth/auth-seam.md",
     "knowledge/data-models/task-manager.md",
     "knowledge/screen-graphs/task-manager.md",
     "templates/web/task-manager/template-spec.json",
@@ -2060,7 +2388,7 @@ function designBriefFor(prompt, appSpec = null) {
       "no billing/payments decision",
       "no hosted deployment, cloud preview, telemetry, or managed service"
     ],
-    recommendedWorkflow: "Plan > Design > Build > Review",
+    recommendedWorkflow: "Plan > Design > Generate > Review",
     nextSuggestedCommand: `buildable generate ${JSON.stringify(prompt)}`,
     interchangeableUse: [
       "Before plan: explore visual direction from a prompt.",
@@ -2084,14 +2412,15 @@ function designBriefFor(prompt, appSpec = null) {
     references,
     referenceLoadingContract,
     handoffPrompt,
-    satisfactionQuestion: `Are you satisfied with this UI/UX direction and mockup-data plan? If yes, I can move to the build phase with \`${`buildable generate ${JSON.stringify(prompt)}`}\`.`
+    satisfactionQuestion: `Are you satisfied with this UI/UX direction and mockup-data plan? If yes, I can move to generate with \`${`buildable generate ${JSON.stringify(prompt)}`}\`.`
   };
 }
 
 function findNearestAppSpec(workspace) {
   const direct = findAppSpec(workspace);
   if (direct) return direct;
-  return null;
+  const phasePlan = join(workspace, ".buildable", "phase-plan.json");
+  return existsSync(phasePlan) ? phasePlan : null;
 }
 
 function design() {
@@ -2101,8 +2430,9 @@ function design() {
   const specPath = specValue
     ? (isAbsolute(specValue) ? specValue : join(process.cwd(), specValue))
     : findNearestAppSpec(target);
-  const appSpec = specPath && existsSync(specPath) ? JSON.parse(readFileSync(specPath, "utf8")) : null;
-  const prompt = input || (appSpec ? `Design ${appSpec.name}` : "");
+  const specDocument = specPath && existsSync(specPath) ? JSON.parse(readFileSync(specPath, "utf8")) : null;
+  const appSpec = specDocument?.appSpec ?? specDocument;
+  const prompt = input || specDocument?.prompt || (appSpec ? `Design ${appSpec.name}` : "");
 
   if (!prompt) {
     console.error('Missing prompt or app spec. Example: buildable design "Build me a CRM website"');
@@ -2136,10 +2466,35 @@ function writePhasePlanFiles(plan, target = process.cwd()) {
   mkdirSync(join(target, ".buildable"), { recursive: true });
   writeJson(join(target, ".buildable", "phase-plan.json"), plan);
   writeFileSync(join(target, ".buildable", "phase-plan.md"), plan.planMarkdown);
+  writeFileSync(join(target, ".buildable", "phase-plan.toon"), planToonFor(plan));
   return {
     json: ".buildable/phase-plan.json",
-    markdown: ".buildable/phase-plan.md"
+    markdown: ".buildable/phase-plan.md",
+    toon: ".buildable/phase-plan.toon"
   };
+}
+
+function savedPhasePlanForPrompt(prompt, workspace = process.cwd()) {
+  const phasePlanPath = join(workspace, ".buildable", "phase-plan.json");
+  if (!existsSync(phasePlanPath)) return null;
+  try {
+    const plan = JSON.parse(readFileSync(phasePlanPath, "utf8"));
+    if (plan?.prompt !== prompt || !plan?.appSpec) return null;
+    if (!plan.artifactType) plan.artifactType = "buildable-phase-plan";
+    if (!plan.workflowStage) plan.workflowStage = "decision";
+    if (!plan.commandRole) plan.commandRole = "plan";
+    if (!plan.planContractVersion) plan.planContractVersion = "audit-first-v1";
+    if (!plan.consumedBy) plan.consumedBy = ["buildable design", "buildable generate", "buildable review"];
+    if (!plan.appSpec.planAudit) plan.appSpec.planAudit = planAuditFor(plan.appSpec);
+    if (!plan.appSpec.promptRefinement) {
+      plan.appSpec.promptRefinement = promptRefinementFor(plan.prompt, plan.classification, defaultsFor(plan.appSpec.archetype), plan.appSpec);
+    }
+    if (!plan.phasePlan) plan.phasePlan = phasePlanFor(plan);
+    if (!plan.planMarkdown) plan.planMarkdown = planMarkdownFor(plan);
+    return plan;
+  } catch {
+    return null;
+  }
 }
 
 function augmentPlanFor(plan) {
@@ -2183,7 +2538,12 @@ function generate() {
     return;
   }
 
-  const plan = specFor(input, { referenceInputs: referenceInputsFromArgs() });
+  const referenceInputs = referenceInputsFromArgs();
+  const authFlagsPresent = flags.has("--with-auth") || flags.has("--with-local-auth") || authProviderFlags.some(([flag]) => flags.has(flag)) || Boolean(parsedArgs.values?.["with-auth-provider"]);
+  const canReuseSavedPlan = referenceInputs.length === 0 && !authFlagsPresent;
+  const savedPlan = canReuseSavedPlan ? savedPhasePlanForPrompt(input) : null;
+  const planSource = savedPlan ? "saved-phase-plan" : "inline-prompt-plan";
+  const plan = savedPlan || specFor(input, { referenceInputs });
   if (plan.classification.questionsNeeded && !flags.has("--force")) {
     console.error("This prompt includes architecture-changing choices. Answer these before generation:");
     for (const question of plan.classification.questions) console.error(`- ${question}`);
@@ -2192,8 +2552,8 @@ function generate() {
     return;
   }
   // Smarter naming: a --name flag or "called/named X" in the prompt brands the app.
-  const defaultName = plan.appSpec.name;
-  const appName = chosenAppName(input, defaultName);
+  const starterDefaultName = appNameFor(plan.appSpec.archetype);
+  const appName = chosenAppName(input, plan.appSpec.name);
   plan.appSpec.name = appName;
 
   // Augment mode plans into an existing app instead of copying a fresh starter.
@@ -2230,7 +2590,7 @@ function generate() {
   let renamedFiles = 0;
   if (hasRunnableStarter) {
     copyDirectory(starter, outDir);
-    renamedFiles = renameAppInDir(outDir, defaultName, appName);
+    renamedFiles = renameAppInDir(outDir, starterDefaultName, appName);
   } else {
     mkdirSync(outDir, { recursive: true });
     writeFileSync(join(outDir, "IMPLEMENTATION_PLAN.md"), augment ? augmentPlanFor(plan) : implementationPlanFor(plan));
@@ -2240,10 +2600,16 @@ function generate() {
 
   mkdirSync(join(outDir, ".buildable"), { recursive: true });
   writeJson(join(outDir, "buildable-app-spec.json"), plan.appSpec);
+  writeJson(join(outDir, ".buildable", "phase-plan.json"), plan);
+  writeFileSync(join(outDir, ".buildable", "phase-plan.toon"), planToonFor(plan));
   writeJson(join(outDir, ".buildable", "config.json"), {
     version: packageJson.version,
+    artifactType: "buildable-generated-project",
+    workflowStage: "generated-files",
     mode,
     appName,
+    sourcePlan: planSource,
+    sourcePlanPath: savedPlan ? ".buildable/phase-plan.json" : null,
     localOnly: true,
     buildableRoot: root,
     generatedAt: new Date().toISOString()
@@ -2283,6 +2649,8 @@ Do not add accounts, billing, cloud previews, managed databases, telemetry, or h
     mode,
     runnable: hasRunnableStarter,
     augment,
+    sourcePlan: planSource,
+    sourcePlanPath: savedPlan ? ".buildable/phase-plan.json" : null,
     appName,
     renamedFiles,
     appSpec: "buildable-app-spec.json"
@@ -2514,12 +2882,16 @@ function review() {
   }
 
   const allowedBackend = appSpec?.persistence?.userNamedBackend ?? null;
+  const allowedAuthProvider = appSpec?.auth?.userNamedProvider ?? null;
+  const authShapeAllowedTerms = new Set(["authentication", "login", "sign in", "sign up"]);
   for (const file of textFiles) {
+    const relativePath = relative(target, file);
     if (
-      file.endsWith("BUILDABLE_NOTES.md") ||
-      file.endsWith("BUILDABLE_TEMPLATE.md") ||
-      file.endsWith("IMPLEMENTATION_PLAN.md") ||
-      file.endsWith("buildable-app-spec.json")
+      relativePath.startsWith(".buildable/") ||
+      relativePath === "BUILDABLE_NOTES.md" ||
+      relativePath === "BUILDABLE_TEMPLATE.md" ||
+      relativePath === "IMPLEMENTATION_PLAN.md" ||
+      relativePath === "buildable-app-spec.json"
     ) {
       continue;
     }
@@ -2527,12 +2899,20 @@ function review() {
     for (const term of localFirstDriftTerms) {
       // The user can opt into one named backend; that vendor is allowed (behind the seam).
       if (allowedBackend && term === allowedBackend) continue;
+      // Local/mock auth shape is allowed only when auth was requested; named providers are allowed only when recorded on the spec.
+      if (appSpec?.auth?.requested && authShapeAllowedTerms.has(term)) continue;
+      if (allowedAuthProvider && term === allowedAuthProvider) continue;
+      if (allowedAuthProvider === "next-auth" && term === "next-auth") continue;
+      if (allowedAuthProvider === "clerk" && term === "clerk") continue;
+      if (allowedAuthProvider === "auth0" && term === "auth0") continue;
+      if (allowedAuthProvider === "supabase auth" && term === "supabase") continue;
+      if (allowedAuthProvider === "firebase auth" && (term === "firebase" || term === "firestore")) continue;
       // Whole-token match so "stripe" doesn't flag "striped", "login" doesn't flag "blogin", etc.
       if (hasTagPhrase(text, term)) {
         const seamHint = appSpec?.persistence?.requested
           ? " If this is the requested data layer, keep it behind the repository seam (knowledge/data-layer/repository-pattern.md)."
           : "";
-        const message = `Non-local-first term "${term}" appears in ${relative(target, file)}.${seamHint}`;
+        const message = `Non-local-first term "${term}" appears in ${relativePath}.${seamHint}`;
         // --strict turns local-first guardrail drift into a blocking failure.
         if (flags.has("--strict")) issues.push(message);
         else warnings.push(message);
@@ -2577,6 +2957,22 @@ function review() {
             : "Persistence requested; implement it behind the repository seam. See knowledge/data-layer/persistence-ladder.md."
     });
     if (hasStorage && !hasSeam) warnings.push("Storage calls are not behind a repository seam. See knowledge/data-layer/repository-pattern.md.");
+  }
+
+  if (appSpec?.auth?.requested) {
+    const hasAuthSeam = /\bauth(?:service|adapter|provider|repository|client)\b|\bAuthService\b|\bAuthAdapter\b|\bAuthProvider\b|\bSessionRepository\b|interface\s+\w*Auth|createLocalAuth|createRemoteAuth/i.test(implementationText);
+    const hasProviderCall = /\b(clerk|auth0|next-auth|nextauth|supabase|firebase)\b/i.test(implementationText);
+    checks.push({
+      name: "auth-seam",
+      status: hasAuthSeam || !hasProviderCall ? "pass" : "warn",
+      message:
+        hasAuthSeam
+          ? "Auth is routed through an auth seam."
+          : hasProviderCall
+            ? "Auth provider calls found without an auth seam; wrap them so the provider stays swappable. See knowledge/auth/auth-seam.md."
+            : "Auth requested; model session state behind an auth seam. See knowledge/auth/auth-shape.md."
+    });
+    if (hasProviderCall && !hasAuthSeam) warnings.push("Auth provider calls are not behind an auth seam. See knowledge/auth/auth-seam.md.");
   }
 
   // Accessibility + state-coverage heuristics (graded, non-blocking warnings).
@@ -2830,7 +3226,7 @@ if (!command || command === "help" || command === "--help" || command === "-h") 
     process.exitCode = 1;
   } else {
     const plan = specFor(input, { referenceInputs: referenceInputsFromArgs() });
-    if (flags.has("--write")) plan.written = writePhasePlanFiles(plan);
+    if (!flags.has("--no-write")) plan.written = writePhasePlanFiles(plan);
     console.log(JSON.stringify(plan, null, 2));
   }
 } else if (command === "design") {

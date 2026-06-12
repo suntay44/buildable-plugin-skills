@@ -24,7 +24,7 @@ Use Buildable only for app planning, app generation, UI/UX product guidance, or 
 
 Mandatory order:
 
-1. Run `buildable plan "<prompt>"` when available. Use `--file <path>`, `--reference <path>`, or `--screenshot <path>` for explicit user-provided files, and use `--write` when the user wants a workspace phase-plan markdown file.
+1. Run `buildable plan "<prompt>"` when available. Use `--file <path>`, `--reference <path>`, or `--screenshot <path>` for explicit user-provided files. It saves `.buildable/phase-plan.md/json/toon` by default; use `--no-write` only for terminal-only inspection.
 2. Load only `appSpec.references`.
 3. Inspect only explicit `appSpec.referenceInputs` supplied by the user.
 4. Do not load all templates.
@@ -45,12 +45,19 @@ Use `knowledge/INDEX.md` and `templates/INDEX.md` only for discovery when the CL
 7. Select compact UI/UX direction from `core/design-system-registry.json` and include it as `appSpec.designSystem`.
 8. Include `appSpec.mockData` with realistic local seed-data guidance and state coverage.
 9. Include `appSpec.referenceInputs` when users attach screenshots/files; preserve paths and inspection instructions without pasting file contents into the prompt.
-10. Produce an app spec using `core/app-spec-schema.md`.
-11. Include a phase plan: clarify if needed, plan, mock data, design, build, review.
-12. Include explicit non-goals to prevent hosted feature drift.
-13. End with a short satisfaction checkpoint:
+10. Include `appSpec.promptRefinement` with assumptions, optional sharpening questions, and default answers.
+11. Include `appSpec.planAudit` with audit-first gates for scope, template status, references, mock data, UI/UX, local-first rules, auth/persistence, and review.
+12. Produce an app spec using `core/app-spec-schema.md`.
+13. Include a phase plan: clarify if needed, plan, mock data, design, build, review.
+14. Include explicit non-goals to prevent hosted feature drift.
+15. Ask questions with restraint:
+   - Ask blocking `appSpec.questions` first when `questionsNeeded` is true.
+   - When there are no blockers, ask at most one or two `promptRefinement.optionalQuestions` only if they would materially improve the result.
+   - If the user wants to proceed, use `promptRefinement` defaults instead of continuing to interrogate.
+16. End with a short satisfaction checkpoint:
    - If the user is not satisfied, ask them to stay in Buildable Planner and revise the saved plan with a prompt such as "Buildable Planner: keep this direction, but make the reminder features stronger."
-   - If the user is satisfied, suggest the correct next skill for the target: Buildable Web Builder for web or Buildable Mobile Builder for mobile. The builder must read the saved `.buildable/phase-plan.json` or app spec, then load only `appSpec.references` and the selected starter source.
+   - If the user is satisfied, suggest the correct next skill for the target: Buildable Web Builder for web or Buildable Mobile Builder for mobile. The builder must read the saved `.buildable/phase-plan.json` or `.buildable/phase-plan.toon` compact contract, then load only `appSpec.references` and the selected starter source.
+17. When the user asks for login, auth, accounts, protected routes, or an explicit auth flag, include `appSpec.auth` and the auth references. Default to local/mock auth behind an auth seam; do not choose a hosted provider unless the user names one.
 
 ## Reference Selection
 
@@ -71,7 +78,9 @@ Return:
 - phase plan
 - selected `appSpec.designSystem`
 - selected `appSpec.mockData`
+- `appSpec.planAudit` audit gates
+- `appSpec.promptRefinement` assumptions and optional questions with defaults
 - references the builder should load next
 - explicit `appSpec.referenceInputs` the builder should inspect
-- questions only if required by policy or vague product direction
+- blocking questions only if required by policy or vague product direction
 - one short next-step question: "Are you satisfied with this plan? If not, continue with Buildable Planner to revise it. If yes, continue with Buildable Web Builder/Mobile Builder using the saved plan."

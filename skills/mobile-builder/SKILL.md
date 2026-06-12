@@ -17,7 +17,7 @@ Use only when the user is building or adapting a native mobile app/prototype. Do
 
 Mandatory order:
 
-1. Read the saved planner output first: `.buildable/phase-plan.json` when present, otherwise `buildable-app-spec.json`.
+1. Read the saved planner output first: `.buildable/phase-plan.json` when present, otherwise `buildable-app-spec.json`. Use `.buildable/phase-plan.toon` when present as the compact agent-facing build contract.
 2. Load only `appSpec.references`.
 3. Load current project files only as needed for the requested change.
 4. Do not load web templates or unrelated mobile archetypes.
@@ -35,13 +35,15 @@ Mandatory order:
 ## Workflow
 
 1. Read the saved plan/app spec from the planner handoff.
-2. If `questionsNeeded` is true, ask the user before generating.
-3. Apply `appSpec.designSystem` for visual tone, density, palette intent, touch layout rules, component rules, accessibility, and anti-patterns.
-4. Load only the references listed in the app spec.
-5. If the template is `generic-app`, use the selected archetype reference to shape screens and entities instead of loading unrelated mobile templates.
-6. Generate touch-first screens and local state.
-7. Validate navigation, touch targets, and state coverage.
-8. Run `buildable review` from the selected app workspace when the CLI is available.
+2. Check `appSpec.planAudit.checks` before editing; treat blocked/failed checks as gates, not suggestions.
+3. If `questionsNeeded` is true, ask the user before generating.
+4. Apply `appSpec.designSystem` for visual tone, density, palette intent, touch layout rules, component rules, accessibility, and anti-patterns.
+5. If `appSpec.auth.requested` is true, implement the local/mock auth shape first and keep any named provider behind the auth seam.
+6. Load only the references listed in the app spec.
+7. If the template is `generic-app`, use the selected archetype reference to shape screens and entities instead of loading unrelated mobile templates.
+8. Generate touch-first screens and local state.
+9. Validate navigation, touch targets, and state coverage.
+10. Run `buildable review` from the selected app workspace when the CLI is available.
 
 ## Build Order
 

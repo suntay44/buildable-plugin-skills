@@ -29,6 +29,8 @@ The registry is the only broad archetype list agents should inspect during class
 4. Load only UI patterns named by the selected template spec.
 5. Load one design playbook and one quality rubric.
 6. Load `knowledge/design-playbooks/ui-quality.md` when visual polish is important or the app is user-facing.
+7. Load `knowledge/auth/auth-shape.md` and `knowledge/auth/auth-seam.md` only when `appSpec.auth.requested` is true.
+8. Load `knowledge/data-layer/persistence-ladder.md` and `knowledge/data-layer/repository-pattern.md` only when `appSpec.persistence.requested` is true.
 
 ## Archetypes
 
