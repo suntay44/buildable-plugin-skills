@@ -301,6 +301,14 @@ Real, unedited output — each rendered straight from a single prompt against it
     <td width="50%"><img src="docs/screenshots/web-notes.png" alt="Generated notes workspace"><br><sub><code>buildable generate "Build me a notes app for organizing ideas"</code></sub></td>
     <td width="50%"><img src="docs/screenshots/web-ecommerce-admin.png" alt="Generated ecommerce admin"><br><sub><code>buildable generate "Build me an ecommerce admin to manage products and orders"</code></sub></td>
   </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/web-landing-page.png" alt="Generated SaaS landing page"><br><sub><code>buildable generate "Build me a landing page for my startup"</code></sub></td>
+    <td width="50%"><img src="docs/screenshots/web-job-board.png" alt="Generated job board"><br><sub><code>buildable generate "Build me a job board with apply forms"</code></sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/web-inventory-manager.png" alt="Generated inventory manager"><br><sub><code>buildable generate "Build me an inventory manager with low-stock alerts"</code></sub></td>
+    <td width="50%"><img src="docs/screenshots/web-blog-cms.png" alt="Generated blog CMS"><br><sub><code>buildable generate "Build me a blog with a CMS editor"</code></sub></td>
+  </tr>
 </table>
 
 | Template | Target | Status |
