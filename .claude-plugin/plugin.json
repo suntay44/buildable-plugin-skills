@@ -1,6 +1,6 @@
 {
   "name": "buildable",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Local product-structure compiler, compact UI/UX brain, and quality gate for your coding agent. A prompt becomes the right archetype, selected design system, runnable build-verified starter, and reviewed result while loading only the references each prompt needs.",
   "author": {
     "name": "Buildable contributors"

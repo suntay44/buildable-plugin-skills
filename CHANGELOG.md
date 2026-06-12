@@ -9,6 +9,8 @@ Unreleased section here and syncs the version across every plugin manifest.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-06-12
+
 ### Added
 
 - Six new runnable web golden starters — `landing-page` (single-scroll SaaS marketing page with responsive nav, pricing, FAQ), `portfolio` (filterable project grid with case-study previews), `blog-cms` (two-pane post list + editor with draft/scheduled/published workflow), `recipe-app` (ingredient search, category/diet filters, saved view, detail steps), `job-board` (filterable listings + validated apply flow with confirmation), and `inventory-manager` (summary metrics, low-stock highlighting, receive/consume adjustment) — each build-verified, wired into config sync, CI, and eval fixtures, and passing `review --strict` with zero warnings. Runnable coverage: 9 → 15.
@@ -21,6 +23,12 @@ Unreleased section here and syncs the version across every plugin manifest.
 - Dark-mode palettes for every design profile (previously only one). `buildable design --dark` (or a "dark mode" prompt) activates the dark theme, and every brief now ships both light and dark token sets plus a `theme` label so agents can wire a light/dark toggle. A test guarantees no profile ships an incomplete dark palette.
 - Local-first persistence ladder: a new `knowledge/data-layer/` pack (persistence ladder + repository seam). When a prompt asks to save/persist/remember data, the plan opts into local-default persistence (`appSpec.persistence`), adds the data-layer references, and instructs the agent to keep storage behind a vendor-neutral repository seam. A user who names a backend (e.g. Supabase) is allowed that one vendor behind the seam.
 - `buildable review` `persistence-seam` check: when persistence is requested, warns on raw storage calls that are not behind a repository seam. The local-first guardrail is now graceful — it allows the backend the user opted into (recorded on the spec) while still flagging un-named hosted vendors, and points drift messages to the seam.
+- Auth-as-a-shape (opt-in): `buildable plan --with-auth` (or a login prompt) adds `appSpec.auth` and a `knowledge/auth/` pack (auth shape + seam). The default is local/mock auth — session model, protected-route structure, demo users — with named providers (Clerk, Supabase Auth, …) treated as swappable adapters behind the seam, not screen-level dependencies.
+- Audit-first phase plans: `buildable plan` writes reusable decision files `.buildable/phase-plan.md/json/toon` with a `planAudit` and optional `promptRefinement` questions; `generate` reuses the saved audited plan (`sourcePlan: saved-phase-plan`) and writes the compact `.toon` contract into the generated app.
+- `buildable design` MCP tool and a desktop MCP bridge (`buildable mcp` / `bin/buildable-mcp.mjs`) exposing all nine commands as MCP tools for Claude Desktop, Codex, and Cursor.
+- Three UI patterns the new rubrics grade against — `pricing-tables`, `auth-screens`, and `settings-layouts`; pricing loads with the landing-page template and auth screens load with opt-in auth references.
+- The `notes` starter now demonstrates the persistence seam: notes survive a refresh via a `localStorage` repository (`lib/repository.ts`) behind the `Repository` interface, hydration-safe and seeded — the living example of the data-layer ladder.
+- Friendly fatal-error handling in the CLI (no raw stack traces; `DEBUG=1` for the full trace) and community-health files (`SECURITY.md`, `CODE_OF_CONDUCT.md`, issue/PR templates) with a CI status badge.
 
 ## [0.2.0] - 2026-06-10
 
@@ -52,6 +60,7 @@ Unreleased section here and syncs the version across every plugin manifest.
 - `buildable eval` scores classification fixtures and context-load efficiency (~90% of context tokens saved per plan).
 - Starter config single-source sync (`npm run sync:starters`) with a drift guard, version-pin guard tests, and a CI workflow that builds every runnable starter.
 
-[Unreleased]: https://github.com/suntay44/buildable-plugin-skills/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/suntay44/buildable-plugin-skills/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/suntay44/buildable-plugin-skills/releases/tag/v0.3.0
 [0.2.0]: https://github.com/suntay44/buildable-plugin-skills/releases/tag/v0.2.0
 [0.1.0]: https://github.com/suntay44/buildable-plugin-skills/releases/tag/v0.1.0
