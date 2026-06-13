@@ -11,7 +11,7 @@ Unreleased section here and syncs the version across every plugin manifest.
 
 ### Changed
 
-- Enriched the three highest-leverage web blocks (`filterable-table`, `detail-panel`, `empty-state`) from ~23-line stubs to fuller micro-template packs: expected data shape, required states, accessibility rules, responsive behavior, a small code sketch, an adaptation checklist, and bad patterns. Loaded only when a plan selects the block, so the token cost stays scoped (a landing page never loads the table guidance).
+- Enriched all micro-template blocks from ~23-line stubs to fuller packs: the three web blocks (`filterable-table`, `detail-panel`, `empty-state`) and the three mobile blocks (`list-with-filters`, `bottom-action-bar`, `empty-state`, the latter tuned for Expo/React Native + NativeWind with safe-area and keyboard guidance). Each now carries an expected data shape, required states, accessibility rules, responsive behavior, a small code sketch, an adaptation checklist, and bad patterns — and still loads only when a plan selects the block, so the token cost stays scoped (a landing page loads no table guidance; a web plan loads no mobile blocks).
 
 ## [0.3.1] - 2026-06-13
 
