@@ -16,6 +16,7 @@
     "mockData",
     "style",
     "designSystem",
+    "blocks",
     "template",
     "templateStatus",
     "generationMode",
@@ -121,6 +122,22 @@
       }
     },
     "template": { "type": "string", "minLength": 1 },
+    "blocks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "role", "target", "reason", "needs", "references"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "name": { "type": "string", "minLength": 1 },
+          "role": { "type": "string", "minLength": 1 },
+          "target": { "enum": ["web", "mobile"] },
+          "reason": { "type": "string", "minLength": 1 },
+          "needs": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+          "references": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+        }
+      }
+    },
     "templateStatus": { "enum": ["planned", "starter", "runnable"] },
     "generationMode": { "enum": ["runnable-starter", "plan-only"] },
     "references": { "type": "array", "items": { "type": "string" } },

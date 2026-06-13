@@ -1,0 +1,95 @@
+{
+  "$schema": "./schema/block-registry.schema.json",
+  "version": "0.1.0",
+  "purpose": "Reusable Buildable micro-blocks selected during planning. Blocks are guidance and examples, not automatic code composition.",
+  "blocks": [
+    {
+      "id": "web/filterable-table",
+      "name": "Filterable Table",
+      "target": "web",
+      "role": "entity-list",
+      "fitsArchetypes": ["crm", "dashboard", "ecommerce-admin", "inventory-manager", "job-board", "blog-cms"],
+      "fitsDesignProfiles": ["operator-dashboard", "marketplace-catalog"],
+      "tags": ["table", "filters", "search", "sort", "status", "dense list"],
+      "needs": ["primary entity with status/category/date fields", "6+ realistic records"],
+      "references": ["blocks/web/filterable-table/BLOCK.md", "knowledge/ui-patterns/tables.md", "knowledge/ui-patterns/filters.md"]
+    },
+    {
+      "id": "web/detail-panel",
+      "name": "Detail Panel",
+      "target": "web",
+      "role": "entity-detail",
+      "fitsArchetypes": ["crm", "ecommerce-admin", "inventory-manager", "job-board", "notes", "real-estate"],
+      "fitsDesignProfiles": ["operator-dashboard", "focused-productivity"],
+      "tags": ["detail", "drawer", "side panel", "selected record", "metadata"],
+      "needs": ["selected entity", "primary and secondary fields", "clear edit or next action"],
+      "references": ["blocks/web/detail-panel/BLOCK.md", "knowledge/ui-patterns/action-bars.md", "knowledge/ui-patterns/forms.md"]
+    },
+    {
+      "id": "web/stat-card-grid",
+      "name": "Stat Card Grid",
+      "target": "web",
+      "role": "summary",
+      "fitsArchetypes": ["crm", "dashboard", "ecommerce-admin", "inventory-manager", "subscription-tracker"],
+      "fitsDesignProfiles": ["operator-dashboard", "modern-saas"],
+      "tags": ["metrics", "summary", "kpi", "cards", "trend"],
+      "needs": ["3-5 computed metrics", "short labels", "comparison or status where useful"],
+      "references": ["blocks/web/stat-card-grid/BLOCK.md", "knowledge/ui-patterns/charts.md"]
+    },
+    {
+      "id": "web/entity-form",
+      "name": "Entity Form",
+      "target": "web",
+      "role": "create-edit",
+      "fitsArchetypes": ["crm", "task-manager", "notes", "blog-cms", "ecommerce-admin", "inventory-manager", "job-board"],
+      "fitsDesignProfiles": ["operator-dashboard", "focused-productivity"],
+      "tags": ["form", "create", "edit", "validation", "save"],
+      "needs": ["entity fields", "validation states", "save/cancel actions"],
+      "references": ["blocks/web/entity-form/BLOCK.md", "knowledge/ui-patterns/forms.md"]
+    },
+    {
+      "id": "web/empty-state",
+      "name": "Workflow Empty State",
+      "target": "web",
+      "role": "state-coverage",
+      "fitsArchetypes": ["crm", "task-manager", "notes", "dashboard", "marketplace", "ecommerce-admin", "inventory-manager", "job-board", "blog-cms"],
+      "fitsDesignProfiles": ["operator-dashboard", "focused-productivity", "marketplace-catalog"],
+      "tags": ["empty", "filtered empty", "no results", "state"],
+      "needs": ["empty copy", "recovery action", "filtered-empty variant"],
+      "references": ["blocks/web/empty-state/BLOCK.md", "knowledge/ui-patterns/empty-states.md"]
+    },
+    {
+      "id": "mobile/list-with-filters",
+      "name": "Mobile List With Filters",
+      "target": "mobile",
+      "role": "entity-list",
+      "fitsArchetypes": ["task-manager", "habit-tracker", "booking", "expense-tracker", "travel-planner", "field-service", "subscription-tracker"],
+      "fitsDesignProfiles": ["mobile-utility"],
+      "tags": ["mobile list", "chips", "search", "filters", "thumb"],
+      "needs": ["primary list entity", "compact filters", "tap target detail/action"],
+      "references": ["blocks/mobile/list-with-filters/BLOCK.md", "knowledge/ui-patterns/filters.md", "knowledge/ui-patterns/navigation.md"]
+    },
+    {
+      "id": "mobile/bottom-action-bar",
+      "name": "Mobile Bottom Action Bar",
+      "target": "mobile",
+      "role": "primary-action",
+      "fitsArchetypes": ["task-manager", "habit-tracker", "booking", "expense-tracker", "meal-planner", "maintenance-request", "field-service"],
+      "fitsDesignProfiles": ["mobile-utility"],
+      "tags": ["bottom bar", "primary action", "mobile", "thumb"],
+      "needs": ["one dominant action", "safe area", "disabled/loading state"],
+      "references": ["blocks/mobile/bottom-action-bar/BLOCK.md", "knowledge/ui-patterns/action-bars.md"]
+    },
+    {
+      "id": "mobile/empty-state",
+      "name": "Mobile Empty State",
+      "target": "mobile",
+      "role": "state-coverage",
+      "fitsArchetypes": ["task-manager", "habit-tracker", "booking", "expense-tracker", "travel-planner", "meal-planner", "field-service", "subscription-tracker"],
+      "fitsDesignProfiles": ["mobile-utility"],
+      "tags": ["empty", "offline", "filtered empty", "mobile state"],
+      "needs": ["small-screen copy", "recovery action", "offline/local fallback"],
+      "references": ["blocks/mobile/empty-state/BLOCK.md", "knowledge/ui-patterns/empty-states.md"]
+    }
+  ]
+}

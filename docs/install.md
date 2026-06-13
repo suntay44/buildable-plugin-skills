@@ -136,7 +136,7 @@ Buildable includes Codex plugin metadata in `.codex-plugin/plugin.json`.
 Local setup:
 
 1. Open Codex Desktop against this repository, or add this repository as a local/personal plugin source if your Codex Desktop build supports local plugin installation.
-2. Verify that `.codex-plugin/plugin.json` resolves the bundled skills in `skills/` and resources in `core/`, `knowledge/`, `templates/`, and `evals/`.
+2. Verify that `.codex-plugin/plugin.json` resolves the bundled skills in `skills/` and resources in `core/`, `blocks/`, `knowledge/`, `templates/`, and `evals/`.
 3. Run `buildable check` from the repository root.
 4. Ask Codex to use Buildable for prompt-to-prototype planning. The plugin should keep generation local and read only the relevant bundled references.
 

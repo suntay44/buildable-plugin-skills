@@ -38,13 +38,14 @@ Mandatory order:
 3. If `questionsNeeded` is true, ask the user before generating.
 4. For fresh starts, prefer `buildable generate "<prompt>"` when a runnable template exists. Add `--out <dir>` only when the user requested a specific folder.
 5. Apply `appSpec.designSystem` for visual tone, density, palette intent, layout rules, component rules, accessibility, and anti-patterns.
-6. If `appSpec.auth.requested` is true, implement the local/mock auth shape first and keep any named provider behind the auth seam.
-7. Load only the references listed in the app spec.
-8. If the template is `generic-app`, use the selected archetype reference to shape screens and entities instead of loading unrelated templates.
-9. Inspect the local project if generating inside an existing app.
-10. Generate or adapt a complete first-screen prototype.
-11. Keep data local unless the spec explicitly requires otherwise.
-11. Run build/typecheck/lint checks when available.
+6. Apply `appSpec.blocks` as reusable micro-template guidance. Selected block docs are references to adapt to the current entity/design system, not generic code to paste blindly.
+7. If `appSpec.auth.requested` is true, implement the local/mock auth shape first and keep any named provider behind the auth seam.
+8. Load only the references listed in the app spec.
+9. If the template is `generic-app`, use the selected archetype reference to shape screens and entities instead of loading unrelated templates.
+10. Inspect the local project if generating inside an existing app.
+11. Generate or adapt a complete first-screen prototype.
+12. Keep data local unless the spec explicitly requires otherwise.
+13. Run build/typecheck/lint checks when available.
 
 ## Build Order
 

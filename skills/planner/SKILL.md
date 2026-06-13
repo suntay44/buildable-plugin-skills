@@ -43,21 +43,22 @@ Use `knowledge/INDEX.md` and `templates/INDEX.md` only for discovery when the CL
 5. Load matching files from `knowledge/data-models/` and `knowledge/screen-graphs/` when they exist.
 6. Select the best `templates/<target>/<archetype>/template-spec.json`.
 7. Select compact UI/UX direction from `core/design-system-registry.json` and include it as `appSpec.designSystem`.
-8. Include `appSpec.mockData` with realistic local seed-data guidance and state coverage.
-9. Include `appSpec.referenceInputs` when users attach screenshots/files; preserve paths and inspection instructions without pasting file contents into the prompt.
-10. Include `appSpec.promptRefinement` with assumptions, optional sharpening questions, and default answers.
-11. Include `appSpec.planAudit` with audit-first gates for scope, template status, references, mock data, UI/UX, local-first rules, auth/persistence, and review.
-12. Produce an app spec using `core/app-spec-schema.md`.
-13. Include a phase plan: clarify if needed, plan, mock data, design, build, review.
-14. Include explicit non-goals to prevent hosted feature drift.
-15. Ask questions with restraint:
+8. Select compatible micro-blocks from `blocks/registry.json` and include them as `appSpec.blocks`; append only selected block references to `appSpec.references`.
+9. Include `appSpec.mockData` with realistic local seed-data guidance and state coverage.
+10. Include `appSpec.referenceInputs` when users attach screenshots/files; preserve paths and inspection instructions without pasting file contents into the prompt.
+11. Include `appSpec.promptRefinement` with assumptions, optional sharpening questions, and default answers.
+12. Include `appSpec.planAudit` with audit-first gates for scope, template status, references, mock data, UI/UX, local-first rules, auth/persistence, and review.
+13. Produce an app spec using `core/app-spec-schema.md`.
+14. Include a phase plan: clarify if needed, plan, mock data, design, build, review.
+15. Include explicit non-goals to prevent hosted feature drift.
+16. Ask questions with restraint:
    - Ask blocking `appSpec.questions` first when `questionsNeeded` is true.
    - When there are no blockers, ask at most one or two `promptRefinement.optionalQuestions` only if they would materially improve the result.
    - If the user wants to proceed, use `promptRefinement` defaults instead of continuing to interrogate.
-16. End with a short satisfaction checkpoint:
+17. End with a short satisfaction checkpoint:
    - If the user is not satisfied, ask them to stay in Buildable Planner and revise the saved plan with a prompt such as "Buildable Planner: keep this direction, but make the reminder features stronger."
    - If the user is satisfied, suggest the correct next skill for the target: Buildable Web Builder for web or Buildable Mobile Builder for mobile. The builder must read the saved `.buildable/phase-plan.json` or `.buildable/phase-plan.toon` compact contract, then load only `appSpec.references` and the selected starter source.
-17. When the user asks for login, auth, accounts, protected routes, or an explicit auth flag, include `appSpec.auth` and the auth references. Default to local/mock auth behind an auth seam; do not choose a hosted provider unless the user names one.
+18. When the user asks for login, auth, accounts, protected routes, or an explicit auth flag, include `appSpec.auth` and the auth references. Default to local/mock auth behind an auth seam; do not choose a hosted provider unless the user names one.
 
 ## Reference Selection
 
@@ -77,6 +78,7 @@ Return:
 - app spec
 - phase plan
 - selected `appSpec.designSystem`
+- selected `appSpec.blocks` reusable guidance
 - selected `appSpec.mockData`
 - `appSpec.planAudit` audit gates
 - `appSpec.promptRefinement` assumptions and optional questions with defaults

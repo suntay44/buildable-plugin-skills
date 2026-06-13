@@ -38,12 +38,13 @@ Mandatory order:
 2. Check `appSpec.planAudit.checks` before editing; treat blocked/failed checks as gates, not suggestions.
 3. If `questionsNeeded` is true, ask the user before generating.
 4. Apply `appSpec.designSystem` for visual tone, density, palette intent, touch layout rules, component rules, accessibility, and anti-patterns.
-5. If `appSpec.auth.requested` is true, implement the local/mock auth shape first and keep any named provider behind the auth seam.
-6. Load only the references listed in the app spec.
-7. If the template is `generic-app`, use the selected archetype reference to shape screens and entities instead of loading unrelated mobile templates.
-8. Generate touch-first screens and local state.
-9. Validate navigation, touch targets, and state coverage.
-10. Run `buildable review` from the selected app workspace when the CLI is available.
+5. Apply `appSpec.blocks` as reusable micro-template guidance. Selected block docs are references to adapt to the current entity/design system, not generic code to paste blindly.
+6. If `appSpec.auth.requested` is true, implement the local/mock auth shape first and keep any named provider behind the auth seam.
+7. Load only the references listed in the app spec.
+8. If the template is `generic-app`, use the selected archetype reference to shape screens and entities instead of loading unrelated mobile templates.
+9. Generate touch-first screens and local state.
+10. Validate navigation, touch targets, and state coverage.
+11. Run `buildable review` from the selected app workspace when the CLI is available.
 
 ## Build Order
 

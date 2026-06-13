@@ -43,6 +43,7 @@
     "../core/schemas/app-spec.schema.json",
     "../core/schemas/archetype-registry.schema.json",
     "../core/schemas/template-spec.schema.json",
+    "../blocks",
     "../knowledge",
     "../templates",
     "../evals/rubric.md",

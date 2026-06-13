@@ -91,6 +91,17 @@ The app spec is the build contract between planner, builder, reviewer, and fixer
     "accessibility": ["visible labels", "focus-visible states", "keyboard reachable actions"],
     "avoid": ["marketing hero layout inside the app", "decorative cards with no workflow value"]
   },
+  "blocks": [
+    {
+      "id": "web/filterable-table",
+      "name": "Filterable Table",
+      "role": "entity-list",
+      "target": "web",
+      "reason": "Filterable Table fits task-manager as an entity-list block.",
+      "needs": ["primary entity with status/category/date fields", "6+ realistic records"],
+      "references": ["blocks/web/filterable-table/BLOCK.md", "knowledge/ui-patterns/tables.md", "knowledge/ui-patterns/filters.md"]
+    }
+  ],
   "template": "templates/web/task-manager/template-spec.json",
   "templateStatus": "runnable",
   "generationMode": "runnable-starter",
@@ -164,6 +175,7 @@ The app spec is the build contract between planner, builder, reviewer, and fixer
 
 - Keep specs concrete enough that a builder can generate code without asking for visual taste preferences.
 - Include `designSystem` so builders get compact UI/UX direction without loading every design playbook.
+- Include `blocks` so builders get selected reusable micro-template guidance without scanning every block. Blocks are selected planning guidance, not automatic code composition.
 - Include `mockData` so design and build phases use realistic local seed data, not generic placeholders.
 - Include `referenceInputs` when users attach screenshots, documents, or files. Keep them separate from bundled `references`; agents should inspect only those explicit user files plus `appSpec.references`.
 - Include `auth` only when the user asks for auth/login/accounts or uses an explicit auth flag. Default to local/mock auth shape behind an auth seam; record a named provider only when the user names one.
