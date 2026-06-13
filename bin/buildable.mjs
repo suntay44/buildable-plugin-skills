@@ -28,6 +28,7 @@ const jsonOutput = flags.has("--json");
 const packageJson = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
 const archetypeRegistry = JSON.parse(readFileSync(join(root, "core/archetype-registry.json"), "utf8"));
 const designSystemRegistry = JSON.parse(readFileSync(join(root, "core/design-system-registry.json"), "utf8"));
+const blockRegistry = JSON.parse(readFileSync(join(root, "blocks/registry.json"), "utf8"));
 // Hosted/non-local-first dependencies that should not appear in a prototype unless the user
 // asked for them — aligned with the ask-vs-build policy and appSpec.mustNotInclude. Matched
 // as whole tokens (see hasTagPhrase) so "stripe" does not flag "striped".
@@ -103,7 +104,9 @@ Commands:
                                 Classify a prompt and print a top-down local app spec as JSON.
                                 --file/--reference/--screenshot records explicit user references;
                                 --with-auth records local/mock auth shape; --with-auth-provider names a provider;
-                                saves .buildable/phase-plan.md/json/toon by default; --no-write only prints JSON.
+                                saves .buildable/phase-plan.md/json/toon by default; --no-write only prints.
+                                --toon prints the compact TOON contract (~80% smaller); --compact prints
+                                slim JSON (drops the planMarkdown render); --no-write skips file writes.
   design [prompt] [--page <name>] [--write]
                                 Produce an interchangeable UI/UX design brief. Uses the current
                                 app spec when present, or classifies the prompt when not.
@@ -852,6 +855,12 @@ function authCommandArgsFor(prompt, auth) {
   return "";
 }
 
+function blockSummaryLine(blocks) {
+  return blocks?.length
+    ? `Selected micro-blocks: ${blocks.map((block) => `${block.id} (${block.role})`).join(", ")}. Use these as reusable UI/product guidance; do not load unselected blocks.`
+    : "Selected micro-blocks: none.";
+}
+
 function planMarkdownFor(plan) {
   const phases = plan.phasePlan ?? phasePlanFor(plan);
   return `# Buildable Phase Plan
@@ -878,6 +887,10 @@ ${plan.appSpec.questions.length ? plan.appSpec.questions.map((question) => `- ${
 ## Audit-First Build Contract
 
 ${plan.appSpec.planAudit.checks.map((check) => `- ${check.id}: ${check.status} — ${check.gate}`).join("\n")}
+
+## Selected Micro-Blocks
+
+${plan.appSpec.blocks.length ? plan.appSpec.blocks.map((block) => `- ${block.id}: ${block.reason}\n  - needs: ${block.needs.join("; ")}`).join("\n") : "- None"}
 
 ## Optional Refinement Questions
 
@@ -963,6 +976,8 @@ function planToonFor(plan) {
     `    density: ${toonValue(spec.designSystem.density)}`,
     `    tone: ${toonValue(spec.designSystem.visualTone)}`,
     toonList("avoid", spec.designSystem.avoid, "    "),
+    "  blocks:",
+    toonTable("selected", ["id", "role", "reason"], spec.blocks, "    "),
     "  audit:",
     toonTable("checks", ["id", "status", "gate"], spec.planAudit.checks, "    "),
     "  product:",
@@ -987,6 +1002,14 @@ function planToonFor(plan) {
   return `${lines.join("\n")}\n`;
 }
 
+// Agent-facing plan view: drop planMarkdown (a human render of phasePlan + appSpec
+// that an agent does not need to re-parse) and point at the .md file instead.
+// ~20% smaller than the full plan JSON with no loss of structured information.
+function compactPlan(plan) {
+  const { planMarkdown, ...rest } = plan;
+  return { ...rest, planMarkdownFile: plan.written?.markdown ?? ".buildable/phase-plan.md" };
+}
+
 function enhancedPromptFor(originalPrompt, appSpec) {
   const features = appSpec.features.join(", ");
   const screens = appSpec.screens.map((screen) => screen.id).join(", ");
@@ -1005,6 +1028,7 @@ function enhancedPromptFor(originalPrompt, appSpec) {
     `Use ${appSpec.sampleData} sample data and follow this product style: ${appSpec.style}.`,
     designPromptLine(appSpec.designSystem),
     designRulesLine(appSpec.designSystem),
+    blockSummaryLine(appSpec.blocks),
     `Mock data guidance: ${appSpec.mockData.recordsPerEntity} realistic local records per entity; include populated, empty, filtered-empty, loading/saving, and validation/error states.`,
     appSpec.persistence?.requested
       ? `Persistence requested: ${appSpec.persistence.rule} Follow knowledge/data-layer/persistence-ladder.md and put storage behind the repository seam in knowledge/data-layer/repository-pattern.md.`
@@ -1076,6 +1100,35 @@ function authFor(prompt, args = parsedArgs) {
   };
 }
 
+function microBlocksFor(appContext, limit = 5) {
+  const usedRoles = new Set();
+  return (blockRegistry.blocks ?? [])
+    .filter((block) => block.target === appContext.target)
+    .map((block) => {
+      const archetypeMatch = block.fitsArchetypes?.includes(appContext.archetype) ? 4 : 0;
+      const designMatch = block.fitsDesignProfiles?.includes(appContext.designSystem.profile) ? 2 : 0;
+      const tagMatch = (block.tags ?? []).some((tag) => hasTagPhrase(appContext.prompt, tag)) ? 1 : 0;
+      return { block, score: archetypeMatch + designMatch + tagMatch };
+    })
+    .filter((entry) => entry.score > 0)
+    .sort((a, b) => b.score - a.score || a.block.id.localeCompare(b.block.id))
+    .filter(({ block }) => {
+      if (usedRoles.has(block.role)) return false;
+      usedRoles.add(block.role);
+      return true;
+    })
+    .slice(0, limit)
+    .map(({ block }) => ({
+      id: block.id,
+      name: block.name,
+      role: block.role,
+      target: block.target,
+      reason: `${block.name} fits ${appContext.archetype} as a ${block.role} block.`,
+      needs: block.needs ?? [],
+      references: block.references ?? []
+    }));
+}
+
 function specFor(prompt, options = {}) {
   const classification = classify(prompt);
   const template = templateFor(classification);
@@ -1087,6 +1140,12 @@ function specFor(prompt, options = {}) {
   const target = classification.target;
   const defaults = defaultsFor(classification.archetype);
   const designSystem = designSystemFor(classification, defaults, prompt);
+  const blocks = microBlocksFor({
+    prompt,
+    target,
+    archetype: classification.archetype,
+    designSystem
+  });
   const archetypeReference = `knowledge/archetypes/${classification.archetype}.md`;
   const designSelectionReference = "knowledge/design-playbooks/design-system-selection.md";
   const references = [...(templateSpec.references ?? [])];
@@ -1095,6 +1154,11 @@ function specFor(prompt, options = {}) {
   }
   if (existsSync(join(root, designSelectionReference)) && !references.includes(designSelectionReference)) {
     references.push(designSelectionReference);
+  }
+  for (const block of blocks) {
+    for (const ref of block.references ?? []) {
+      if (existsSync(join(root, ref)) && !references.includes(ref)) references.push(ref);
+    }
   }
 
   const persistence = persistenceFor(prompt);
@@ -1134,6 +1198,7 @@ function specFor(prompt, options = {}) {
       mockData: mockDataFor(defaults),
       style: defaults.style,
       designSystem,
+      blocks,
       template: template.path,
       templateStatus: templateSpec.status ?? template.status,
       generationMode: templateSpec.status === "runnable" ? "runnable-starter" : "plan-only",
@@ -1175,7 +1240,7 @@ function specFor(prompt, options = {}) {
 
 function validateAppSpec(spec) {
   const issues = [];
-  const required = ["name", "target", "archetype", "complexity", "stack", "screens", "entities", "features", "sampleData", "mockData", "style", "designSystem", "template", "templateStatus", "generationMode", "references", "referenceInputs", "referenceLoadingContract", "mustNotInclude", "acceptanceCriteria", "questionsNeeded", "questions", "planAudit", "promptRefinement"];
+  const required = ["name", "target", "archetype", "complexity", "stack", "screens", "entities", "features", "sampleData", "mockData", "style", "designSystem", "blocks", "template", "templateStatus", "generationMode", "references", "referenceInputs", "referenceLoadingContract", "mustNotInclude", "acceptanceCriteria", "questionsNeeded", "questions", "planAudit", "promptRefinement"];
 
   for (const field of required) {
     if (spec[field] === undefined || spec[field] === null) issues.push(`app spec missing ${field}`);
@@ -1225,6 +1290,22 @@ function validateAppSpec(spec) {
   }
   if (!templateStatuses.includes(spec.templateStatus)) issues.push(`app spec has invalid templateStatus ${spec.templateStatus}`);
   if (!["runnable-starter", "plan-only"].includes(spec.generationMode)) issues.push(`app spec has invalid generationMode ${spec.generationMode}`);
+  if (!Array.isArray(spec.blocks)) {
+    issues.push("app spec blocks must be an array");
+  } else {
+    const registryIds = new Set((blockRegistry.blocks ?? []).map((block) => block.id));
+    for (const block of spec.blocks) {
+      if (!block?.id) issues.push("app spec block missing id");
+      if (block?.id && !registryIds.has(block.id)) issues.push(`app spec references unknown block ${block.id}`);
+      if (!Array.isArray(block?.references) || block.references.length === 0) issues.push(`app spec block ${block?.id ?? "<unknown>"} must include references`);
+      for (const reference of block?.references ?? []) {
+        if (!existsSync(join(root, reference))) issues.push(`app spec block ${block.id} missing reference ${reference}`);
+        if (Array.isArray(spec.references) && !spec.references.includes(reference)) {
+          issues.push(`app spec references must include selected block reference ${reference}`);
+        }
+      }
+    }
+  }
   if (!Array.isArray(spec.references)) issues.push("app spec references must be an array");
   if (!Array.isArray(spec.referenceLoadingContract)) issues.push("app spec referenceLoadingContract must be an array");
   for (const rule of referenceLoadingContract) {
@@ -1312,6 +1393,45 @@ function validateArchetypeRegistry(registry) {
 
     if (entry?.id && !existsSync(join(root, `knowledge/archetypes/${entry.id}.md`))) {
       issues.push(`${label}: missing knowledge/archetypes/${entry.id}.md`);
+    }
+  }
+
+  return issues;
+}
+
+function validateBlockRegistry(registry) {
+  const issues = [];
+  const ids = new Set();
+  const required = ["id", "name", "target", "role", "fitsArchetypes", "fitsDesignProfiles", "tags", "needs", "references"];
+
+  if (!registry || !Array.isArray(registry.blocks) || registry.blocks.length === 0) {
+    return ["blocks/registry.json: blocks must be a non-empty array"];
+  }
+
+  const archetypeIds = new Set(archetypeRegistry.archetypes.map((entry) => entry.id));
+  const profileIds = new Set((designSystemRegistry.profiles ?? []).map((entry) => entry.id));
+
+  for (const block of registry.blocks) {
+    const label = block?.id ? `blocks/registry.json:${block.id}` : "blocks/registry.json:<missing-id>";
+    for (const field of required) {
+      if (block?.[field] === undefined || block?.[field] === null) issues.push(`${label}: missing ${field}`);
+    }
+    if (block?.id) {
+      if (ids.has(block.id)) issues.push(`${label}: duplicate id`);
+      ids.add(block.id);
+    }
+    if (block?.target && !["web", "mobile"].includes(block.target)) issues.push(`${label}: invalid target ${block.target}`);
+    for (const field of ["fitsArchetypes", "fitsDesignProfiles", "tags", "needs", "references"]) {
+      if (!Array.isArray(block?.[field]) || block[field].length === 0) issues.push(`${label}: ${field} must be a non-empty array`);
+    }
+    for (const archetype of block?.fitsArchetypes ?? []) {
+      if (!archetypeIds.has(archetype)) issues.push(`${label}: unknown archetype ${archetype}`);
+    }
+    for (const profile of block?.fitsDesignProfiles ?? []) {
+      if (!profileIds.has(profile)) issues.push(`${label}: unknown design profile ${profile}`);
+    }
+    for (const reference of block?.references ?? []) {
+      if (!existsSync(join(root, reference))) issues.push(`${label}: missing reference ${reference}`);
     }
   }
 
@@ -1465,6 +1585,9 @@ function check() {
     "core/schemas/archetype-registry.schema.json",
     "core/schemas/app-spec.schema.json",
     "core/schemas/template-spec.schema.json",
+    "blocks/registry.json",
+    "blocks/README.md",
+    "blocks/schema/block-registry.schema.json",
     "knowledge/archetypes/task-manager.md",
     "knowledge/design-playbooks/design-system-selection.md",
     "knowledge/auth/auth-shape.md",
@@ -1499,6 +1622,7 @@ function check() {
   const templateIssues = [];
   const registryIssues = validateArchetypeRegistry(archetypeRegistry);
   const designSystemIssues = validateDesignSystemRegistry(designSystemRegistry);
+  const blockIssues = validateBlockRegistry(blockRegistry);
   const templates = listTemplates();
   const templateStatusCounts = templates.reduce((counts, template) => {
     counts[template.status] = (counts[template.status] ?? 0) + 1;
@@ -1542,6 +1666,9 @@ function check() {
       for (const reference of readJson(template.path).references ?? []) planReferences.add(reference);
     }
     for (const entry of archetypeRegistry.archetypes) planReferences.add(`knowledge/archetypes/${entry.id}.md`);
+    for (const block of blockRegistry.blocks ?? []) {
+      for (const reference of block.references ?? []) planReferences.add(reference);
+    }
     planReferences.add("knowledge/design-playbooks/design-system-selection.md");
     for (const reference of planReferences) {
       if (!covered(reference)) pluginIssues.push(`codex resources do not expose ${reference}`);
@@ -1576,6 +1703,7 @@ function check() {
     missing.length === 0 &&
     registryIssues.length === 0 &&
     designSystemIssues.length === 0 &&
+    blockIssues.length === 0 &&
     templateIssues.length === 0 &&
     pluginIssues.length === 0 &&
     claudePluginIssues.length === 0;
@@ -1585,6 +1713,7 @@ function check() {
     checked: {
       requiredFiles: required.length,
       archetypes: archetypeRegistry.archetypes.length,
+      blocks: blockRegistry.blocks?.length ?? 0,
       templateSpecs: templates.length,
       runnableTemplates: templateStatusCounts.runnable ?? 0,
       plannedTemplates: templateStatusCounts.planned ?? 0,
@@ -1594,6 +1723,7 @@ function check() {
     missing,
     registryIssues,
     designSystemIssues,
+    blockIssues,
     templateIssues,
     pluginIssues,
     claudePluginIssues
@@ -1611,6 +1741,7 @@ function check() {
     console.log(`  root: ${root}`);
     console.log(`  required files: ${required.length}`);
     console.log(`  archetypes: ${archetypeRegistry.archetypes.length}`);
+    console.log(`  blocks: ${blockRegistry.blocks?.length ?? 0}`);
     console.log(`  template specs: ${templates.length} (${templateStatusCounts.runnable ?? 0} runnable, ${templateStatusCounts.planned ?? 0} planned)`);
     console.log("  Codex plugin metadata: present");
     console.log(`  Claude plugin metadata: ${payload.checked.claudePlugin ? "present" : "absent"}`);
@@ -1619,6 +1750,8 @@ function check() {
     console.error("Buildable local install check failed.");
     for (const path of missing) console.error(`  missing: ${path}`);
     for (const issue of registryIssues) console.error(`  registry: ${issue}`);
+    for (const issue of designSystemIssues) console.error(`  design-system: ${issue}`);
+    for (const issue of blockIssues) console.error(`  blocks: ${issue}`);
     for (const issue of templateIssues) console.error(`  template: ${issue}`);
     for (const issue of pluginIssues) console.error(`  plugin: ${issue}`);
     for (const issue of claudePluginIssues) console.error(`  claude-plugin: ${issue}`);
@@ -1650,9 +1783,9 @@ function directoryBytes(relativeDir, extensions) {
 }
 
 function corpusBytes() {
-  // The "discoverable brain" an agent could naively load: all knowledge docs plus
-  // every template plan/spec. Buildable's contract loads only a slice of this.
-  return directoryBytes("knowledge", [".md"]) + directoryBytes("templates", [".md", ".json"]);
+  // The "discoverable brain" an agent could naively load: all blocks/knowledge docs plus
+  // every template plan/spec. Buildable's contract loads only a selected slice.
+  return directoryBytes("blocks", [".md", ".json"]) + directoryBytes("knowledge", [".md"]) + directoryBytes("templates", [".md", ".json"]);
 }
 
 function referencedBytes(references) {
@@ -1717,6 +1850,7 @@ function runEval() {
       specQualityComponents: quality.components,
       guidance: {
         references: appSpec.references.length,
+        blocks: appSpec.blocks.length,
         features: appSpec.features.length,
         entityFields: (appSpec.entities ?? []).reduce((sum, entity) => sum + (entity.fields ?? []).length, 0),
         acceptanceCriteria: (appSpec.acceptanceCriteria ?? []).length,
@@ -1750,7 +1884,7 @@ function runEval() {
   };
 
   if (flags.has("--compare")) {
-    const keys = ["references", "features", "entityFields", "acceptanceCriteria", "screens"];
+    const keys = ["references", "blocks", "features", "entityFields", "acceptanceCriteria", "screens"];
     const average = (key) => (results.length ? Number((results.reduce((sum, r) => sum + r.guidance[key], 0) / results.length).toFixed(1)) : 0);
     const buildable = Object.fromEntries(keys.map((key) => [key, average(key)]));
     // A raw prompt with no Buildable layer supplies none of this structure.
@@ -1788,7 +1922,7 @@ function runEval() {
       const { buildable } = payload.comparison.perPromptAverage;
       console.log("");
       console.log("Guided vs raw prompt (per prompt, on average):");
-      console.log(`  Buildable: ${buildable.features} features · ${buildable.entityFields} typed entity fields · ${buildable.references} curated references · ${buildable.acceptanceCriteria} acceptance criteria`);
+      console.log(`  Buildable: ${buildable.features} features · ${buildable.entityFields} typed entity fields · ${buildable.blocks} selected blocks · ${buildable.references} curated references · ${buildable.acceptanceCriteria} acceptance criteria`);
       console.log("  Raw prompt: 0 of each (the agent starts from a blank slate)");
       console.log(`  ...delivered while loading ${payload.comparison.contextCostVsLoadEverything.buildable} instead of 100%.`);
     }
@@ -1925,11 +2059,15 @@ This template does not include a runnable starter yet. Use this directory as an 
 
 ${plan.appSpec.references.map((reference) => `- ${reference}`).join("\n")}
 
+## Selected Micro-Blocks
+
+${plan.appSpec.blocks.length ? plan.appSpec.blocks.map((block) => `- ${block.id}: ${block.reason}`).join("\n") : "- None"}
+
 ## Build Steps
 
 1. Read \`buildable-app-spec.json\`.
 2. Follow \`appSpec.referenceLoadingContract\`.
-3. Load only the references listed above.
+3. Load only the references listed above, including selected block docs.
 4. Build a local ${plan.appSpec.target} prototype that implements the listed screens, entities, features, and acceptance criteria.
 5. Use local/mock data by default.
 6. Run \`buildable review\` and fix blocking issues before handoff.
@@ -2587,6 +2725,19 @@ function savedPhasePlanForPrompt(prompt, workspace = process.cwd()) {
     if (!plan.commandRole) plan.commandRole = "plan";
     if (!plan.planContractVersion) plan.planContractVersion = "audit-first-v1";
     if (!plan.consumedBy) plan.consumedBy = ["buildable design", "buildable generate", "buildable review"];
+    if (!Array.isArray(plan.appSpec.blocks)) {
+      plan.appSpec.blocks = microBlocksFor({
+        prompt: plan.prompt,
+        target: plan.appSpec.target,
+        archetype: plan.appSpec.archetype,
+        designSystem: plan.appSpec.designSystem
+      });
+      for (const block of plan.appSpec.blocks) {
+        for (const ref of block.references ?? []) {
+          if (existsSync(join(root, ref)) && !plan.appSpec.references.includes(ref)) plan.appSpec.references.push(ref);
+        }
+      }
+    }
     if (!plan.appSpec.planAudit) plan.appSpec.planAudit = planAuditFor(plan.appSpec);
     if (!plan.appSpec.promptRefinement) {
       plan.appSpec.promptRefinement = promptRefinementFor(plan.prompt, plan.classification, defaultsFor(plan.appSpec.archetype), plan.appSpec);
@@ -2619,6 +2770,10 @@ directory. Do not scaffold a new project or overwrite unrelated code.
 ## References To Load
 
 ${plan.appSpec.references.map((reference) => `- ${reference}`).join("\n")}
+
+## Selected Micro-Blocks
+
+${plan.appSpec.blocks.length ? plan.appSpec.blocks.map((block) => `- ${block.id}: ${block.reason}`).join("\n") : "- None"}
 
 ## Build Steps
 
@@ -3329,7 +3484,14 @@ if (!command || command === "help" || command === "--help" || command === "-h") 
   } else {
     const plan = specFor(input, { referenceInputs: referenceInputsFromArgs() });
     if (!flags.has("--no-write")) plan.written = writePhasePlanFiles(plan);
-    console.log(JSON.stringify(plan, null, 2));
+    if (flags.has("--toon")) {
+      // Compact TOON contract (~80% smaller than full JSON) for token-tight agent handoffs.
+      process.stdout.write(planToonFor(plan));
+    } else if (flags.has("--compact")) {
+      console.log(JSON.stringify(compactPlan(plan), null, 2));
+    } else {
+      console.log(JSON.stringify(plan, null, 2));
+    }
   }
 } else if (command === "design") {
   design();

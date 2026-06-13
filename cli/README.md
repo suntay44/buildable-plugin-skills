@@ -27,6 +27,7 @@ buildable help
 buildable list
 buildable list --json
 buildable plan "build me a todo app"
+buildable plan "build me a todo app" --toon
 buildable plan "build me a todo app" --with-auth
 buildable plan "use this screenshot for a CRM" --file ./crm-mockup.png
 buildable design "build me a CRM website"
@@ -50,6 +51,7 @@ buildable check --json
 - selected target platform and archetype
 - stack, template spec path, template status, and generation mode
 - expected screens, entities, features, sample data, and acceptance criteria
+- selected `blocks` with reusable micro-template guidance and block references
 - `planAudit` with audit-first gates for scope, template, references, mock data, UI/UX, local-first rules, auth/persistence, and review
 - `promptRefinement` with assumptions, optional sharpening questions, and default answers
 - compact `designSystem` guidance with visual tone, palette intent, typography, density, layout/component rules, accessibility, and anti-patterns
@@ -70,7 +72,9 @@ Example:
 buildable plan "Build a mobile habit tracker"
 ```
 
-Use `plan` when the user wants direction before app files are created. It is the no-code prompting layer: classify, choose the right references, identify blocking questions, suggest optional refinement questions with defaults, outline the phases, then let Claude, Codex, Cursor, or another agent continue from the spec. It saves `.buildable/phase-plan.json`, `.buildable/phase-plan.md`, and compact `.buildable/phase-plan.toon` in the current workspace by default. Add `--no-write` only when you want terminal JSON without workspace files.
+Use `plan` when the user wants direction before app files are created. It is the no-code prompting layer: classify, choose the right references, select compatible micro-blocks, identify blocking questions, suggest optional refinement questions with defaults, outline the phases, then let Claude, Codex, Cursor, or another agent continue from the spec. It saves `.buildable/phase-plan.json`, `.buildable/phase-plan.md`, and compact `.buildable/phase-plan.toon` in the current workspace by default. Add `--no-write` only when you want terminal output without workspace files.
+
+For token-tight handoffs, `--toon` prints the compact TOON contract (`toon-style-v1`, ~80% smaller than the full JSON) and `--compact` prints slim JSON that drops the human `planMarkdown` render. TOON is built into the CLI — no install. The MCP `buildable_plan` tool returns the compact form by default; pass `verbose: true` for full JSON or `toon: true` for the TOON contract.
 
 After showing a plan, agents should ask blocking questions first when `questionsNeeded` is true. When the plan is otherwise clear, ask at most one or two `promptRefinement.optionalQuestions` if they would improve the result; otherwise state the defaults and continue. If the user is not satisfied, keep using Buildable Planner and revise the saved plan from the user's next prompt, for example: `Buildable Planner: keep this direction, but make reminders stronger`. If yes, continue with Buildable Web Builder or Buildable Mobile Builder. The builder should read the saved plan/spec, then load only `appSpec.references`, explicit `appSpec.referenceInputs`, and the selected starter source.
 
@@ -132,11 +136,11 @@ The same rule is emitted in every plan as `appSpec.referenceLoadingContract`.
 - template spec files are readable
 - template references point to existing local files
 - Codex plugin skills and resources resolve locally
-- every file a plan can reference is *available* to the Codex plugin (the manifest exposes `knowledge/` and `templates/`), and `check` verifies that coverage
+- every file a plan can reference is *available* to the Codex plugin (the manifest exposes `blocks/`, `knowledge/`, and `templates/`), and `check` verifies that coverage
 
 ### Available to the plugin vs loaded by the agent
 
-These are two different things. The Codex manifest *exposes* `knowledge/` and `templates/` so any `appSpec.references` target can be resolved — that is availability. It does **not** mean the agent loads those directories. At runtime the agent loads only the exact files in `appSpec.references`, per `core/reference-loading-contract.md`. The token-efficiency story is about what is *loaded*, not what is *available*.
+These are two different things. The Codex manifest *exposes* `blocks/`, `knowledge/`, and `templates/` so any `appSpec.references` target can be resolved — that is availability. It does **not** mean the agent loads those directories. At runtime the agent loads only the exact files in `appSpec.references`, per `core/reference-loading-contract.md`. The token-efficiency story is about what is *loaded*, not what is *available*.
 
 ## Slash Commands and MCP Tools
 

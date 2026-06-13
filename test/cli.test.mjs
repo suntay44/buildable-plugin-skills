@@ -56,6 +56,7 @@ test("plan emits documented app spec fields", () => {
     "mockData",
     "style",
     "designSystem",
+    "blocks",
     "template",
     "templateStatus",
     "generationMode",
@@ -91,6 +92,9 @@ test("plan emits documented app spec fields", () => {
   assert.ok(spec.designSystem.layoutRules.some((rule) => rule.includes("core workflow")));
   assert.ok(spec.designSystem.componentRules.some((rule) => rule.includes("status chips")));
   assert.ok(spec.designSystem.accessibility.includes("focus-visible states"));
+  assert.ok(Array.isArray(spec.blocks));
+  assert.ok(spec.blocks.some((block) => block.id === "web/entity-form"));
+  assert.ok(spec.blocks.some((block) => block.id === "web/empty-state"));
   assert.ok(spec.references.includes("knowledge/design-playbooks/ui-quality.md"));
   assert.ok(spec.references.includes("knowledge/design-playbooks/design-system-selection.md"));
   assert.deepEqual(spec.referenceInputs, []);
@@ -110,10 +114,42 @@ test("plan emits documented app spec fields", () => {
   assert.ok(spec.promptRefinement.optionalQuestions.length >= 2);
   assert.ok(spec.promptRefinement.optionalQuestions.some((entry) => entry.id === "task_intelligence"));
   assert.match(payload.enhancedPrompt, /Optional refinement questions/);
+  assert.match(payload.enhancedPrompt, /Selected micro-blocks/);
   assert.match(payload.planMarkdown, /# Buildable Phase Plan/);
   assert.match(payload.planMarkdown, /Audit-First Build Contract/);
+  assert.match(payload.planMarkdown, /Selected Micro-Blocks/);
   assert.match(payload.planMarkdown, /Mock Data Guidance/);
   assert.match(payload.planMarkdown, /Optional Refinement Questions/);
+});
+
+test("plan selects compatible micro-blocks without loading unrelated blocks", () => {
+  const crm = jsonFrom(run(["plan", "Create a CRM website for tracking leads"]));
+
+  assert.equal(crm.appSpec.archetype, "crm");
+  assert.equal(crm.appSpec.target, "web");
+  assert.equal(crm.appSpec.template, "templates/web/crm/template-spec.json");
+  const blockIds = crm.appSpec.blocks.map((block) => block.id);
+  assert.ok(blockIds.includes("web/filterable-table"));
+  assert.ok(blockIds.includes("web/detail-panel"));
+  assert.ok(blockIds.includes("web/stat-card-grid"));
+  assert.ok(blockIds.includes("web/entity-form"));
+  assert.ok(blockIds.includes("web/empty-state"));
+  assert.ok(!blockIds.some((id) => id.startsWith("mobile/")));
+  assert.ok(crm.appSpec.references.includes("blocks/web/filterable-table/BLOCK.md"));
+  assert.ok(crm.appSpec.references.includes("blocks/web/detail-panel/BLOCK.md"));
+  assert.ok(!crm.appSpec.references.includes("blocks/mobile/list-with-filters/BLOCK.md"));
+  for (const block of crm.appSpec.blocks) {
+    for (const reference of block.references) {
+      assert.ok(crm.appSpec.references.includes(reference), `${reference} is loaded through appSpec.references`);
+    }
+  }
+
+  const mobile = jsonFrom(run(["plan", "Build me a mobile task manager"]));
+  const mobileBlocks = mobile.appSpec.blocks.map((block) => block.id);
+  assert.ok(mobileBlocks.includes("mobile/list-with-filters"));
+  assert.ok(mobileBlocks.includes("mobile/bottom-action-bar"));
+  assert.ok(mobileBlocks.includes("mobile/empty-state"));
+  assert.ok(!mobileBlocks.some((id) => id.startsWith("web/")));
 });
 
 test("plan preserves explicit user reference files without reading everything", () => {
@@ -213,7 +249,52 @@ test("plan writes a markdown phase plan by default", () => {
   const toon = readFileSync(join(workspace, ".buildable/phase-plan.toon"), "utf8");
   assert.match(toon, /buildable_plan:/);
   assert.match(toon, /checks\[\d+\]\{id,status,gate\}:/);
+  assert.match(toon, /selected\[\d+\]\{id,role,reason\}:/);
   assert.match(toon, /references\[\d+\]:/);
+});
+
+test("plan --compact and --toon shrink the agent-facing output", () => {
+  const full = run(["plan", "Build me a CRM", "--no-write"]).stdout;
+  const compact = run(["plan", "Build me a CRM", "--no-write", "--compact"]).stdout;
+  const toon = run(["plan", "Build me a CRM", "--no-write", "--toon"]).stdout;
+
+  // Default still carries the human planMarkdown render (back-compat).
+  assert.match(full, /"planMarkdown": "# Buildable Phase Plan/);
+
+  // Compact drops the planMarkdown render but keeps the structured spec + a file pointer.
+  const compactJson = JSON.parse(compact);
+  assert.equal(compactJson.planMarkdown, undefined);
+  assert.equal(compactJson.planMarkdownFile, ".buildable/phase-plan.md");
+  assert.equal(compactJson.appSpec.archetype, "crm");
+  assert.ok(compact.length < full.length);
+
+  // TOON is the compact contract, not JSON, and is dramatically smaller.
+  assert.match(toon, /^buildable_plan:/);
+  assert.match(toon, /format: toon-style-v1/);
+  assert.ok(toon.length < full.length / 3);
+});
+
+test("mcp buildable_plan returns compact by default, full with verbose, toon on request", () => {
+  const call = (args) => {
+    const input =
+      [
+        JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2024-11-05", capabilities: {}, clientInfo: { name: "t", version: "0" } } }),
+        JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized", params: {} }),
+        JSON.stringify({ jsonrpc: "2.0", id: 2, method: "tools/call", params: { name: "buildable_plan", arguments: { prompt: "Build me a CRM", noWrite: true, ...args } } })
+      ].join("\n") + "\n";
+    const res = spawnSync(process.execPath, [mcp], { cwd: root, encoding: "utf8", input });
+    const msg = res.stdout.trim().split("\n").map((line) => JSON.parse(line)).find((m) => m.id === 2);
+    return msg.result.content[0].text;
+  };
+
+  const def = call({});
+  const verbose = call({ verbose: true });
+  const toon = call({ toon: true });
+
+  assert.ok(!/planMarkdown":\s*"#/.test(def), "default MCP plan drops the planMarkdown render");
+  assert.ok(/planMarkdown":\s*"#/.test(verbose), "verbose MCP plan keeps the full render");
+  assert.ok(/buildable_plan:/.test(toon) && toon.length < def.length / 2, "toon is the smallest");
+  assert.ok(def.length < verbose.length, "compact default is smaller than verbose");
 });
 
 test("plan --no-write only prints JSON", () => {
@@ -449,6 +530,7 @@ test("generate reuses the saved audit-first phase plan when the prompt matches",
   assert.equal(config.workflowStage, "generated-files");
   assert.equal(spec.name, "SavedFlow");
   assert.ok(spec.features.includes("saved plan only feature"));
+  assert.ok(spec.blocks.some((block) => block.id === "web/entity-form"));
   assert.ok(existsSync(join(out, ".buildable/phase-plan.toon")));
   assert.match(page, /SavedFlow/);
   assert.doesNotMatch(page, /TaskFlow/);

@@ -9,6 +9,11 @@ Unreleased section here and syncs the version across every plugin manifest.
 
 ## [Unreleased]
 
+### Added
+
+- Token-efficient plan handoffs: `buildable plan --toon` prints the compact TOON contract (`toon-style-v1`, ~80% smaller than the full plan JSON) and `--compact` prints slim JSON that drops the redundant human `planMarkdown` render (~20% smaller). TOON is built into the CLI — no dependency, no install.
+- The MCP `buildable_plan` tool now returns the compact form by default (planMarkdown dropped), with `verbose: true` for the full JSON and `toon: true` for the TOON contract — so desktop/agent clients spend ~20–80% fewer tokens per plan with no loss of structured information.
+
 ## [0.3.0] - 2026-06-12
 
 ### Added

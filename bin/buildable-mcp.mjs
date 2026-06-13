@@ -22,7 +22,9 @@ const tools = [
         withAuth: { type: "boolean", description: "Opt into Buildable's local/mock auth shape behind an auth seam." },
         authProvider: { type: "string", description: "Optional user-named auth provider to keep behind the auth seam." },
         write: { type: "boolean", description: "Deprecated compatibility flag; plan writes by default." },
-        noWrite: { type: "boolean", description: "Only return JSON; do not write .buildable/phase-plan files." }
+        noWrite: { type: "boolean", description: "Only return the plan; do not write .buildable/phase-plan files." },
+        toon: { type: "boolean", description: "Return the compact TOON contract (~80% fewer tokens) instead of JSON." },
+        verbose: { type: "boolean", description: "Return the full plan JSON including the planMarkdown render. Default is compact JSON (planMarkdown dropped)." }
       },
       required: ["prompt"],
       additionalProperties: false
@@ -145,6 +147,10 @@ function buildArgs(toolName, args = {}) {
     if (args.withAuth) command.push("--with-auth");
     if (args.authProvider) command.push("--with-auth-provider", args.authProvider);
     if (args.noWrite) command.push("--no-write");
+    // Token-efficient by default: return the compact TOON contract, or compact JSON
+    // (drops the redundant planMarkdown render). Pass verbose:true for the full plan JSON.
+    if (args.toon) command.push("--toon");
+    else if (!args.verbose) command.push("--compact");
     return command;
   }
   if (toolName === "buildable_generate") {

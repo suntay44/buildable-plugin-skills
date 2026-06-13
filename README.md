@@ -368,6 +368,11 @@ Agents load only the references a prompt needs (the `appSpec.referenceLoadingCon
 buildable eval --compare
 ```
 
+**Compact plan handoffs (TOON).** The plan an agent reads back is itself token-optimized. Buildable serializes the build contract in **TOON** — a compact, dependency-free `toon-style-v1` format (no install; it's built into the CLI). The same plan that is ~22 KB as full JSON is ~4.4 KB as TOON (**~80% smaller**), so:
+
+- `buildable plan "<prompt>" --toon` prints the compact contract; `--compact` prints slim JSON (drops the human `planMarkdown` render).
+- The **MCP tools return the compact form by default** (full JSON via `verbose: true`, the TOON contract via `toon: true`), so desktop/agent clients spend ~20–80% fewer tokens per plan with no loss of structured information.
+
 ## Supported app types
 
 ~55 common categories — task managers, CRMs, dashboards, marketplaces, notes, ecommerce admin, booking, habit/fitness trackers, blogs, job boards, inventory, and more (tag-matched via `core/archetype-registry.json`). See the full list and which are runnable in **[CONTRIBUTING.md](CONTRIBUTING.md)**.
