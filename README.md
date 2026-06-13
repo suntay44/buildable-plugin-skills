@@ -215,6 +215,8 @@ A few things worth knowing about the flow:
 
 Design quality is graded against surface-specific rubrics, not taste: every plan loads the base web/mobile rubric plus a specialized one (`content-marketing`, `data-dense`, or `forms-auth`) selected by the app's design profile, backed by the shared token scales in `core/design-system-registry.json` (`foundations`). This is the part a hosted builder can't give you: design quality as an enforceable, local gate.
 
+`review` also prints an advisory **readiness** section — an honest "what's left to productionize" list derived from the spec. It names what's intentionally mocked (in-memory vs local-persisted data, mock vs named-provider auth, no deploy) and points at the seam that makes each real (the persistence ladder, the auth seam). It is advice, not a gate: Buildable never auto-adds a backend — it tells you the local-first path to a real one.
+
 ## Slash Commands and MCP
 
 Buildable is command-first. Use the lightest integration your agent surface supports:

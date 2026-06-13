@@ -3040,6 +3040,37 @@ function runBuildChecks(target, checks, issues, warnings) {
   }
 }
 
+// Advisory "what's left to productionize" — derived from the spec, never auto-applied.
+// Buildable prototypes are local-first by design; this names what is intentionally mocked
+// and points at the seam that makes each piece real, without violating the local-first stance.
+function readinessFor(appSpec, implementationText) {
+  if (!appSpec) return [];
+  const items = [];
+  const hasLocalStore = /localstorage|indexeddb|asyncstorage|sqlite/.test(implementationText);
+
+  const namedBackend = appSpec.persistence?.userNamedBackend ?? null;
+  if (namedBackend) {
+    items.push({ area: "data", status: "named-backend", note: `Planned around "${namedBackend}" behind the repository seam. Wire the real adapter (keep a local rung for dev) to ship. See knowledge/data-layer/repository-pattern.md.` });
+  } else if (appSpec.persistence?.requested || hasLocalStore) {
+    items.push({ area: "data", status: "local", note: "Data persists locally (browser/file storage). For multi-device or shared data, climb to a user-owned remote behind the same seam. See knowledge/data-layer/persistence-ladder.md." });
+  } else {
+    items.push({ area: "data", status: "in-memory", note: "Data is in-memory mock and resets on refresh. To persist, follow the persistence ladder. See knowledge/data-layer/persistence-ladder.md." });
+  }
+
+  const namedProvider = appSpec.auth?.userNamedProvider ?? null;
+  if (namedProvider) {
+    items.push({ area: "auth", status: "named-provider", note: `Auth is planned around "${namedProvider}" behind the auth seam; wire the real adapter to go live. See knowledge/auth/auth-seam.md.` });
+  } else if (appSpec.auth?.requested) {
+    items.push({ area: "auth", status: "mock", note: "Auth is local/mock (demo users, session + protected-route shape). Name a provider and wire it behind the seam for real accounts. See knowledge/auth/auth-seam.md." });
+  } else {
+    items.push({ area: "auth", status: "none", note: "No authentication. If users need accounts, add it with `buildable plan --with-auth` (local/mock first, behind a seam)." });
+  }
+
+  items.push({ area: "deployment", status: "none", note: "No deploy/hosting configured — this is a local prototype. Add your own host or a static export when you are ready to ship." });
+
+  return items;
+}
+
 function review() {
   const targetValue = parsedArgs.positionals[0] ?? ".";
   const target = isAbsolute(targetValue) ? targetValue : join(process.cwd(), targetValue);
@@ -3285,6 +3316,8 @@ function review() {
     runBuildChecks(target, checks, issues, warnings);
   }
 
+  const readiness = readinessFor(appSpec, implementationText);
+
   const report = {
     ok: issues.length === 0,
     status: issues.length === 0 ? "pass" : "fail",
@@ -3299,6 +3332,7 @@ function review() {
     checks,
     issues,
     warnings,
+    readiness,
     checkedAt: new Date().toISOString()
   };
 
@@ -3320,6 +3354,10 @@ ${issues.length ? issues.map((issue) => `- ${issue}`).join("\n") : "- None"}
 ## Warnings
 
 ${warnings.length ? warnings.map((warning) => `- ${warning}`).join("\n") : "- None"}
+
+## Readiness (advisory — what's left to productionize)
+
+${readiness.length ? readiness.map((item) => `- ${item.area} (${item.status}): ${item.note}`).join("\n") : "- Not assessed (no app spec found)."}
 `
   );
 
@@ -3329,6 +3367,10 @@ ${warnings.length ? warnings.map((warning) => `- ${warning}`).join("\n") : "- No
     console.log(`Buildable review ${report.ok ? "passed" : "failed"} for ${target}`);
     console.log(`  issues: ${issues.length}`);
     console.log(`  warnings: ${warnings.length}`);
+    if (readiness.length) {
+      console.log("  readiness (advisory — what's left to productionize):");
+      for (const item of readiness) console.log(`    - ${item.area}: ${item.note}`);
+    }
     console.log("  report: .buildable/review-report.md");
   }
 

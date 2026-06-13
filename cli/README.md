@@ -208,7 +208,7 @@ Buildable may strongly define expected product shape for common app types. It mu
 - `init` creates local Buildable workspace context.
 - `plan` performs lightweight prompt classification and emits an app spec with references.
 - `generate` copies runnable local starters or writes plan-only instruction packs, then writes an app spec.
-- `review` audits local prototypes against app spec structure, source representation, responsive-layout risk, accessibility signals, state coverage, and local-first guardrails, then writes `.buildable/review-report.md`. It is a static/local quality gate; use browser or device checks for final visual confidence.
+- `review` audits local prototypes against app spec structure, source representation, responsive-layout risk, accessibility signals, state coverage, design-token discipline, and local-first guardrails, then writes `.buildable/review-report.md`. It also prints an advisory **readiness** section — a spec-derived "what's left to productionize" list (mocked vs persisted data, mock vs named-provider auth, no deploy) that points at the persistence/auth seams without auto-adding anything. It is a static/local quality gate; use browser or device checks for final visual confidence.
 - `mcp` exposes those same commands as local MCP tools for desktop/agent clients that cannot run project slash commands directly.
 - `check` verifies that core Buildable files, template references, template statuses, and plugin resource coverage exist.
 - `list` prints bundled template specs with runnable/planned status for quick inspection.

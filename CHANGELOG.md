@@ -13,6 +13,7 @@ Unreleased section here and syncs the version across every plugin manifest.
 
 - Token-efficient plan handoffs: `buildable plan --toon` prints the compact TOON contract (`toon-style-v1`, ~80% smaller than the full plan JSON) and `--compact` prints slim JSON that drops the redundant human `planMarkdown` render (~20% smaller). TOON is built into the CLI — no dependency, no install.
 - The MCP `buildable_plan` tool now returns the compact form by default (planMarkdown dropped), with `verbose: true` for the full JSON and `toon: true` for the TOON contract — so desktop/agent clients spend ~20–80% fewer tokens per plan with no loss of structured information.
+- `buildable review` now prints an advisory **readiness** section (in the report and on the `readiness` field): a spec-derived "what's left to productionize" list covering data (in-memory / local / named-backend), auth (none / mock / named-provider), and deployment, each pointing at the persistence or auth seam. It is advisory only — it never affects pass/fail and never auto-adds a backend.
 
 ## [0.3.0] - 2026-06-12
 

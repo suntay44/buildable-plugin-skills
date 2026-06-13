@@ -19,3 +19,5 @@ Review the selected workspace by default. If a path is provided, review: **${ARG
 3. Fix blocking issues first (missing entities, missing features, non-local-first drift, build failures), then polish issues. Keep changes local-first.
 
 4. Report what you fixed and any residual risks. If the review now passes, say so plainly.
+
+5. Relay the advisory **Readiness** section as the honest "what's left to ship" summary (mocked vs persisted data, mock vs named-provider auth, no deploy). It is guidance, not a failure — do not auto-add a backend, auth provider, or deploy config unless the user asks; point them at the persistence/auth seams instead.

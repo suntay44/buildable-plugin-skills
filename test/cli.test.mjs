@@ -962,6 +962,27 @@ test("persistence allows a user-named backend behind the seam, still flags other
   assert.ok(all.includes('"firebase"'), "an un-named backend is still flagged");
 });
 
+test("review emits an advisory readiness section without affecting pass/fail", () => {
+  const workspace = mkdtempSync(join(tmpdir(), "buildable-readiness-"));
+  const out = join(workspace, "app");
+  run(["generate", "Build me a todo app", "--out", out, "--json"], { cwd: workspace });
+
+  const report = jsonFrom(run(["review", out, "--json"], { cwd: workspace }));
+  // Advisory only — a clean prototype still passes.
+  assert.equal(report.ok, true);
+  const byArea = Object.fromEntries(report.readiness.map((item) => [item.area, item]));
+  assert.equal(byArea.data.status, "in-memory");
+  assert.equal(byArea.auth.status, "none");
+  assert.equal(byArea.deployment.status, "none");
+  assert.match(byArea.data.note, /persistence ladder/);
+  assert.match(byArea.auth.note, /--with-auth/);
+
+  // A local storage seam upgrades the data advisory to "local", still passing.
+  writeFileSync(join(out, "lib/repository.ts"), 'export const save = (v) => localStorage.setItem("k", v);\n');
+  const withStore = jsonFrom(run(["review", out, "--json"], { cwd: workspace }));
+  assert.equal(withStore.readiness.find((item) => item.area === "data").status, "local");
+});
+
 test("review warns when persistence has storage calls without a seam", () => {
   const workspace = mkdtempSync(join(tmpdir(), "buildable-seam-"));
   const out = join(workspace, "app");
