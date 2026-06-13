@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "name": "buildable",
   "display_name": "Buildable",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Local-first AI app builder brain with archetypes, design-system guidance, templates, skills, and review rubrics for generating polished prototypes.",
   "author": "Buildable contributors",
   "license": "MIT",

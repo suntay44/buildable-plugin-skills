@@ -9,11 +9,17 @@ Unreleased section here and syncs the version across every plugin manifest.
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-06-13
+
 ### Added
 
 - Token-efficient plan handoffs: `buildable plan --toon` prints the compact TOON contract (`toon-style-v1`, ~80% smaller than the full plan JSON) and `--compact` prints slim JSON that drops the redundant human `planMarkdown` render (~20% smaller). TOON is built into the CLI — no dependency, no install.
 - The MCP `buildable_plan` tool now returns the compact form by default (planMarkdown dropped), with `verbose: true` for the full JSON and `toon: true` for the TOON contract — so desktop/agent clients spend ~20–80% fewer tokens per plan with no loss of structured information.
 - `buildable review` now prints an advisory **readiness** section (in the report and on the `readiness` field): a spec-derived "what's left to productionize" list covering data (in-memory / local / named-backend), auth (none / mock / named-provider), and deployment, each pointing at the persistence or auth seam. It is advisory only — it never affects pass/fail and never auto-adds a backend.
+
+### Fixed
+
+- The `blocks/` micro-template directory (registry, schema, and 11 `BLOCK.md` files) was untracked while the CLI loads `blocks/registry.json` at startup, so a fresh install/CI checkout failed with `ENOENT` before any command could run. The blocks pack and its supporting manifests/skills are now committed.
 
 ## [0.3.0] - 2026-06-12
 
@@ -66,7 +72,8 @@ Unreleased section here and syncs the version across every plugin manifest.
 - `buildable eval` scores classification fixtures and context-load efficiency (~90% of context tokens saved per plan).
 - Starter config single-source sync (`npm run sync:starters`) with a drift guard, version-pin guard tests, and a CI workflow that builds every runnable starter.
 
-[Unreleased]: https://github.com/suntay44/buildable-plugin-skills/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/suntay44/buildable-plugin-skills/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/suntay44/buildable-plugin-skills/releases/tag/v0.3.1
 [0.3.0]: https://github.com/suntay44/buildable-plugin-skills/releases/tag/v0.3.0
 [0.2.0]: https://github.com/suntay44/buildable-plugin-skills/releases/tag/v0.2.0
 [0.1.0]: https://github.com/suntay44/buildable-plugin-skills/releases/tag/v0.1.0
