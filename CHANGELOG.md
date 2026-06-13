@@ -9,6 +9,10 @@ Unreleased section here and syncs the version across every plugin manifest.
 
 ## [Unreleased]
 
+### Changed
+
+- Enriched the three highest-leverage web blocks (`filterable-table`, `detail-panel`, `empty-state`) from ~23-line stubs to fuller micro-template packs: expected data shape, required states, accessibility rules, responsive behavior, a small code sketch, an adaptation checklist, and bad patterns. Loaded only when a plan selects the block, so the token cost stays scoped (a landing page never loads the table guidance).
+
 ## [0.3.1] - 2026-06-13
 
 ### Added
