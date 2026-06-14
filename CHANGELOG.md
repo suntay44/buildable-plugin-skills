@@ -9,9 +9,16 @@ Unreleased section here and syncs the version across every plugin manifest.
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-06-14
+
+### Added
+
+- `ROADMAP.md` — honest, usage-driven roadmap (today / next / exploring / out-of-scope) that backs the README's "runnable coverage grows release over release" framing and gives contributors a place to plug in.
+
 ### Changed
 
 - Enriched all micro-template blocks from ~23-line stubs to fuller packs: the three web blocks (`filterable-table`, `detail-panel`, `empty-state`) and the three mobile blocks (`list-with-filters`, `bottom-action-bar`, `empty-state`, the latter tuned for Expo/React Native + NativeWind with safe-area and keyboard guidance). Each now carries an expected data shape, required states, accessibility rules, responsive behavior, a small code sketch, an adaptation checklist, and bad patterns — and still loads only when a plan selects the block, so the token cost stays scoped (a landing page loads no table guidance; a web plan loads no mobile blocks).
+- README leads with proof: the honest-strong "15 runnable, build-verified starters" headlines (with 55 archetypes framed as recognition/planning breadth), a first-screen "proof it's real" strip (CI-built starters, 73 tests, zero deps, eval numbers), and a roadmap note so planned packs read as growing, not unfinished. Bundled-brain figure corrected to the live ~10%.
 
 ## [0.3.1] - 2026-06-13
 
@@ -76,7 +83,8 @@ Unreleased section here and syncs the version across every plugin manifest.
 - `buildable eval` scores classification fixtures and context-load efficiency (~90% of context tokens saved per plan).
 - Starter config single-source sync (`npm run sync:starters`) with a drift guard, version-pin guard tests, and a CI workflow that builds every runnable starter.
 
-[Unreleased]: https://github.com/suntay44/buildable-plugin-skills/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/suntay44/buildable-plugin-skills/compare/v0.3.2...HEAD
+[0.3.2]: https://github.com/suntay44/buildable-plugin-skills/releases/tag/v0.3.2
 [0.3.1]: https://github.com/suntay44/buildable-plugin-skills/releases/tag/v0.3.1
 [0.3.0]: https://github.com/suntay44/buildable-plugin-skills/releases/tag/v0.3.0
 [0.2.0]: https://github.com/suntay44/buildable-plugin-skills/releases/tag/v0.2.0

@@ -1,6 +1,6 @@
 {
   "name": "@buildable/local-builder",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Local product-structure compiler, compact UI/UX brain, and quality gate for coding agents (Claude Code, Codex, Cursor).",
   "type": "module",
   "bin": {
@@ -25,6 +25,7 @@
     "CHANGELOG.md",
     "CODE_OF_CONDUCT.md",
     "SECURITY.md",
+    "ROADMAP.md",
     ".mcp.json",
     "docs/install.md",
     "bin/",

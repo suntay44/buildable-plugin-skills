@@ -37,6 +37,7 @@ It does **not** replace your agent or run as a hosted platform. It is a file-bas
 - [Token efficiency](#token-efficiency)
 - [Supported app types](#supported-app-types)
 - [Non-goals](#non-goals)
+- [Roadmap](ROADMAP.md)
 - [Repository map](#repository-map)
 - [Templates catalog](#templates-catalog)
 - [License](#license)
@@ -278,7 +279,7 @@ Golden templates are Buildable's approved starting points. They come in two leve
 
 Only templates marked `✅ runnable` are copied by `buildable generate` without extra flags. Templates marked `📝 planned` need `buildable generate "<prompt>" --plan-pack`; that writes instructions and specs, not runnable source.
 
-Runnable coverage grows release over release (**9 → 15 in v0.3**). Planned packs aren't stubs — they emit a full app spec, implementation plan, and scoped reference list, so the agent builds the long tail from a real contract instead of from scratch.
+Runnable coverage grows release over release (**9 → 15 in v0.3**; see the [roadmap](ROADMAP.md)). Planned packs aren't stubs — they emit a full app spec, implementation plan, and scoped reference list, so the agent builds the long tail from a real contract instead of from scratch.
 
 ### What it generates
 
