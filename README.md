@@ -47,9 +47,9 @@ It does **not** replace your agent or run as a hosted platform. It is a file-bas
 
 A raw coding agent starts every app from a blank slate. Hosted builders feel magical because they already know what a "todo app" or "CRM" should contain. Buildable packages that same knowledge locally:
 
-- **Curated archetypes** — 55 app types with default screens, entities, and interactions.
+- **Runnable starters first** — 15 build-verified golden starters for the most common app types, plus 55 archetypes it recognizes and plans, so even the long tail gets a real spec and implementation plan instead of a blank slate.
 - **Micro-blocks** — small reusable UI/product units (filterable table, detail panel, stat-card grid, form, empty state) that `plan` selects per app and the agent composes, instead of reinventing each one.
-- **Golden templates** — runnable, build-verified starters the agent adapts instead of inventing.
+- **Adapt, don't invent** — the agent starts from a proven golden template and adapts it to the prompt, instead of reconstructing app structure from scratch.
 - **UI/UX system guidance** — compact design profiles plus patterns for forms, tables, filters, empty states, and responsive layout.
 - **Plan + review loop** — a CLI that classifies prompts, emits an app spec, and audits the result.
 - **Progressive loading** — the agent reads only the references a prompt needs, not the whole repo.
@@ -71,6 +71,8 @@ Buildable is a **product-structure compiler, compact UI/UX brain, and quality ga
 
 - **Use it when** you want consistent, real prototypes for common app types — fast, in your own stack, no lock-in.
 - **Skip it when** you need a one-off component or throwaway script; a raw agent is enough.
+
+**Proof it's real, not a prompt wrapper:** every one of the 15 starters is built and type-checked in CI, the CLI is covered by 73 tests with zero runtime dependencies, and each plan loads only ~10% of the bundled brain. See it yourself — `buildable eval --compare` prints the numbers, and the [generated screenshots](#what-it-generates) are unedited single-prompt output.
 
 ## Example workflows
 
@@ -276,6 +278,8 @@ Golden templates are Buildable's approved starting points. They come in two leve
 
 Only templates marked `✅ runnable` are copied by `buildable generate` without extra flags. Templates marked `📝 planned` need `buildable generate "<prompt>" --plan-pack`; that writes instructions and specs, not runnable source.
 
+Runnable coverage grows release over release (**9 → 15 in v0.3**). Planned packs aren't stubs — they emit a full app spec, implementation plan, and scoped reference list, so the agent builds the long tail from a real contract instead of from scratch.
+
 ### What it generates
 
 Real, unedited output — each rendered straight from a single prompt against its runnable starter:
@@ -364,7 +368,7 @@ Buildable applies three levels of guidance so it reduces blank-page ambiguity wi
 
 ## Token efficiency
 
-Agents load only the references a prompt needs (the `appSpec.referenceLoadingContract`), never the whole repo. Across the golden prompts, each plan loads **~9% of the bundled-brain reference bytes — about 91% less than loading the whole brain** — while still specifying, on average, **6 features, 9 typed entity fields, and 4 acceptance criteria** that a raw prompt gives you none of. (This measures Buildable's *bundled context*, not your total Claude/Codex session tokens.) Prove it yourself:
+Agents load only the references a prompt needs (the `appSpec.referenceLoadingContract`), never the whole repo. Across the golden prompts, each plan loads **~10% of the bundled-brain reference bytes — about 90% less than loading the whole brain** — while still specifying, on average, **6 features, 9 typed entity fields, and 4 acceptance criteria** that a raw prompt gives you none of. (This measures Buildable's *bundled context*, not your total Claude/Codex session tokens.) Prove it yourself:
 
 ```bash
 buildable eval --compare
@@ -377,7 +381,7 @@ buildable eval --compare
 
 ## Supported app types
 
-~55 common categories — task managers, CRMs, dashboards, marketplaces, notes, ecommerce admin, booking, habit/fitness trackers, blogs, job boards, inventory, and more (tag-matched via `core/archetype-registry.json`). See the full list and which are runnable in **[CONTRIBUTING.md](CONTRIBUTING.md)**.
+**15 generate runnable, build-verified code today** — task managers, CRMs, dashboards, marketplaces, notes, ecommerce admin, landing pages, portfolios, blogs, recipe apps, job boards, inventory, plus mobile habit-tracker / booking / task-manager. On top of that, **55 archetypes are recognized and planned** (tag-matched via `core/archetype-registry.json`): the long tail still gets a full app spec + implementation plan, not a blank slate. See the full list and runnable status in **[CONTRIBUTING.md](CONTRIBUTING.md)**.
 
 ## Non-goals
 
