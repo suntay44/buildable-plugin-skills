@@ -9,6 +9,20 @@ Unreleased section here and syncs the version across every plugin manifest.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-06-14
+
+### Added
+
+- **Stability commitment.** Declared the stable public surfaces (commands & flags, the `appSpec` shape, the `buildable_*` MCP tools, and the block registry format) in a new README "Stability" section. As of 1.0 these are not renamed or removed without a major (2.0) release; additive changes ship in minor/patch. The app-spec JSON schema now documents this contract.
+
+### Changed
+
+- Non-goals made firm and explicit: Buildable is and will remain a **local plugin/skills layer for coding agents — not a hosted product** (no billing, accounts, hosted previews, managed databases, deployment, telemetry, or central registry; your code never leaves your machine).
+
+### Removed
+
+- The deprecated, no-op `write` flag on the MCP `buildable_plan` tool (the design tool's real `--write` is unchanged). Cleaned up before freezing the 1.0 interface.
+
 ## [0.3.2] - 2026-06-14
 
 ### Added
@@ -83,7 +97,8 @@ Unreleased section here and syncs the version across every plugin manifest.
 - `buildable eval` scores classification fixtures and context-load efficiency (~90% of context tokens saved per plan).
 - Starter config single-source sync (`npm run sync:starters`) with a drift guard, version-pin guard tests, and a CI workflow that builds every runnable starter.
 
-[Unreleased]: https://github.com/suntay44/buildable-plugin-skills/compare/v0.3.2...HEAD
+[Unreleased]: https://github.com/suntay44/buildable-plugin-skills/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/suntay44/buildable-plugin-skills/releases/tag/v1.0.0
 [0.3.2]: https://github.com/suntay44/buildable-plugin-skills/releases/tag/v0.3.2
 [0.3.1]: https://github.com/suntay44/buildable-plugin-skills/releases/tag/v0.3.1
 [0.3.0]: https://github.com/suntay44/buildable-plugin-skills/releases/tag/v0.3.0

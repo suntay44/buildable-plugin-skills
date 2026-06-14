@@ -5,14 +5,14 @@
   },
   "metadata": {
     "description": "Local-first builder-brain plugins for Claude Code.",
-    "version": "0.3.2"
+    "version": "1.0.0"
   },
   "plugins": [
     {
       "name": "buildable",
       "source": "./",
       "description": "Local product-structure compiler, compact UI/UX brain, and quality gate for your coding agent: a prompt becomes the right archetype, selected design system, runnable build-verified starter, and reviewed result.",
-      "version": "0.3.2",
+      "version": "1.0.0",
       "license": "MIT",
       "keywords": [
         "app-builder",

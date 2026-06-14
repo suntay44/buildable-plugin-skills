@@ -37,6 +37,7 @@ It does **not** replace your agent or run as a hosted platform. It is a file-bas
 - [Token efficiency](#token-efficiency)
 - [Supported app types](#supported-app-types)
 - [Non-goals](#non-goals)
+- [Stability](#stability)
 - [Roadmap](ROADMAP.md)
 - [Repository map](#repository-map)
 - [Templates catalog](#templates-catalog)
@@ -386,7 +387,18 @@ buildable eval --compare
 
 ## Non-goals
 
-Buildable V1 does **not** include billing, builder accounts, cloud previews, managed databases, hosted deployments, telemetry, or central template services. Those may become optional extensions later — the core works from a local repository.
+**Buildable is and will remain a local plugin/skills layer for coding agents — not a hosted product.** It does **not** include billing, accounts, cloud previews, managed databases, hosted deployments, telemetry, or a central template service, and it never sends your code anywhere. A user who names their own backend or auth provider is supported — but always behind a swappable local seam, never as a platform dependency. See [Explicitly out of scope](ROADMAP.md) in the roadmap.
+
+## Stability
+
+Buildable follows semantic versioning. As of **1.0**, these are the stable public surfaces — they won't be renamed or removed without a major (2.0) release:
+
+- **Commands & flags** — `buildable plan/design/generate/review/init/preview/check/list/eval` and the `/buildable-*` slash commands, plus their documented flags.
+- **App spec shape** — the fields agents read in `appSpec` (`references`, `blocks`, `persistence`, `auth`, `designSystem`, …), defined in [`core/schemas/app-spec.schema.json`](core/schemas/app-spec.schema.json).
+- **MCP tools** — the `buildable_*` tool names and their documented arguments.
+- **Block registry format** — the shape contributors build blocks against.
+
+Additive changes — new commands, optional flags, new `appSpec` fields, new blocks, new runnable starters — ship in minor/patch releases and won't break you. Renames and removals are reserved for a 2.0.
 
 ## Repository map
 

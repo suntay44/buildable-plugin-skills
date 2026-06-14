@@ -21,7 +21,6 @@ const tools = [
         files: { type: "array", items: { type: "string" }, description: "Optional explicit user reference files or screenshots to preserve in appSpec.referenceInputs." },
         withAuth: { type: "boolean", description: "Opt into Buildable's local/mock auth shape behind an auth seam." },
         authProvider: { type: "string", description: "Optional user-named auth provider to keep behind the auth seam." },
-        write: { type: "boolean", description: "Deprecated compatibility flag; plan writes by default." },
         noWrite: { type: "boolean", description: "Only return the plan; do not write .buildable/phase-plan files." },
         toon: { type: "boolean", description: "Return the compact TOON contract (~80% fewer tokens) instead of JSON." },
         verbose: { type: "boolean", description: "Return the full plan JSON including the planMarkdown render. Default is compact JSON (planMarkdown dropped)." }

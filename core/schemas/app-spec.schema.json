@@ -2,6 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://buildable.local/schemas/app-spec.schema.json",
   "title": "Buildable App Spec",
+  "description": "The app spec returned by `buildable plan` and read by the agent. Stable public contract as of Buildable 1.0: fields may be added in minor/patch releases, but existing field names are not renamed or removed without a major (2.0) release.",
   "type": "object",
   "required": [
     "name",
