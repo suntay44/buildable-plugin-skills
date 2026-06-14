@@ -404,6 +404,7 @@ Additive changes — new commands, optional flags, new `appSpec` fields, new blo
 
 ```txt
 core/           Prompt classification, app spec, workflow, ask-vs-build policy
+blocks/         Reusable micro-template packs (registry + per-block guidance)
 knowledge/      Archetypes, data models, screen graphs, UI patterns, playbooks, rubrics
 templates/      Golden templates (15 runnable starters + 10 planned specs)
 skills/         Agent skills: planner, web-builder, mobile-builder, reviewer

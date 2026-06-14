@@ -9,6 +9,21 @@ Unreleased section here and syncs the version across every plugin manifest.
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-06-14
+
+### Fixed
+
+- **`blocks/` was missing from the npm `files` allowlist** — the CLI reads `blocks/registry.json` at startup, so an `npm install` tarball would have crashed on launch (the same bug class that broke CI earlier; the git/marketplace install was unaffected). Added `blocks/` to `files`; verified `npm pack` now ships the registry + all 8 `BLOCK.md`.
+- **App-spec schema completeness** — the 1.0 "stable contract" schema was missing five fields the CLI actually emits (`expectedFiles`, `dataMode`, `persistence`, `starter`, `nextStep`), including `persistence`, which `review` reads. The schema now documents every emitted field.
+
+### Added
+
+- Two guard tests: one asserts every runtime-critical directory (`bin/`, `blocks/`, `core/`, `knowledge/`, `templates/`) is in the npm `files` allowlist; the other asserts the app-spec schema documents every field a plan emits (so the 1.0 contract can't silently drift).
+
+### Removed
+
+- Two empty `examples/` placeholder dirs (`crm`, `dashboard`) that only held "reserved for…" READMEs; `examples/task-manager` remains as the full reference app. Added `blocks/` to the README repository map.
+
 ## [1.0.0] - 2026-06-14
 
 ### Added
@@ -97,7 +112,8 @@ Unreleased section here and syncs the version across every plugin manifest.
 - `buildable eval` scores classification fixtures and context-load efficiency (~90% of context tokens saved per plan).
 - Starter config single-source sync (`npm run sync:starters`) with a drift guard, version-pin guard tests, and a CI workflow that builds every runnable starter.
 
-[Unreleased]: https://github.com/suntay44/buildable-plugin-skills/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/suntay44/buildable-plugin-skills/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/suntay44/buildable-plugin-skills/releases/tag/v1.0.1
 [1.0.0]: https://github.com/suntay44/buildable-plugin-skills/releases/tag/v1.0.0
 [0.3.2]: https://github.com/suntay44/buildable-plugin-skills/releases/tag/v0.3.2
 [0.3.1]: https://github.com/suntay44/buildable-plugin-skills/releases/tag/v0.3.1

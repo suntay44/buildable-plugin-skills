@@ -1172,6 +1172,24 @@ test("check validates template and plugin references", () => {
   assert.ok(payload.checked.plannedTemplates >= 1);
 });
 
+test("npm files allowlist ships every directory the CLI reads at runtime", () => {
+  // Guards the bug class where blocks/registry.json (read at startup) shipped untracked:
+  // a published tarball must include every runtime-critical directory.
+  const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
+  const files = pkg.files ?? [];
+  for (const dir of ["bin/", "blocks/", "core/", "knowledge/", "templates/"]) {
+    assert.ok(files.includes(dir), `package.json "files" must include ${dir} (the CLI reads it at runtime)`);
+  }
+});
+
+test("app-spec schema documents every field the CLI emits (1.0 contract integrity)", () => {
+  const spec = jsonFrom(run(["plan", "Build me a CRM", "--no-write"])).appSpec;
+  const schema = JSON.parse(readFileSync(join(root, "core/schemas/app-spec.schema.json"), "utf8"));
+  const documented = new Set(Object.keys(schema.properties ?? {}));
+  const undocumented = Object.keys(spec).filter((key) => !documented.has(key));
+  assert.equal(undocumented.length, 0, `schema is missing emitted fields: ${undocumented.join(", ")}`);
+});
+
 test("list exposes runnable and planned generation status", () => {
   const payload = jsonFrom(run(["list", "--json"]));
   assert.ok(payload.generation.runnableTemplates >= 5);

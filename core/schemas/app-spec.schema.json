@@ -21,6 +21,10 @@
     "template",
     "templateStatus",
     "generationMode",
+    "expectedFiles",
+    "dataMode",
+    "persistence",
+    "nextStep",
     "references",
     "referenceInputs",
     "referenceLoadingContract",
@@ -141,6 +145,22 @@
     },
     "templateStatus": { "enum": ["planned", "starter", "runnable"] },
     "generationMode": { "enum": ["runnable-starter", "plan-only"] },
+    "expectedFiles": { "type": "array", "items": { "type": "string" } },
+    "dataMode": { "type": "string" },
+    "starter": { "type": "string", "description": "Path to the starter source for runnable templates; omitted for planned-only templates." },
+    "persistence": {
+      "type": ["object", "null"],
+      "description": "Opt-in local-first persistence plan, or null when the prompt did not ask to save/persist data.",
+      "properties": {
+        "requested": { "type": "boolean" },
+        "defaultLayer": { "type": "string" },
+        "vendorNeutral": { "type": "boolean" },
+        "userNamedBackend": { "type": ["string", "null"] },
+        "references": { "type": "array", "items": { "type": "string" } },
+        "rule": { "type": "string" }
+      }
+    },
+    "nextStep": { "type": "string" },
     "references": { "type": "array", "items": { "type": "string" } },
     "referenceInputs": {
       "type": "array",

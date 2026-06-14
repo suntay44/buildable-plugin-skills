@@ -1,6 +1,6 @@
 {
   "name": "@buildable/local-builder",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Local product-structure compiler, compact UI/UX brain, and quality gate for coding agents (Claude Code, Codex, Cursor).",
   "type": "module",
   "bin": {
@@ -36,6 +36,7 @@
     ".codex-plugin/",
     ".claude-plugin/",
     "commands/",
+    "blocks/",
     "core/",
     "knowledge/",
     "skills/",
