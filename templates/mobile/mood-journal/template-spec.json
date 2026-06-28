@@ -1,0 +1,24 @@
+{
+  "name": "mobile-mood-journal",
+  "target": "mobile",
+  "archetype": "mood-journal",
+  "stack": {
+    "framework": "Expo",
+    "language": "TypeScript",
+    "styling": "NativeWind",
+    "navigation": "Expo Router",
+    "data": "local-state"
+  },
+  "status": "planned",
+  "references": [
+    "knowledge/archetypes/mood-journal.md",
+    "knowledge/design-playbooks/mobile-health-utility.md",
+    "knowledge/design-playbooks/mobile-utility.md",
+    "knowledge/design-playbooks/ui-quality.md",
+    "knowledge/ui-patterns/forms.md",
+    "knowledge/ui-patterns/empty-states.md",
+    "knowledge/quality-rubrics/mobile-app.md",
+    "templates/mobile/mood-journal/TEMPLATE_PLAN.md"
+  ]
+}
+

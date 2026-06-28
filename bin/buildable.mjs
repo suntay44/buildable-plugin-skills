@@ -107,8 +107,7 @@ Commands:
                                 --file/--reference/--screenshot records explicit user references;
                                 --with-auth records local/mock auth shape; --with-auth-provider names a provider;
                                 saves .buildable/phase-plan.md/json/toon by default; --no-write only prints.
-                                --toon prints the compact TOON contract (~80% smaller); --compact prints
-                                slim JSON (drops the planMarkdown render); --no-write skips file writes.
+                                --compact prints slim JSON (drops the planMarkdown render).
   design [prompt] [--page <name>] [--write]
                                 Produce an interchangeable UI/UX design brief. Uses the current
                                 app spec when present, or classifies the prompt when not.
@@ -330,15 +329,22 @@ function inferredFieldsFor(archetype, entityName, registered) {
 
   const fieldsByEntity = {
     Booking: ["serviceId", "slotId", "customerName", "customerEmail", "notes", "status"],
+    CartItem: ["productId", "name", "quantity", "unitPrice", "variant", "status"],
+    ChartBlock: ["title", "type", "metric", "groupBy", "dateRange", "order"],
     Conversation: ["title", "participants", "lastMessageAt", "unreadCount"],
     Course: ["title", "description", "progress", "status"],
+    Dose: ["medicationId", "scheduledAt", "status", "takenAt", "notes"],
     Event: ["title", "date", "location", "status"],
+    InspectionItem: ["section", "label", "status", "severity", "notes", "photoPlaceholder"],
     InventoryItem: ["name", "sku", "category", "quantity", "reorderLevel", "unitCost", "location"],
     Invoice: ["number", "clientName", "amount", "status", "dueDate"],
+    Issue: ["title", "area", "severity", "status", "notes"],
     Job: ["title", "company", "location", "status", "postedAt"],
+    JournalEntry: ["mood", "summary", "tags", "prompt", "entryDate"],
     Lead: ["name", "company", "email", "stage", "value", "nextAction"],
     Lesson: ["title", "description", "duration", "order", "status"],
     Listing: ["title", "description", "category", "priceLabel", "location", "status"],
+    Medication: ["name", "dosage", "schedule", "instructions", "refillDate", "status"],
     MenuItem: ["name", "description", "price", "category", "available"],
     Message: ["conversationId", "sender", "body", "sentAt", "read"],
     Metric: ["label", "value", "delta", "trend"],
@@ -350,8 +356,10 @@ function inferredFieldsFor(archetype, entityName, registered) {
     Recipe: ["name", "description", "category", "ingredients", "steps", "prepMinutes", "servings", "dietTags", "saved"],
     Project: ["title", "description", "status", "dueDate"],
     Question: ["label", "type", "required", "options"],
+    Report: ["title", "description", "owner", "status", "dateRange", "updatedAt"],
     Response: ["submittedAt", "answers", "status"],
     Section: ["title", "subtitle", "body", "ctaLabel", "order"],
+    ShoppingItem: ["name", "category", "quantity", "checked", "notes", "storeSection"],
     Subscription: ["service", "cost", "billingPeriod", "renewalDate", "status", "category"],
     Task: ["title", "description", "status", "priority", "dueDate", "tags"],
     Ticket: ["subject", "customerName", "priority", "status", "assignee"],
@@ -2116,6 +2124,7 @@ function workspaceStatus(workspace) {
       phasePlan: statusPathInfo(workspace, ".buildable/phase-plan.json"),
       phasePlanToon: statusPathInfo(workspace, ".buildable/phase-plan.toon"),
       designBrief: statusPathInfo(workspace, ".buildable/design-brief.md"),
+      designBriefToon: statusPathInfo(workspace, ".buildable/design-brief.toon"),
       appSpec: {
         path: appSpecPath ? relative(workspace, appSpecPath) : "buildable-app-spec.json",
         exists: Boolean(appSpecPath)
@@ -2126,7 +2135,8 @@ function workspaceStatus(workspace) {
         path: "package.json",
         exists: existsSync(packagePath)
       },
-      reviewReport: statusPathInfo(workspace, ".buildable/review-report.md")
+      reviewReport: statusPathInfo(workspace, ".buildable/review-report.md"),
+      reviewReportToon: statusPathInfo(workspace, ".buildable/review-report.toon")
     },
     plan: phasePlan ? {
       prompt: phasePlan.prompt ?? null,
@@ -2166,7 +2176,9 @@ function printWorkspaceStatus(payload) {
   console.log(`Stage: ${payload.stage}`);
   console.log("");
   console.log(`Plan: ${payload.files.phasePlan.exists ? "found" : "missing"}`);
+  console.log(`Plan TOON: ${payload.files.phasePlanToon.exists ? "found" : "missing"}`);
   console.log(`Design brief: ${payload.files.designBrief.exists ? "found" : "missing"}`);
+  console.log(`Design TOON: ${payload.files.designBriefToon.exists ? "found" : "missing"}`);
   console.log(`App spec: ${payload.files.appSpec.exists ? (payload.app?.appSpecValid ? "valid" : "invalid") : "missing"}`);
   if (payload.app) {
     console.log(`App: ${payload.app.name} (${payload.app.target} ${payload.app.archetype})`);
@@ -2185,6 +2197,7 @@ function printWorkspaceStatus(payload) {
     }
   }
   console.log(`Review: ${payload.files.reviewReport.exists ? "found" : "not recorded"}`);
+  console.log(`Review TOON: ${payload.files.reviewReportToon.exists ? "found" : "missing"}`);
   console.log("");
   console.log("Recommended next step:");
   console.log(`  ${payload.next.command}`);
@@ -2760,6 +2773,43 @@ Ask the user: "${brief.satisfactionQuestion}"
 `;
 }
 
+function designToonFor(brief) {
+  const lines = [
+    "buildable_design:",
+    "  format: toon-style-v1",
+    "  source_of_truth: .buildable/design-brief.json",
+    `  prompt: ${toonValue(brief.prompt)}`,
+    `  scope: ${toonValue(brief.scope)}`,
+    `  boundary: ${toonValue(brief.boundary)}`,
+    "  app:",
+    `    name: ${toonValue(brief.app.name)}`,
+    `    target: ${toonValue(brief.app.target)}`,
+    `    archetype: ${toonValue(brief.app.archetype)}`,
+    `    focus: ${toonValue(brief.focus ?? "whole app")}`,
+    "  design:",
+    `    profile: ${toonValue(brief.designSystem.profile)}`,
+    `    styleName: ${toonValue(brief.designSystem.styleName)}`,
+    `    density: ${toonValue(brief.designSystem.density)}`,
+    `    theme: ${toonValue(brief.designTokens.theme)}`,
+    toonTable("colors", ["role", "value"], Object.entries(brief.designTokens.colors).map(([role, value]) => ({ role, value })), "    "),
+    toonList("components", brief.designTokens.components ?? [], "    "),
+    toonList("uiRules", brief.uiRules, "    "),
+    toonList("avoid", brief.avoid, "    "),
+    "  mockData:",
+    `    recordsPerEntity: ${toonValue(brief.mockDataGuidance.recordsPerEntity)}`,
+    toonTable("entities", ["name", "minimumRecords", "fields"], (brief.mockDataGuidance.entities ?? []).map((entity) => ({
+      name: entity.name,
+      minimumRecords: entity.minimumRecords,
+      fields: (entity.fieldsToPopulate ?? []).join("|")
+    })), "    "),
+    toonList("requiredStates", brief.mockDataGuidance.requiredStates ?? [], "    "),
+    "  loading:",
+    toonList("references", brief.references, "    "),
+    toonTable("referenceInputs", ["kind", "path", "exists"], brief.referenceInputs ?? [], "    ")
+  ];
+  return `${lines.join("\n")}\n`;
+}
+
 function designBriefFor(prompt, appSpec = null) {
   const plan = appSpec
     ? {
@@ -2885,9 +2935,11 @@ function design() {
     mkdirSync(join(target, ".buildable"), { recursive: true });
     writeJson(join(target, ".buildable", "design-brief.json"), brief);
     writeFileSync(join(target, ".buildable", "design-brief.md"), designBriefMarkdown(brief));
+    writeFileSync(join(target, ".buildable", "design-brief.toon"), designToonFor(brief));
     brief.written = {
       json: ".buildable/design-brief.json",
-      markdown: ".buildable/design-brief.md"
+      markdown: ".buildable/design-brief.md",
+      toon: ".buildable/design-brief.toon"
     };
   }
 
@@ -3534,6 +3586,27 @@ function review() {
   };
 
   mkdirSync(join(target, ".buildable"), { recursive: true });
+  const reviewToon = [
+    "buildable_review:",
+    "  format: toon-style-v1",
+    "  source_of_truth: .buildable/review-report.md",
+    `  status: ${toonValue(report.status)}`,
+    `  ok: ${toonValue(report.ok)}`,
+    `  target: ${toonValue(relative(process.cwd(), target) || ".")}`,
+    "  summary:",
+    `    checks: ${toonValue(report.summary.checks)}`,
+    `    passed: ${toonValue(report.summary.passed)}`,
+    `    warned: ${toonValue(report.summary.warned)}`,
+    `    failed: ${toonValue(report.summary.failed)}`,
+    "  checks:",
+    toonTable("items", ["name", "status", "message"], checks, "    "),
+    "  issues:",
+    toonList("items", issues, "    "),
+    "  warnings:",
+    toonList("items", warnings, "    "),
+    "  readiness:",
+    toonTable("items", ["area", "status", "note"], readiness, "    ")
+  ].join("\n") + "\n";
   writeFileSync(
     join(target, ".buildable", "review-report.md"),
     `# Buildable Review Report
@@ -3557,6 +3630,8 @@ ${warnings.length ? warnings.map((warning) => `- ${warning}`).join("\n") : "- No
 ${readiness.length ? readiness.map((item) => `- ${item.area} (${item.status}): ${item.note}`).join("\n") : "- Not assessed (no app spec found)."}
 `
   );
+  writeFileSync(join(target, ".buildable", "review-report.toon"), reviewToon);
+  report.toon = ".buildable/review-report.toon";
 
   if (jsonOutput) {
     console.log(JSON.stringify(report, null, 2));

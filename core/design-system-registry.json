@@ -79,7 +79,7 @@
     },
     {
       "id": "operator-dashboard",
-      "matches": ["crm", "dashboard", "ecommerce-admin", "invoice-manager", "support-helpdesk", "admin-panel", "inventory-manager", "asset-tracker", "hiring-tracker", "bug-tracker", "personal-finance"],
+      "matches": ["crm", "dashboard", "ecommerce-admin", "invoice-manager", "support-helpdesk", "admin-panel", "inventory-manager", "asset-tracker", "hiring-tracker", "bug-tracker", "personal-finance", "report-builder"],
       "target": "web",
       "styleName": "Operator dashboard",
       "visualTone": "dense, scannable, confident operations UI",
@@ -141,7 +141,7 @@
     },
     {
       "id": "marketplace-catalog",
-      "matches": ["marketplace", "real-estate", "job-board", "directory-site", "membership-directory", "client-portal"],
+      "matches": ["marketplace", "real-estate", "job-board", "directory-site", "membership-directory", "client-portal", "ecommerce-storefront"],
       "target": "web",
       "styleName": "Marketplace catalog",
       "visualTone": "browseable, trustworthy, comparison-friendly",
@@ -172,7 +172,7 @@
     },
     {
       "id": "mobile-utility",
-      "matches": ["habit-tracker", "booking", "expense-tracker", "fitness-tracker", "meal-planner", "subscription-tracker", "maintenance-request", "field-service"],
+      "matches": ["habit-tracker", "booking", "expense-tracker", "fitness-tracker", "meal-planner", "subscription-tracker", "maintenance-request", "field-service", "shopping-list", "mood-journal", "medication-reminder", "property-inspection"],
       "target": "mobile",
       "styleName": "Mobile utility",
       "visualTone": "fast, thumb-friendly, reassuring",

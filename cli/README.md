@@ -27,7 +27,6 @@ buildable help
 buildable list
 buildable list --json
 buildable plan "build me a todo app"
-buildable plan "build me a todo app" --toon
 buildable plan "build me a todo app" --with-auth
 buildable plan "use this screenshot for a CRM" --file ./crm-mockup.png
 buildable design "build me a CRM website"
@@ -75,7 +74,7 @@ buildable plan "Build a mobile habit tracker"
 
 Use `plan` when the user wants direction before app files are created. It is the no-code prompting layer: classify, choose the right references, select compatible micro-blocks, identify blocking questions, suggest optional refinement questions with defaults, outline the phases, then let Claude, Codex, Cursor, or another agent continue from the spec. It saves `.buildable/phase-plan.json`, `.buildable/phase-plan.md`, and compact `.buildable/phase-plan.toon` in the current workspace by default. Add `--no-write` only when you want terminal output without workspace files.
 
-For token-tight handoffs, `--toon` prints the compact TOON contract (`toon-style-v1`, ~80% smaller than the full JSON) and `--compact` prints slim JSON that drops the human `planMarkdown` render. TOON is built into the CLI — no install. The MCP `buildable_plan` tool returns the compact form by default; pass `verbose: true` for full JSON or `toon: true` for the TOON contract.
+For token-tight handoffs, `buildable plan` writes `.buildable/phase-plan.toon` automatically. Agents should prefer that compact TOON contract when continuing a build, then read `.buildable/phase-plan.json` only when they need the full structured object. The MCP `buildable_plan` tool returns compact JSON by default; pass `verbose: true` only when full JSON is needed.
 
 After showing a plan, agents should ask blocking questions first when `questionsNeeded` is true. When the plan is otherwise clear, ask at most one or two `promptRefinement.optionalQuestions` if they would improve the result; otherwise state the defaults and continue. If the user is not satisfied, keep using Buildable Planner and revise the saved plan from the user's next prompt, for example: `Buildable Planner: keep this direction, but make reminders stronger`. If yes, continue with Buildable Web Builder or Buildable Mobile Builder. The builder should read the saved plan/spec, then load only `appSpec.references`, explicit `appSpec.referenceInputs`, and the selected starter source.
 

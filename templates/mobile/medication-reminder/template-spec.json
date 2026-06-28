@@ -1,0 +1,23 @@
+{
+  "name": "mobile-medication-reminder",
+  "target": "mobile",
+  "archetype": "medication-reminder",
+  "stack": {
+    "framework": "Expo",
+    "language": "TypeScript",
+    "styling": "NativeWind",
+    "navigation": "Expo Router",
+    "data": "local-state"
+  },
+  "status": "planned",
+  "references": [
+    "knowledge/archetypes/medication-reminder.md",
+    "knowledge/design-playbooks/mobile-health-utility.md",
+    "knowledge/design-playbooks/mobile-utility.md",
+    "knowledge/ui-patterns/action-bars.md",
+    "knowledge/ui-patterns/empty-states.md",
+    "knowledge/quality-rubrics/mobile-app.md",
+    "templates/mobile/medication-reminder/TEMPLATE_PLAN.md"
+  ]
+}
+

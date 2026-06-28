@@ -89,6 +89,12 @@ The registry is the only broad archetype list agents should inspect during class
 - `maintenance-request`: repair requests and work orders.
 - `field-service`: technician jobs and service status.
 - `directory-site`: local, vendor, or resource directories.
+- `ecommerce-storefront`: product catalogs, carts, storefront shopping flows.
+- `report-builder`: saved reports, chart/table blocks, analytics workspaces.
+- `shopping-list`: grocery lists, store mode, grouped mobile shopping.
+- `mood-journal`: mood check-ins, wellness reflection, local history.
+- `medication-reminder`: dose schedules, taken/missed states, medication details.
+- `property-inspection`: walkthrough checklists, condition notes, issue summaries.
 
 ## Reference Pattern
 

@@ -1,0 +1,24 @@
+{
+  "name": "mobile-property-inspection",
+  "target": "mobile",
+  "archetype": "property-inspection",
+  "stack": {
+    "framework": "Expo",
+    "language": "TypeScript",
+    "styling": "NativeWind",
+    "navigation": "Expo Router",
+    "data": "local-state"
+  },
+  "status": "planned",
+  "references": [
+    "knowledge/archetypes/property-inspection.md",
+    "knowledge/design-playbooks/mobile-field-operations.md",
+    "knowledge/design-playbooks/mobile-utility.md",
+    "knowledge/ui-patterns/action-bars.md",
+    "knowledge/ui-patterns/forms.md",
+    "knowledge/ui-patterns/empty-states.md",
+    "knowledge/quality-rubrics/mobile-app.md",
+    "templates/mobile/property-inspection/TEMPLATE_PLAN.md"
+  ]
+}
+

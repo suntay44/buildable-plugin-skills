@@ -12,10 +12,16 @@ Unreleased section here and syncs the version across every plugin manifest.
 ### Added
 
 - `buildable status` and `buildable_status` MCP tool: a read-only workspace inspector that reports the current Buildable workflow stage and recommends the next command.
+- TOON handoff files are now built into the normal workflow beyond planning: `buildable design --write` writes `.buildable/design-brief.toon`, and `buildable review` writes `.buildable/review-report.toon`.
+- Six planned template packs and matching archetypes: web `ecommerce-storefront`, web `report-builder`, mobile `shopping-list`, mobile `mood-journal`, mobile `medication-reminder`, and mobile `property-inspection`.
+- Four focused UI/UX playbooks: commerce, reporting workspaces, mobile health utilities, and mobile field operations.
 
 ### Changed
 
 - Updated the README proof strip to match the current 77-test suite.
+- README and CLI docs now present TOON as an automatic compact handoff from plain `buildable plan`, not as a separate command users need to remember.
+- The MCP `buildable_plan` `toon: true` argument remains supported as a stable compatibility alias, even though the main docs now prefer automatic `.toon` handoff files.
+- Template coverage is now 15 runnable starters plus 16 planned packs across 61 recognized archetypes.
 
 ## [1.0.1] - 2026-06-14
 

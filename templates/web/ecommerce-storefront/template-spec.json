@@ -1,0 +1,24 @@
+{
+  "name": "web-ecommerce-storefront",
+  "target": "web",
+  "archetype": "ecommerce-storefront",
+  "stack": {
+    "framework": "Next.js",
+    "language": "TypeScript",
+    "styling": "Tailwind CSS",
+    "data": "local-state"
+  },
+  "status": "planned",
+  "references": [
+    "knowledge/archetypes/ecommerce-storefront.md",
+    "knowledge/design-playbooks/commerce.md",
+    "knowledge/design-playbooks/design-system-selection.md",
+    "knowledge/design-playbooks/ui-quality.md",
+    "knowledge/ui-patterns/filters.md",
+    "knowledge/ui-patterns/empty-states.md",
+    "knowledge/ui-patterns/responsive-layouts.md",
+    "knowledge/quality-rubrics/web-app.md",
+    "templates/web/ecommerce-storefront/TEMPLATE_PLAN.md"
+  ]
+}
+

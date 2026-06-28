@@ -253,10 +253,12 @@ test("plan writes a markdown phase plan by default", () => {
   assert.match(toon, /references\[\d+\]:/);
 });
 
-test("plan --compact and --toon shrink the agent-facing output", () => {
+test("plan --compact shrinks output while plain plan writes TOON handoff", () => {
+  const workspace = mkdtempSync(join(tmpdir(), "buildable-plan-toon-built-in-"));
   const full = run(["plan", "Build me a CRM", "--no-write"]).stdout;
   const compact = run(["plan", "Build me a CRM", "--no-write", "--compact"]).stdout;
-  const toon = run(["plan", "Build me a CRM", "--no-write", "--toon"]).stdout;
+  jsonFrom(run(["plan", "Build me a CRM"], { cwd: workspace }));
+  const toon = readFileSync(join(workspace, ".buildable/phase-plan.toon"), "utf8");
 
   // Default still carries the human planMarkdown render (back-compat).
   assert.match(full, /"planMarkdown": "# Buildable Phase Plan/);
@@ -268,13 +270,13 @@ test("plan --compact and --toon shrink the agent-facing output", () => {
   assert.equal(compactJson.appSpec.archetype, "crm");
   assert.ok(compact.length < full.length);
 
-  // TOON is the compact contract, not JSON, and is dramatically smaller.
+  // TOON is built into the normal planning workflow as a compact handoff file.
   assert.match(toon, /^buildable_plan:/);
   assert.match(toon, /format: toon-style-v1/);
   assert.ok(toon.length < full.length / 3);
 });
 
-test("mcp buildable_plan returns compact by default, full with verbose, toon on request", () => {
+test("mcp buildable_plan returns compact by default, full with verbose, and TOON via stable alias", () => {
   const call = (args) => {
     const input =
       [
@@ -293,7 +295,7 @@ test("mcp buildable_plan returns compact by default, full with verbose, toon on 
 
   assert.ok(!/planMarkdown":\s*"#/.test(def), "default MCP plan drops the planMarkdown render");
   assert.ok(/planMarkdown":\s*"#/.test(verbose), "verbose MCP plan keeps the full render");
-  assert.ok(/buildable_plan:/.test(toon) && toon.length < def.length / 2, "toon is the smallest");
+  assert.ok(/buildable_plan:/.test(toon) && toon.length < def.length / 2, "toon alias returns the compact contract");
   assert.ok(def.length < verbose.length, "compact default is smaller than verbose");
 });
 
@@ -318,8 +320,11 @@ test("design can run mid-session from an existing app spec and write a brief", (
   assert.equal(payload.app.archetype, "task-manager");
   assert.equal(payload.focus, "login");
   assert.equal(payload.written.json, ".buildable/design-brief.json");
+  assert.equal(payload.written.toon, ".buildable/design-brief.toon");
   assert.ok(existsSync(join(out, ".buildable/design-brief.json")));
   assert.ok(existsSync(join(out, ".buildable/design-brief.md")));
+  assert.ok(existsSync(join(out, ".buildable/design-brief.toon")));
+  assert.match(readFileSync(join(out, ".buildable/design-brief.toon"), "utf8"), /^buildable_design:/);
   assert.match(readFileSync(join(out, ".buildable/design-brief.md"), "utf8"), /focus: login/);
 });
 
@@ -506,6 +511,7 @@ test("status reports planned, blocked, design-ready, generated, and reviewed sta
   const designReady = jsonFrom(run(["status", "--json"], { cwd: workspace }));
   assert.equal(designReady.stage, "design-ready");
   assert.equal(designReady.files.designBrief.exists, true);
+  assert.equal(designReady.files.designBriefToon.exists, true);
   assert.equal(designReady.next.command, 'buildable generate "Build me a CRM website"');
 
   const blockedWorkspace = mkdtempSync(join(tmpdir(), "buildable-status-blocked-"));
@@ -527,6 +533,7 @@ test("status reports planned, blocked, design-ready, generated, and reviewed sta
   const reviewed = jsonFrom(run(["status", "--json"], { cwd: out }));
   assert.equal(reviewed.stage, "reviewed");
   assert.equal(reviewed.files.reviewReport.exists, true);
+  assert.equal(reviewed.files.reviewReportToon.exists, true);
 });
 
 test("generate copies runnable web task-manager starter and review passes", () => {
@@ -605,7 +612,10 @@ test("review defaults to the current app workspace", () => {
 
   assert.equal(report.ok, true);
   assert.equal(report.appSpec, "buildable-app-spec.json");
+  assert.equal(report.toon, ".buildable/review-report.toon");
   assert.ok(existsSync(join(out, ".buildable/review-report.md")));
+  assert.ok(existsSync(join(out, ".buildable/review-report.toon")));
+  assert.match(readFileSync(join(out, ".buildable/review-report.toon"), "utf8"), /^buildable_review:/);
 });
 
 test("mcp server exposes Buildable commands as tools", () => {

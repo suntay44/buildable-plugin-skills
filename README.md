@@ -49,7 +49,7 @@ It does **not** replace your agent or run as a hosted platform. It is a file-bas
 
 A raw coding agent starts every app from a blank slate. Hosted builders feel magical because they already know what a "todo app" or "CRM" should contain. Buildable packages that same knowledge locally:
 
-- **Runnable starters first** — 15 build-verified golden starters for the most common app types, plus 55 archetypes it recognizes and plans, so even the long tail gets a real spec and implementation plan instead of a blank slate.
+- **Runnable starters first** — 15 build-verified golden starters for the most common app types, plus 61 archetypes it recognizes and plans, so even the long tail gets a real spec and implementation plan instead of a blank slate.
 - **Micro-blocks** — small reusable UI/product units (filterable table, detail panel, stat-card grid, form, empty state) that `plan` selects per app and the agent composes, instead of reinventing each one.
 - **Adapt, don't invent** — the agent starts from a proven golden template and adapts it to the prompt, instead of reconstructing app structure from scratch.
 - **UI/UX system guidance** — compact design profiles plus patterns for forms, tables, filters, empty states, and responsive layout.
@@ -382,12 +382,13 @@ buildable eval --compare
 
 **Compact plan handoffs (TOON).** The plan an agent reads back is itself token-optimized. Buildable serializes the build contract in **TOON** — a compact, dependency-free `toon-style-v1` format (no install; it's built into the CLI). The same plan that is ~22 KB as full JSON is ~4.4 KB as TOON (**~80% smaller**), so:
 
-- `buildable plan "<prompt>" --toon` prints the compact contract; `--compact` prints slim JSON (drops the human `planMarkdown` render).
-- The **MCP tools return the compact form by default** (full JSON via `verbose: true`, the TOON contract via `toon: true`), so desktop/agent clients spend ~20–80% fewer tokens per plan with no loss of structured information.
+- `buildable plan "<prompt>"` writes `.buildable/phase-plan.toon` automatically beside the markdown and JSON plan.
+- Builders should prefer `.buildable/phase-plan.toon` as the compact handoff when it exists, then read `.buildable/phase-plan.json` only when they need the full structured object.
+- The **MCP tools return compact JSON by default** (full JSON via `verbose: true`) while the workspace still gets the `.toon` handoff file, so desktop/agent clients stay simple and token-light.
 
 ## Supported app types
 
-**15 generate runnable, build-verified code today** — task managers, CRMs, dashboards, marketplaces, notes, ecommerce admin, landing pages, portfolios, blogs, recipe apps, job boards, inventory, plus mobile habit-tracker / booking / task-manager. On top of that, **55 archetypes are recognized and planned** (tag-matched via `core/archetype-registry.json`): the long tail still gets a full app spec + implementation plan, not a blank slate. See the full list and runnable status in **[CONTRIBUTING.md](CONTRIBUTING.md)**.
+**15 generate runnable, build-verified code today** — task managers, CRMs, dashboards, marketplaces, notes, ecommerce admin, landing pages, portfolios, blogs, recipe apps, job boards, inventory, plus mobile habit-tracker / booking / task-manager. On top of that, **61 archetypes are recognized and planned** (tag-matched via `core/archetype-registry.json`): the long tail still gets a full app spec + implementation plan, not a blank slate. See the full list and runnable status in **[CONTRIBUTING.md](CONTRIBUTING.md)**.
 
 ## Non-goals
 
@@ -410,7 +411,7 @@ Additive changes — new commands, optional flags, new `appSpec` fields, new blo
 core/           Prompt classification, app spec, workflow, ask-vs-build policy
 blocks/         Reusable micro-template packs (registry + per-block guidance)
 knowledge/      Archetypes, data models, screen graphs, UI patterns, playbooks, rubrics
-templates/      Golden templates (15 runnable starters + 10 planned specs)
+templates/      Golden templates (15 runnable starters + 16 planned specs)
 skills/         Agent skills: planner, web-builder, mobile-builder, reviewer
 commands/       Claude Code slash commands
 adapters/       Codex, Claude, Cursor integration notes

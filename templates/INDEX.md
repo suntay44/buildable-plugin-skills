@@ -31,6 +31,8 @@ The same rule is emitted in every plan as `appSpec.referenceLoadingContract`. Th
 - `templates/web/marketplace`: runnable Next.js services marketplace starter.
 - `templates/web/notes`: runnable Next.js two-pane notes workspace starter.
 - `templates/web/ecommerce-admin`: runnable Next.js store-admin starter (overview/products/orders).
+- `templates/web/ecommerce-storefront`: planned storefront/catalog/cart pack.
+- `templates/web/report-builder`: planned report-builder workspace pack.
 
 ## Mobile Templates
 
@@ -46,6 +48,10 @@ The same rule is emitted in every plan as `appSpec.referenceLoadingContract`. Th
 - `templates/mobile/subscription-tracker`: planned Expo + NativeWind renewal tracking pack.
 - `templates/mobile/maintenance-request`: planned Expo + NativeWind repair request pack.
 - `templates/mobile/field-service`: planned Expo + NativeWind technician workflow pack.
+- `templates/mobile/shopping-list`: planned Expo + NativeWind shopping list pack.
+- `templates/mobile/mood-journal`: planned Expo + NativeWind wellness journal pack.
+- `templates/mobile/medication-reminder`: planned Expo + NativeWind medication schedule pack.
+- `templates/mobile/property-inspection`: planned Expo + NativeWind inspection checklist pack.
 
 ## Command Path
 
@@ -58,4 +64,4 @@ buildable plan "<prompt>"
 
 `buildable plan` returns the selected template and references. Use that output instead of scanning all templates.
 
-`buildable list` shows runnable versus planned template counts. Runnable templates (web task-manager, CRM, dashboard, marketplace, notes, ecommerce-admin; mobile habit-tracker, booking, task-manager) copy real source; planned templates are app-spec and `--plan-pack` instruction-pack routes.
+`buildable list` shows runnable versus planned template counts. Runnable templates (web task-manager, CRM, dashboard, marketplace, notes, ecommerce-admin, landing page, portfolio, blog CMS, recipe app, job board, inventory; mobile habit-tracker, booking, task-manager) copy real source; planned templates are app-spec and `--plan-pack` instruction-pack routes.

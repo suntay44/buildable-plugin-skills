@@ -551,6 +551,66 @@
       "screens": ["directory", "listing detail"],
       "entities": ["DirectoryListing"],
       "features": ["listing grid", "category filters", "search", "detail view", "empty state"]
+    },
+    {
+      "id": "ecommerce-storefront",
+      "name": "Storefront",
+      "defaultTarget": "web",
+      "tags": ["online store", "storefront", "shop", "shopping", "cart", "product page", "checkout"],
+      "style": "commerce storefront",
+      "screens": ["catalog", "product detail", "cart"],
+      "entities": ["Product", "CartItem"],
+      "features": ["product catalog", "category filters", "product detail", "cart state", "checkout handoff", "empty cart state"]
+    },
+    {
+      "id": "report-builder",
+      "name": "ReportDesk",
+      "defaultTarget": "web",
+      "tags": ["report builder", "reports", "reporting tool", "export reports", "data report", "insights builder"],
+      "style": "analytics workspace",
+      "screens": ["report workspace", "saved reports"],
+      "entities": ["Report", "ChartBlock"],
+      "features": ["report list", "chart block library", "date filters", "saved views", "export state", "empty report state"]
+    },
+    {
+      "id": "shopping-list",
+      "name": "ShopList",
+      "defaultTarget": "mobile",
+      "tags": ["shopping list", "grocery list", "groceries", "shopping", "store list", "meal shopping"],
+      "style": "mobile utility",
+      "screens": ["list", "store mode"],
+      "entities": ["ShoppingItem"],
+      "features": ["add item", "check off item", "category grouping", "store mode", "quantity notes", "empty list state"]
+    },
+    {
+      "id": "mood-journal",
+      "name": "MoodNote",
+      "defaultTarget": "mobile",
+      "tags": ["mood journal", "journal", "mental wellness", "mood tracker", "daily reflection", "feelings"],
+      "style": "mobile wellness journal",
+      "screens": ["today", "history"],
+      "entities": ["JournalEntry"],
+      "features": ["daily entry", "mood check-in", "tag feelings", "history list", "reflection prompt", "empty history state"]
+    },
+    {
+      "id": "medication-reminder",
+      "name": "DoseTrack",
+      "defaultTarget": "mobile",
+      "tags": ["medication", "medicine reminder", "pill tracker", "dose", "prescription", "health reminders"],
+      "style": "mobile health utility",
+      "screens": ["today doses", "medication detail"],
+      "entities": ["Medication", "Dose"],
+      "features": ["dose schedule", "mark taken", "snooze reminder", "missed dose state", "medication detail", "empty schedule state"]
+    },
+    {
+      "id": "property-inspection",
+      "name": "InspectKit",
+      "defaultTarget": "mobile",
+      "tags": ["property inspection", "inspection checklist", "site inspection", "walkthrough", "condition report"],
+      "style": "mobile field operations",
+      "screens": ["inspection checklist", "issue detail"],
+      "entities": ["InspectionItem", "Issue"],
+      "features": ["checklist sections", "condition status", "issue notes", "photo placeholder", "completion summary", "empty checklist state"]
     }
   ]
 }

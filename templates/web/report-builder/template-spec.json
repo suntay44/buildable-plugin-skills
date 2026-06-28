@@ -1,0 +1,25 @@
+{
+  "name": "web-report-builder",
+  "target": "web",
+  "archetype": "report-builder",
+  "stack": {
+    "framework": "Next.js",
+    "language": "TypeScript",
+    "styling": "Tailwind CSS",
+    "data": "local-state"
+  },
+  "status": "planned",
+  "references": [
+    "knowledge/archetypes/report-builder.md",
+    "knowledge/design-playbooks/reporting-workspace.md",
+    "knowledge/design-playbooks/admin-dashboard.md",
+    "knowledge/design-playbooks/ui-quality.md",
+    "knowledge/ui-patterns/charts.md",
+    "knowledge/ui-patterns/filters.md",
+    "knowledge/ui-patterns/empty-states.md",
+    "knowledge/quality-rubrics/data-dense.md",
+    "knowledge/quality-rubrics/web-app.md",
+    "templates/web/report-builder/TEMPLATE_PLAN.md"
+  ]
+}
+

@@ -62,6 +62,10 @@ Archetypes live in `knowledge/archetypes/` and are matched through compact tags 
 | `video-library` |  |
 | `clinic-intake` |  |
 | `directory-site` |  |
+| `ecommerce-storefront` | `shopping-list` |
+| `report-builder` | `mood-journal` |
+|  | `medication-reminder` |
+|  | `property-inspection` |
 
 ## Golden Templates
 
@@ -99,6 +103,12 @@ Golden templates are Buildable's approved starting points. Runnable templates co
 - `templates/mobile/subscription-tracker`
 - `templates/mobile/maintenance-request`
 - `templates/mobile/field-service`
+- `templates/web/ecommerce-storefront`
+- `templates/web/report-builder`
+- `templates/mobile/shopping-list`
+- `templates/mobile/mood-journal`
+- `templates/mobile/medication-reminder`
+- `templates/mobile/property-inspection`
 - `templates/mobile/generic-app`
 
 ## UI/UX Playbooks
@@ -113,6 +123,10 @@ Agents should load only the playbooks referenced by `appSpec.references`.
 - `knowledge/design-playbooks/modern-saas.md`
 - `knowledge/design-playbooks/productivity.md`
 - `knowledge/design-playbooks/ui-quality.md`
+- `knowledge/design-playbooks/commerce.md`
+- `knowledge/design-playbooks/reporting-workspace.md`
+- `knowledge/design-playbooks/mobile-health-utility.md`
+- `knowledge/design-playbooks/mobile-field-operations.md`
 
 ### UI Patterns
 

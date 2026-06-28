@@ -1,0 +1,24 @@
+{
+  "name": "mobile-shopping-list",
+  "target": "mobile",
+  "archetype": "shopping-list",
+  "stack": {
+    "framework": "Expo",
+    "language": "TypeScript",
+    "styling": "NativeWind",
+    "navigation": "Expo Router",
+    "data": "local-state"
+  },
+  "status": "planned",
+  "references": [
+    "knowledge/archetypes/shopping-list.md",
+    "knowledge/design-playbooks/mobile-utility.md",
+    "knowledge/design-playbooks/ui-quality.md",
+    "knowledge/ui-patterns/action-bars.md",
+    "knowledge/ui-patterns/filters.md",
+    "knowledge/ui-patterns/empty-states.md",
+    "knowledge/quality-rubrics/mobile-app.md",
+    "templates/mobile/shopping-list/TEMPLATE_PLAN.md"
+  ]
+}
+

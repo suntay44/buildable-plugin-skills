@@ -80,6 +80,36 @@
       "prompt": "Build me an inventory manager with low-stock alerts",
       "archetype": "inventory-manager",
       "target": "web"
+    },
+    {
+      "prompt": "Build an online store with product pages and a cart",
+      "archetype": "ecommerce-storefront",
+      "target": "web"
+    },
+    {
+      "prompt": "Build a report builder for saved analytics reports",
+      "archetype": "report-builder",
+      "target": "web"
+    },
+    {
+      "prompt": "Build a mobile grocery shopping list with store mode",
+      "archetype": "shopping-list",
+      "target": "mobile"
+    },
+    {
+      "prompt": "Build a mobile mood journal for daily reflection",
+      "archetype": "mood-journal",
+      "target": "mobile"
+    },
+    {
+      "prompt": "Build a mobile medication reminder app",
+      "archetype": "medication-reminder",
+      "target": "mobile"
+    },
+    {
+      "prompt": "Build a mobile property inspection checklist",
+      "archetype": "property-inspection",
+      "target": "mobile"
     }
   ]
 }
