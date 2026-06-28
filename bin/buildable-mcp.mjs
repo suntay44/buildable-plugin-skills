@@ -90,6 +90,17 @@ const tools = [
     }
   },
   {
+    name: "buildable_status",
+    description: "Inspect a Buildable workspace and return the current workflow stage plus recommended next command. Read-only.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        workspace: { type: "string", description: "Workspace folder to inspect. Defaults to BUILDABLE_WORKSPACE or current process cwd." }
+      },
+      additionalProperties: false
+    }
+  },
+  {
     name: "buildable_list",
     description: "List bundled archetypes and runnable/planned template status.",
     inputSchema: {
@@ -183,6 +194,7 @@ function buildArgs(toolName, args = {}) {
     if (args.existing) command.push("--existing");
     return command;
   }
+  if (toolName === "buildable_status") return ["status", "--json"];
   if (toolName === "buildable_list") return ["list", "--json"];
   if (toolName === "buildable_check") return ["check", "--json"];
   if (toolName === "buildable_eval") {

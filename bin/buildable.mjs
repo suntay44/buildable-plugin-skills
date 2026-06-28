@@ -92,6 +92,7 @@ Usage:
   buildable generate "Build me a todo app"
   buildable generate "Build me a lightweight CRM" --name "LeadDesk"
   buildable init --existing
+  buildable status
   buildable review
   buildable mcp
   buildable check
@@ -100,6 +101,7 @@ Usage:
 
 Commands:
   init [--existing]             Create .buildable config for a workspace.
+  status [path] [--json]        Inspect a workspace and suggest the next Buildable command.
   plan <prompt> [--file <path>] [--no-write]
                                 Classify a prompt and print a top-down local app spec as JSON.
                                 --file/--reference/--screenshot records explicit user references;
@@ -1607,6 +1609,7 @@ function check() {
     ".cursor/rules/buildable.mdc",
     ".cursor/commands/buildable-plan.md",
     ".cursor/commands/buildable-design.md",
+    ".cursor/commands/buildable-status.md",
     ".codex-plugin/plugin.json",
     ".claude-plugin/plugin.json",
     ".claude-plugin/marketplace.json",
@@ -1616,6 +1619,7 @@ function check() {
     "commands/buildable-review.md",
     "commands/buildable-init.md",
     "commands/buildable-preview.md",
+    "commands/buildable-status.md",
     "evals/fixtures.json"
   ];
   const missing = required.filter((path) => !existsSync(join(root, path)));
@@ -2007,6 +2011,199 @@ Guardrails:
   };
 
   console.log(jsonOutput ? JSON.stringify(payload, null, 2) : `Initialized Buildable workspace (${config.mode}) at ${workspace}`);
+}
+
+function readJsonIfExists(path) {
+  if (!existsSync(path)) return null;
+  try {
+    return JSON.parse(readFileSync(path, "utf8"));
+  } catch {
+    return null;
+  }
+}
+
+function statusPathInfo(workspace, relativePath) {
+  const absolutePath = join(workspace, relativePath);
+  return {
+    path: relativePath,
+    exists: existsSync(absolutePath)
+  };
+}
+
+function quoteCommandPrompt(prompt, fallback = "<describe your app>") {
+  return JSON.stringify(prompt || fallback);
+}
+
+function workspaceStatus(workspace) {
+  const packagePath = join(workspace, "package.json");
+  const configPath = join(workspace, ".buildable", "config.json");
+  const phasePlanPath = join(workspace, ".buildable", "phase-plan.json");
+  const appSpecPath = findAppSpec(workspace);
+  const designBriefPath = join(workspace, ".buildable", "design-brief.md");
+  const reviewReportPath = join(workspace, ".buildable", "review-report.md");
+  const implementationPlanPath = join(workspace, "IMPLEMENTATION_PLAN.md");
+
+  const config = readJsonIfExists(configPath);
+  const phasePlan = readJsonIfExists(phasePlanPath);
+  const appSpecDocument = appSpecPath ? readJsonIfExists(appSpecPath) : null;
+  const appSpec = appSpecDocument?.appSpec ?? appSpecDocument ?? phasePlan?.appSpec ?? null;
+  const appSpecIssues = appSpec ? validateAppSpec(appSpec) : [];
+  const expectedFiles = Array.isArray(appSpec?.expectedFiles) ? appSpec.expectedFiles : [];
+  const missingExpectedFiles = expectedFiles.filter((path) => !existsSync(join(workspace, path)));
+  const presentExpectedFiles = expectedFiles.filter((path) => existsSync(join(workspace, path)));
+  const hasDesignBrief = existsSync(designBriefPath);
+  const hasReviewReport = existsSync(reviewReportPath);
+  const isBuildablePluginRepo =
+    existsSync(join(workspace, "bin", "buildable.mjs")) &&
+    existsSync(join(workspace, "core", "archetype-registry.json")) &&
+    existsSync(join(workspace, "templates"));
+  const generated =
+    Boolean(appSpecPath) &&
+    (config?.workflowStage === "generated-files" ||
+      config?.artifactType === "buildable-generated-project" ||
+      existsSync(join(workspace, "BUILDABLE_TEMPLATE.md")) ||
+      existsSync(implementationPlanPath) ||
+      presentExpectedFiles.length > 0);
+  const initializedExisting = config?.mode === "existing-app";
+  const blocked = Boolean(appSpec?.questionsNeeded || phasePlan?.classification?.questionsNeeded);
+
+  let stage = "uninitialized";
+  if (initializedExisting && !phasePlan && !appSpecPath) stage = "initialized-existing-app";
+  if (phasePlan && !blocked) stage = "planned";
+  if (hasDesignBrief && !generated && !blocked) stage = "design-ready";
+  if (generated && !hasReviewReport) stage = missingExpectedFiles.length > 0 ? "generated-incomplete" : "needs-review";
+  if (generated && hasReviewReport) stage = "reviewed";
+  if (blocked) stage = "blocked-needs-questions";
+  if (isBuildablePluginRepo) stage = "buildable-plugin-repo";
+
+  const prompt = phasePlan?.prompt ?? null;
+  let nextCommand = `buildable plan ${quoteCommandPrompt(null)}`;
+  let nextReason = "No Buildable plan or generated app was found in this workspace.";
+
+  if (stage === "buildable-plugin-repo") {
+    nextCommand = "buildable check";
+    nextReason = "This is the Buildable plugin repository; run self-checks before publishing changes.";
+  } else if (stage === "initialized-existing-app") {
+    nextCommand = 'buildable plan "<describe the workflow to add>"';
+    nextReason = "The existing app is initialized but has no saved Buildable plan yet.";
+  } else if (stage === "blocked-needs-questions") {
+    nextCommand = prompt ? `buildable plan ${quoteCommandPrompt(prompt)}` : `buildable plan ${quoteCommandPrompt(null)}`;
+    nextReason = "The saved plan has blocking product-direction or architecture questions.";
+  } else if (stage === "planned") {
+    nextCommand = "buildable design --write";
+    nextReason = "A plan exists; write a concrete UI/UX brief before generation when visual direction matters.";
+  } else if (stage === "design-ready") {
+    nextCommand = prompt ? `buildable generate ${quoteCommandPrompt(prompt)}` : `buildable generate ${quoteCommandPrompt(null)}`;
+    nextReason = "The design brief is ready and no generated app files were detected.";
+  } else if (stage === "generated-incomplete") {
+    nextCommand = "buildable review";
+    nextReason = "Generated app spec exists, but some expected files are missing; run review to get the fix list.";
+  } else if (stage === "needs-review") {
+    nextCommand = "buildable review";
+    nextReason = "Generated app files were detected and no review report was found.";
+  } else if (stage === "reviewed") {
+    nextCommand = "buildable review";
+    nextReason = "A review report exists; rerun review after fixes or further changes.";
+  }
+
+  return {
+    ok: true,
+    workspace,
+    stage,
+    readOnly: true,
+    files: {
+      config: statusPathInfo(workspace, ".buildable/config.json"),
+      phasePlan: statusPathInfo(workspace, ".buildable/phase-plan.json"),
+      phasePlanToon: statusPathInfo(workspace, ".buildable/phase-plan.toon"),
+      designBrief: statusPathInfo(workspace, ".buildable/design-brief.md"),
+      appSpec: {
+        path: appSpecPath ? relative(workspace, appSpecPath) : "buildable-app-spec.json",
+        exists: Boolean(appSpecPath)
+      },
+      buildableTemplate: statusPathInfo(workspace, "BUILDABLE_TEMPLATE.md"),
+      implementationPlan: statusPathInfo(workspace, "IMPLEMENTATION_PLAN.md"),
+      packageJson: {
+        path: "package.json",
+        exists: existsSync(packagePath)
+      },
+      reviewReport: statusPathInfo(workspace, ".buildable/review-report.md")
+    },
+    plan: phasePlan ? {
+      prompt: phasePlan.prompt ?? null,
+      artifactType: phasePlan.artifactType ?? null,
+      workflowStage: phasePlan.workflowStage ?? null
+    } : null,
+    app: appSpec ? {
+      name: appSpec.name,
+      target: appSpec.target,
+      archetype: appSpec.archetype,
+      template: appSpec.template,
+      templateStatus: appSpec.templateStatus,
+      generationMode: appSpec.generationMode,
+      references: Array.isArray(appSpec.references) ? appSpec.references.length : 0,
+      blocks: Array.isArray(appSpec.blocks) ? appSpec.blocks.map((block) => block.id) : [],
+      questionsNeeded: Boolean(appSpec.questionsNeeded),
+      questions: appSpec.questions ?? [],
+      expectedFiles: {
+        total: expectedFiles.length,
+        present: presentExpectedFiles.length,
+        missing: missingExpectedFiles
+      },
+      appSpecValid: appSpecIssues.length === 0,
+      appSpecIssues
+    } : null,
+    next: {
+      command: nextCommand,
+      reason: nextReason
+    }
+  };
+}
+
+function printWorkspaceStatus(payload) {
+  console.log("Buildable workspace status");
+  console.log("");
+  console.log(`Workspace: ${payload.workspace}`);
+  console.log(`Stage: ${payload.stage}`);
+  console.log("");
+  console.log(`Plan: ${payload.files.phasePlan.exists ? "found" : "missing"}`);
+  console.log(`Design brief: ${payload.files.designBrief.exists ? "found" : "missing"}`);
+  console.log(`App spec: ${payload.files.appSpec.exists ? (payload.app?.appSpecValid ? "valid" : "invalid") : "missing"}`);
+  if (payload.app) {
+    console.log(`App: ${payload.app.name} (${payload.app.target} ${payload.app.archetype})`);
+    console.log(`Template: ${payload.app.templateStatus} ${payload.app.template}`);
+    console.log(`References: ${payload.app.references} selected`);
+    console.log(`Blocks: ${payload.app.blocks.length ? payload.app.blocks.join(", ") : "none"}`);
+    if (payload.app.expectedFiles.total > 0) {
+      console.log(`Expected files: ${payload.app.expectedFiles.present}/${payload.app.expectedFiles.total} present`);
+      if (payload.app.expectedFiles.missing.length > 0) {
+        console.log(`Missing: ${payload.app.expectedFiles.missing.join(", ")}`);
+      }
+    }
+    if (payload.app.questionsNeeded) {
+      console.log("Questions:");
+      for (const question of payload.app.questions) console.log(`  - ${question}`);
+    }
+  }
+  console.log(`Review: ${payload.files.reviewReport.exists ? "found" : "not recorded"}`);
+  console.log("");
+  console.log("Recommended next step:");
+  console.log(`  ${payload.next.command}`);
+  console.log(`  ${payload.next.reason}`);
+}
+
+function status() {
+  const targetValue = parsedArgs.positionals[0] ?? ".";
+  const workspace = isAbsolute(targetValue) ? targetValue : join(process.cwd(), targetValue);
+
+  if (!existsSync(workspace) || !statSync(workspace).isDirectory()) {
+    console.error(`Status target is not a directory: ${workspace}`);
+    process.exitCode = 1;
+    return;
+  }
+
+  const payload = workspaceStatus(workspace);
+  if (jsonOutput) console.log(JSON.stringify(payload, null, 2));
+  else printWorkspaceStatus(payload);
 }
 
 function copyDirectory(source, destination) {
@@ -2669,7 +2866,7 @@ function design() {
   const specValue = parsedArgs.values.spec;
   const specPath = specValue
     ? (isAbsolute(specValue) ? specValue : join(process.cwd(), specValue))
-    : findNearestAppSpec(target);
+    : (input ? findAppSpec(target) : findNearestAppSpec(target));
   const specDocument = specPath && existsSync(specPath) ? JSON.parse(readFileSync(specPath, "utf8")) : null;
   const appSpec = specDocument?.appSpec ?? specDocument;
   const prompt = input || specDocument?.prompt || (appSpec ? `Design ${appSpec.name}` : "");
@@ -3519,6 +3716,8 @@ if (!command || command === "help" || command === "--help" || command === "-h") 
   console.log(packageJson.version);
 } else if (command === "init") {
   init();
+} else if (command === "status") {
+  status();
 } else if (command === "plan") {
   if (!input) {
     console.error('Missing prompt. Example: buildable plan "Build me a todo app"');

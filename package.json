@@ -16,7 +16,7 @@
     "config:check": "node ./scripts/sync-starter-config.mjs --check",
     "version:bump": "node ./scripts/version-bump.mjs",
     "version:check": "node ./scripts/version-bump.mjs --check",
-    "smoke": "node ./bin/buildable.mjs help && node ./bin/buildable.mjs check --json && node ./bin/buildable.mjs list --json && node ./bin/buildable.mjs eval --json && node ./bin/buildable.mjs plan \"Build me a lightweight CRM\" && node ./bin/buildable.mjs plan \"Build me a mobile task manager\"",
+    "smoke": "node ./bin/buildable.mjs help && node ./bin/buildable.mjs check --json && node ./bin/buildable.mjs list --json && node ./bin/buildable.mjs status --json && node ./bin/buildable.mjs eval --json && node ./bin/buildable.mjs plan \"Build me a lightweight CRM\" && node ./bin/buildable.mjs plan \"Build me a mobile task manager\"",
     "test": "node --test"
   },
   "files": [

@@ -9,6 +9,14 @@ Unreleased section here and syncs the version across every plugin manifest.
 
 ## [Unreleased]
 
+### Added
+
+- `buildable status` and `buildable_status` MCP tool: a read-only workspace inspector that reports the current Buildable workflow stage and recommends the next command.
+
+### Changed
+
+- Updated the README proof strip to match the current 77-test suite.
+
 ## [1.0.1] - 2026-06-14
 
 ### Fixed

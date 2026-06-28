@@ -35,6 +35,7 @@ buildable design "design this login page" --page login --write
 buildable init --existing
 buildable generate "build me a todo app"
 buildable generate "build me a CRM" --plan-pack
+buildable status
 buildable review
 buildable mcp
 buildable check
@@ -86,6 +87,18 @@ buildable plan "Use this requirements doc" --file ./requirements.md
 ```
 
 Buildable stores these as `appSpec.referenceInputs`. Agents should inspect only those explicit files plus `appSpec.references`; Buildable does not paste large file contents into the plan.
+
+## What `status` Emits
+
+`buildable status` is a read-only workspace inspector for continuing across sessions. It checks only the selected app folder for `.buildable/config.json`, `.buildable/phase-plan.json`, `.buildable/design-brief.md`, `buildable-app-spec.json`, expected files, and `.buildable/review-report.md`.
+
+It reports the workflow stage (`uninitialized`, `initialized-existing-app`, `planned`, `blocked-needs-questions`, `design-ready`, `needs-review`, `generated-incomplete`, or `reviewed`) and recommends the next command. Use `--json` when an agent should parse the result.
+
+Example:
+
+```bash
+buildable status --json
+```
 
 ## What `design` Emits
 
@@ -151,6 +164,7 @@ Buildable's lowest-token path is still command-first: run the CLI, Claude Code s
 - `buildable_plan`
 - `buildable_design`
 - `buildable_generate`
+- `buildable_status`
 - `buildable_review`
 - `buildable_init`
 - `buildable_list`
@@ -208,6 +222,7 @@ Buildable may strongly define expected product shape for common app types. It mu
 - `init` creates local Buildable workspace context.
 - `plan` performs lightweight prompt classification and emits an app spec with references.
 - `generate` copies runnable local starters or writes plan-only instruction packs, then writes an app spec.
+- `status` inspects the local workspace and recommends the next Buildable command without writing files.
 - `review` audits local prototypes against app spec structure, source representation, responsive-layout risk, accessibility signals, state coverage, design-token discipline, and local-first guardrails, then writes `.buildable/review-report.md`. It also prints an advisory **readiness** section — a spec-derived "what's left to productionize" list (mocked vs persisted data, mock vs named-provider auth, no deploy) that points at the persistence/auth seams without auto-adding anything. It is a static/local quality gate; use browser or device checks for final visual confidence.
 - `mcp` exposes those same commands as local MCP tools for desktop/agent clients that cannot run project slash commands directly.
 - `check` verifies that core Buildable files, template references, template statuses, and plugin resource coverage exist.

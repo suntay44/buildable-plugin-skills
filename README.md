@@ -74,7 +74,7 @@ Buildable is a **product-structure compiler, compact UI/UX brain, and quality ga
 - **Use it when** you want consistent, real prototypes for common app types — fast, in your own stack, no lock-in.
 - **Skip it when** you need a one-off component or throwaway script; a raw agent is enough.
 
-**Proof it's real, not a prompt wrapper:** every one of the 15 starters is built and type-checked in CI, the CLI is covered by 73 tests with zero runtime dependencies, and each plan loads only ~10% of the bundled brain. See it yourself — `buildable eval --compare` prints the numbers, and the [generated screenshots](#what-it-generates) are unedited single-prompt output.
+**Proof it's real, not a prompt wrapper:** every one of the 15 starters is built and type-checked in CI, the CLI is covered by 77 tests with zero runtime dependencies, and each plan loads only ~10% of the bundled brain. See it yourself — `buildable eval --compare` prints the numbers, and the [generated screenshots](#what-it-generates) are unedited single-prompt output.
 
 ## Example workflows
 
@@ -140,6 +140,7 @@ buildable plan "Build me a task manager"
 buildable design "Build me a task manager"
 buildable generate "Build me a task manager"
 cd taskflow
+buildable status
 buildable review
 ```
 
@@ -178,6 +179,7 @@ This auto-discovers the planner, web-builder, mobile-builder, and reviewer skill
 | `/buildable-plan` | Create or revise the audit-first phase plan, app spec, selected references, and prompt-refinement questions |
 | `/buildable-design` | Create a UI/UX-only brief from the prompt, saved plan, or current app spec |
 | `/buildable-generate` | Create local project files from the saved plan: copy a runnable starter, write an augment pack, or write a planned-template pack |
+| `/buildable-status` | Inspect the current workspace and suggest the next safe command |
 | `/buildable-review` | Audit a prototype against the saved app spec (`--build` runs typecheck/build) |
 | `/buildable-preview` | Optional: render the running app, screenshot it, catch runtime errors |
 | `/buildable-init` | Make the current workspace Buildable-aware |
@@ -197,6 +199,7 @@ Load `.codex-plugin/plugin.json` when your Codex surface supports local plugins/
 | `buildable plan "<prompt>" [--file <path>] [--with-auth] [--no-write]` | Create or revise the audit-first decision files: `.buildable/phase-plan.md/json/toon`. It classifies the prompt, preserves explicit screenshots/files, selects compatible micro-blocks, asks blocking product questions when needed, adds optional refinement questions with defaults, and selects only the references the agent should load. |
 | `buildable design "<prompt>" [--page <surface>] [--dark] [--write]` | Produce a UI/UX-only brief with concrete tokens (every profile ships light **and** dark palettes; `--dark` activates the dark theme), mockup-data guidance, and page/component rules; can use the current app spec |
 | `buildable generate "<prompt>" [--out <dir>]` | Create local project files from the saved plan. Runnable templates copy starter source; `--plan-pack` writes implementation files for planned templates; `--augment` writes guidance into an existing app. |
+| `buildable status [path]` | Read-only workflow inspector: reports whether the workspace is uninitialized, planned, blocked, design-ready, generated, or reviewed, then suggests the next command |
 | `buildable review [path] [--build]` | Audit the current app by default; optional path reviews another folder, optional `--build` runs typecheck/build |
 | `buildable preview [path] --url <url>` | Optional: render the running app in a headless browser; screenshot + catch runtime errors |
 | `buildable init [--existing]` | Create `.buildable` config for a workspace |
@@ -211,6 +214,7 @@ A few things worth knowing about the flow:
 
 - **`plan` is the routing source.** It classifies the prompt, picks the archetype/template/blocks, lists the exact references to load, and asks blocking questions only when product direction or architecture-changing choices are unclear. Not satisfied? Revise the saved `.buildable/phase-plan.*` and keep planning before you generate.
 - **`generate` reuses the saved plan.** If `.buildable/phase-plan.json` matches the prompt, it builds from that audited plan instead of re-planning, then writes the compact `.toon` contract into the generated app. Use `--augment` to plan into an existing app instead of copying a new starter.
+- **`status` keeps sessions oriented.** It reads only local Buildable files and expected app files, then tells Codex/Claude/Cursor whether to plan, answer questions, design, generate, review, or keep fixing.
 - **`review` is a real gate.** Add `--build` to run typecheck/build, and `--strict` to fail (not just warn) on local-first guardrail drift.
 
 ### Review
@@ -225,9 +229,9 @@ Design quality is graded against surface-specific rubrics, not taste: every plan
 
 Buildable is command-first. Use the lightest integration your agent surface supports:
 
-- **Terminal / CLI:** run `buildable plan`, `buildable design`, `buildable generate`, `buildable review`, and the other commands above.
+- **Terminal / CLI:** run `buildable plan`, `buildable design`, `buildable generate`, `buildable status`, `buildable review`, and the other commands above.
 - **Project slash commands/rules:** Claude Code uses `/buildable-*`; Cursor uses `.cursor/commands/` and `.cursor/rules/buildable.mdc`; Codex can load the plugin manifest when local plugins are supported.
-- **MCP bridge:** use `buildable mcp` only for desktop or agent tool clients that cannot run those project commands directly. The client sees local tools named `buildable_plan`, `buildable_design`, `buildable_generate`, `buildable_review`, `buildable_init`, `buildable_list`, `buildable_check`, `buildable_eval`, and `buildable_preview`.
+- **MCP bridge:** use `buildable mcp` only for desktop or agent tool clients that cannot run those project commands directly. The client sees local tools named `buildable_plan`, `buildable_design`, `buildable_generate`, `buildable_status`, `buildable_review`, `buildable_init`, `buildable_list`, `buildable_check`, `buildable_eval`, and `buildable_preview`.
 
 MCP does not load the whole Buildable brain. Each tool calls the same CLI engine, which returns a compact plan/spec and the exact `appSpec.references` the agent should inspect. Keep `BUILDABLE_WORKSPACE` pointed at the app folder you want the desktop client to work in.
 

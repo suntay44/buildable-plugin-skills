@@ -469,6 +469,66 @@ test("init --existing creates local workspace profile", () => {
   assert.ok(existsSync(join(workspace, ".buildable/repo-profile.json")));
 });
 
+test("status reports empty and initialized workspaces without writing", () => {
+  const empty = mkdtempSync(join(tmpdir(), "buildable-status-empty-"));
+  const emptyStatus = jsonFrom(run(["status", "--json"], { cwd: empty }));
+
+  assert.equal(emptyStatus.stage, "uninitialized");
+  assert.equal(emptyStatus.readOnly, true);
+  assert.equal(emptyStatus.files.phasePlan.exists, false);
+  assert.equal(emptyStatus.files.appSpec.exists, false);
+  assert.equal(emptyStatus.next.command, 'buildable plan "<describe your app>"');
+  assert.equal(existsSync(join(empty, ".buildable")), false);
+
+  jsonFrom(run(["init", "--existing", "--json"], { cwd: empty }));
+  const initializedStatus = jsonFrom(run(["status", "--json"], { cwd: empty }));
+  assert.equal(initializedStatus.stage, "initialized-existing-app");
+  assert.equal(initializedStatus.files.config.exists, true);
+  assert.match(initializedStatus.next.command, /buildable plan/);
+
+  const pluginRepoStatus = jsonFrom(run(["status", "--json"], { cwd: root }));
+  assert.equal(pluginRepoStatus.stage, "buildable-plugin-repo");
+  assert.equal(pluginRepoStatus.next.command, "buildable check");
+});
+
+test("status reports planned, blocked, design-ready, generated, and reviewed states", () => {
+  const workspace = mkdtempSync(join(tmpdir(), "buildable-status-flow-"));
+
+  jsonFrom(run(["plan", "Build me a CRM website"], { cwd: workspace }));
+  const planned = jsonFrom(run(["status", "--json"], { cwd: workspace }));
+  assert.equal(planned.stage, "planned");
+  assert.equal(planned.app.archetype, "crm");
+  assert.equal(planned.app.references, 19);
+  assert.ok(planned.app.blocks.includes("web/filterable-table"));
+  assert.equal(planned.next.command, "buildable design --write");
+
+  jsonFrom(run(["design", "--write", "--json"], { cwd: workspace }));
+  const designReady = jsonFrom(run(["status", "--json"], { cwd: workspace }));
+  assert.equal(designReady.stage, "design-ready");
+  assert.equal(designReady.files.designBrief.exists, true);
+  assert.equal(designReady.next.command, 'buildable generate "Build me a CRM website"');
+
+  const blockedWorkspace = mkdtempSync(join(tmpdir(), "buildable-status-blocked-"));
+  jsonFrom(run(["plan", "I have a restaurant"], { cwd: blockedWorkspace }));
+  const blocked = jsonFrom(run(["status", "--json"], { cwd: blockedWorkspace }));
+  assert.equal(blocked.stage, "blocked-needs-questions");
+  assert.equal(blocked.app.questionsNeeded, true);
+  assert.ok(blocked.app.questions.some((question) => question.includes("informational website")));
+
+  const generatedWorkspace = mkdtempSync(join(tmpdir(), "buildable-status-generated-"));
+  const out = join(generatedWorkspace, "leadflow");
+  jsonFrom(run(["generate", "Build me a CRM", "--out", out, "--json"], { cwd: generatedWorkspace }));
+  const generated = jsonFrom(run(["status", "--json"], { cwd: out }));
+  assert.equal(generated.stage, "needs-review");
+  assert.equal(generated.app.expectedFiles.missing.length, 0);
+  assert.equal(generated.next.command, "buildable review");
+
+  jsonFrom(run(["review", "--json"], { cwd: out }));
+  const reviewed = jsonFrom(run(["status", "--json"], { cwd: out }));
+  assert.equal(reviewed.stage, "reviewed");
+  assert.equal(reviewed.files.reviewReport.exists, true);
+});
+
 test("generate copies runnable web task-manager starter and review passes", () => {
   const workspace = mkdtempSync(join(tmpdir(), "buildable-generate-"));
   const out = join(workspace, "taskflow");
@@ -571,6 +631,15 @@ test("mcp server exposes Buildable commands as tools", () => {
         name: "buildable_plan",
         arguments: { prompt: "Build me a mobile habit tracker", workspace, files: ["./README.md"] }
       }
+    }),
+    JSON.stringify({
+      jsonrpc: "2.0",
+      id: 4,
+      method: "tools/call",
+      params: {
+        name: "buildable_status",
+        arguments: { workspace }
+      }
     })
   ].join("\n") + "\n";
 
@@ -585,6 +654,7 @@ test("mcp server exposes Buildable commands as tools", () => {
   assert.equal(messages.find((message) => message.id === 1)?.result.serverInfo.name, "buildable");
   assert.ok(messages.find((message) => message.id === 2)?.result.tools.some((tool) => tool.name === "buildable_plan"));
   assert.ok(messages.find((message) => message.id === 2)?.result.tools.some((tool) => tool.name === "buildable_design"));
+  assert.ok(messages.find((message) => message.id === 2)?.result.tools.some((tool) => tool.name === "buildable_status"));
 
   const call = messages.find((message) => message.id === 3);
   assert.equal(call.result.isError, false);
@@ -592,6 +662,11 @@ test("mcp server exposes Buildable commands as tools", () => {
   assert.equal(call.result.structuredContent.result.appSpec.target, "mobile");
   assert.equal(call.result.structuredContent.result.appSpec.referenceInputs[0].path, "./README.md");
   assert.ok(existsSync(join(workspace, ".buildable/phase-plan.json")));
+
+  const statusCall = messages.find((message) => message.id === 4);
+  assert.equal(statusCall.result.isError, false);
+  assert.equal(statusCall.result.structuredContent.result.stage, "planned");
+  assert.equal(statusCall.result.structuredContent.result.next.command, "buildable design --write");
 });
 
 test("generate brands a runnable starter via --name", () => {
