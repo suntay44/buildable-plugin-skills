@@ -1,6 +1,6 @@
 ---
 name: buildable-planner
-description: Use when turning an app idea prompt into a Buildable classification, ask-vs-build decision, selected archetype, phase plan, reference set, mock-data guidance, and concrete local-first app spec.
+description: Plan or classify a Buildable app idea into an archetype, ask-vs-build decision, phase plan, references, mock-data guidance, and local-first app spec. Use for Buildable product planning and ambiguous app-build requests; do not use for ordinary coding, debugging, or generic project planning.
 ---
 
 # Buildable Planner Skill
@@ -15,10 +15,6 @@ Use this skill to classify prompts, choose an archetype, decide whether question
 - optional local preferences
 
 Resolve all referenced paths from the Buildable plugin or repository root.
-
-## Activation
-
-Use Buildable only for app planning, app generation, UI/UX product guidance, or prototype review. Do not activate globally for unrelated coding tasks.
 
 ## Reference Loading Contract
 

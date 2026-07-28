@@ -2,6 +2,16 @@
   "name": "@buildable/local-builder",
   "version": "1.0.1",
   "description": "Local product-structure compiler, compact UI/UX brain, and quality gate for coding agents (Claude Code, Codex, Cursor).",
+  "private": true,
+  "homepage": "https://github.com/suntay44/buildable-plugin-skills#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/suntay44/buildable-plugin-skills.git"
+  },
+  "bugs": {
+    "url": "https://github.com/suntay44/buildable-plugin-skills/issues"
+  },
+  "funding": "https://www.buymeacoffee.com/povpatricksun",
   "type": "module",
   "bin": {
     "buildable": "./bin/buildable.mjs",
@@ -16,6 +26,7 @@
     "config:check": "node ./scripts/sync-starter-config.mjs --check",
     "version:bump": "node ./scripts/version-bump.mjs",
     "version:check": "node ./scripts/version-bump.mjs --check",
+    "audit:starter": "node ./scripts/audit-starter.mjs",
     "smoke": "node ./bin/buildable.mjs help && node ./bin/buildable.mjs check --json && node ./bin/buildable.mjs list --json && node ./bin/buildable.mjs status --json && node ./bin/buildable.mjs eval --json && node ./bin/buildable.mjs plan \"Build me a lightweight CRM\" && node ./bin/buildable.mjs plan \"Build me a mobile task manager\"",
     "test": "node --test"
   },
@@ -27,6 +38,7 @@
     "SECURITY.md",
     "ROADMAP.md",
     ".mcp.json",
+    ".agents/plugins/marketplace.json",
     "docs/install.md",
     "bin/",
     "cli/",
@@ -50,13 +62,19 @@
     "app-builder",
     "local-ai",
     "codex",
+    "codex-plugin",
     "claude",
+    "claude-code-plugin",
     "cursor",
     "cli",
-    "local-first"
+    "local-first",
+    "mcp",
+    "nextjs",
+    "expo",
+    "react-native"
   ],
   "engines": {
-    "node": ">=18"
+    "node": ">=22.13.0"
   },
   "license": "MIT"
 }

@@ -1,0 +1,20 @@
+{
+  "name": "buildable",
+  "interface": {
+    "displayName": "Buildable"
+  },
+  "plugins": [
+    {
+      "name": "buildable",
+      "source": {
+        "source": "local",
+        "path": "./"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

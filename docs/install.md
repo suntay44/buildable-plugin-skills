@@ -8,7 +8,7 @@ Buildable is a **product-structure compiler, compact UI/UX brain, and quality ga
 
 ## Requirements
 
-- Node.js 18 or newer for the CLI.
+- Node.js 22.13 or newer for the CLI.
 - A local checkout of this repository.
 - One or more local coding agents: Codex Desktop, Claude Code, Cursor, or a terminal CLI workflow.
 
@@ -60,6 +60,7 @@ Clients will expose these as tools:
 | `buildable_plan` | `buildable plan` |
 | `buildable_design` | `buildable design` |
 | `buildable_generate` | `buildable generate` |
+| `buildable_status` | `buildable status` |
 | `buildable_review` | `buildable review` |
 | `buildable_init` | `buildable init` |
 | `buildable_list` | `buildable list` |
@@ -133,12 +134,16 @@ For existing apps, Buildable should provide context and review guidance. It shou
 
 Buildable includes Codex plugin metadata in `.codex-plugin/plugin.json`.
 
-Local setup:
+Marketplace setup:
 
-1. Open Codex Desktop against this repository, or add this repository as a local/personal plugin source if your Codex Desktop build supports local plugin installation.
-2. Verify that `.codex-plugin/plugin.json` resolves the bundled skills in `skills/` and resources in `core/`, `blocks/`, `knowledge/`, `templates/`, and `evals/`.
-3. Run `buildable check` from the repository root.
-4. Ask Codex to use Buildable for prompt-to-prototype planning. The plugin should keep generation local and read only the relevant bundled references.
+```bash
+codex plugin marketplace add suntay44/buildable-plugin-skills
+codex plugin marketplace list
+```
+
+Then select that marketplace in the ChatGPT desktop app and install **Buildable**. The repository’s `.agents/plugins/marketplace.json` points to `.codex-plugin/plugin.json`, which discovers `skills/` and the bundled `.mcp.json` server. Run `buildable check` from the checkout to verify those paths.
+
+For local plugin development, open Codex against this repository and use it as a local/personal marketplace source. Ask Codex to use Buildable for prompt-to-prototype planning; the skills keep generation local and load only selected references.
 
 Manual fallback:
 
@@ -155,7 +160,7 @@ Plugin setup (recommended):
 /plugin install buildable@buildable
 ```
 
-This registers `/buildable-plan`, `/buildable-design`, `/buildable-generate`, `/buildable-review`, `/buildable-preview`, and `/buildable-init`, and loads the planner, web-builder, mobile-builder, and reviewer skills.
+This registers `/buildable-plan`, `/buildable-design`, `/buildable-generate`, `/buildable-status`, `/buildable-review`, `/buildable-preview`, and `/buildable-init`, and loads the planner, web-builder, mobile-builder, and reviewer skills.
 
 Instructions-only setup:
 

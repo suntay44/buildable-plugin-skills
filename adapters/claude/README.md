@@ -40,7 +40,7 @@ If you prefer plain project instructions instead of installing the plugin:
 1. Copy or symlink `adapters/claude/CLAUDE.md` into the Claude Code project instructions you want to use.
 2. Keep this Buildable repository available locally so Claude can read `core/`, `knowledge/`, `templates/`, `skills/`, and `evals/`.
 3. Run `buildable check` from this repository before relying on the adapter.
-4. Optionally run `buildable plan "<prompt>" --write` and give Claude the generated phase plan/spec before code generation.
+4. Optionally run `buildable plan "<prompt>"` and give Claude the generated phase plan/spec before code generation.
 
 ## Included Behavior
 

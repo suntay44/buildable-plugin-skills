@@ -1,6 +1,6 @@
 ---
 name: buildable-mobile-builder
-description: Use when generating or adapting local-first Expo and React Native prototypes from Buildable app specs, archetypes, UI patterns, design playbooks, and mobile golden templates.
+description: Generate or adapt a local-first Buildable mobile prototype from an app spec, archetype, UI pattern, design playbook, or mobile golden template. Use for Buildable Expo/React Native implementation; do not use for ordinary mobile debugging or unrelated React Native edits.
 ---
 
 # Buildable Mobile Builder Skill
@@ -8,10 +8,6 @@ description: Use when generating or adapting local-first Expo and React Native p
 Use this skill to generate or adapt local mobile prototypes.
 
 Resolve all referenced paths from the Buildable plugin or repository root.
-
-## Activation
-
-Use only when the user is building or adapting a native mobile app/prototype. Do not activate for unrelated React Native debugging unless the user asks for Buildable guidance.
 
 ## Reference Loading Contract
 

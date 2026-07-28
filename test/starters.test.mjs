@@ -32,13 +32,13 @@ test("runnable web starters exist and were discovered", () => {
   assert.ok(webStarters.length >= 4, `expected >= 4 web starters, found ${webStarters.length}`);
 });
 
-test("web starters pin Tailwind v3 and avoid the v4 PostCSS break", () => {
+test("web starters use the supported Next, React, and Tailwind contracts", () => {
   for (const starter of webStarters) {
     const pkg = readJson(`${starter}/package.json`);
     const tailwind = pkg.devDependencies?.tailwindcss ?? "";
-    // Tailwind v4 moved its PostCSS plugin and config model, which breaks the
-    // @tailwind directives + tailwind.config.ts these starters use.
-    assert.match(tailwind, /^3\./, `${starter} must pin exact tailwindcss v3, got "${tailwind}"`);
+    assert.match(pkg.dependencies?.next ?? "", /^16\./, `${starter} must use supported Next 16`);
+    assert.match(pkg.dependencies?.react ?? "", /^19\./, `${starter} must use React 19`);
+    assert.match(tailwind, /^4\./, `${starter} must pin exact tailwindcss v4, got "${tailwind}"`);
 
     for (const section of ["dependencies", "devDependencies"]) {
       for (const [name, version] of Object.entries(pkg[section] ?? {})) {
@@ -48,12 +48,12 @@ test("web starters pin Tailwind v3 and avoid the v4 PostCSS break", () => {
     }
 
     const postcss = read(`${starter}/postcss.config.js`);
-    assert.match(postcss, /tailwindcss:/, `${starter} postcss must use the v3 tailwindcss plugin`);
-    assert.doesNotMatch(postcss, /@tailwindcss\/postcss/, `${starter} must not use the v4 PostCSS plugin`);
+    assert.match(postcss, /@tailwindcss\/postcss/, `${starter} postcss must use the v4 PostCSS plugin`);
 
     const globals = read(`${starter}/app/globals.css`);
-    assert.match(globals, /@tailwind base;/, `${starter} globals.css must use v3 @tailwind directives`);
-    assert.doesNotMatch(globals, /@import ["']tailwindcss["']/, `${starter} must not use the v4 CSS import`);
+    assert.match(globals, /@import ["']tailwindcss["']/, `${starter} globals.css must use the v4 CSS import`);
+    assert.match(globals, /@config ["']\.\.\/tailwind\.config\.js["']/, `${starter} must load its legacy theme tokens`);
+    assert.equal(pkg.scripts?.lint, "eslint .", `${starter} must not use the removed next lint command`);
   }
 });
 
@@ -70,7 +70,15 @@ test("web starter tsconfig avoids deprecated-to-error options", () => {
 
 test("web starters share identical framework config (no drift)", () => {
   const canonical = "templates/web/task-manager/starter";
-  const sharedFiles = ["tsconfig.json", "postcss.config.js", "next.config.js", "next-env.d.ts"];
+  const sharedFiles = [
+    "tsconfig.json",
+    "postcss.config.js",
+    "next.config.js",
+    "next-env.d.ts",
+    "eslint.config.mjs",
+    "app/globals.css",
+    "tailwind.config.js"
+  ];
 
   for (const file of sharedFiles) {
     const expected = read(`${canonical}/${file}`);
@@ -99,9 +107,9 @@ test("mobile starters pin NativeWind exactly and keep the className augmentation
   for (const starter of mobileStarters) {
     const pkg = readJson(`${starter}/package.json`);
     const nativewind = pkg.dependencies?.nativewind ?? "";
-    // NativeWind 4.2.x's transitive type package does not hoist on a clean install,
-    // so the documented reference leaves className untyped. Pin the known-good build.
-    assert.match(nativewind, /^4\.1\.\d+$/, `${starter} must pin an exact NativeWind 4.1.x, got "${nativewind}"`);
+    assert.equal(pkg.dependencies?.expo, "~57.0.8", `${starter} must track Expo SDK 57`);
+    assert.match(pkg.dependencies?.reactNative ?? pkg.dependencies?.["react-native"] ?? "", /^0\.86\./);
+    assert.match(nativewind, /^4\.2\.\d+$/, `${starter} must pin an exact NativeWind 4.2.x, got "${nativewind}"`);
 
     const envTypes = read(`${starter}/nativewind-env.d.ts`);
     assert.match(envTypes, /declare module ["']react-native["']/, `${starter} needs a self-contained className augmentation`);
@@ -129,6 +137,26 @@ test("mobile starter fragments import React for Expo typecheck", () => {
         /^import React(?:,|\s+from)/m,
         `${appEntry} uses a JSX fragment and must import React for Expo's typecheck`
       );
+    }
+  }
+});
+
+test("mobile starters share their Expo and NativeWind framework config", () => {
+  const canonical = "templates/mobile/task-manager/starter";
+  const sharedFiles = [
+    "nativewind-env.d.ts",
+    "styles.d.ts",
+    "tsconfig.json",
+    "babel.config.js",
+    "metro.config.js",
+    "global.css",
+    "tailwind.config.js"
+  ];
+
+  for (const file of sharedFiles) {
+    const expected = read(`${canonical}/${file}`);
+    for (const starter of mobileStarters) {
+      assert.equal(read(`${starter}/${file}`), expected, `${starter}/${file} drifted from ${canonical}`);
     }
   }
 });

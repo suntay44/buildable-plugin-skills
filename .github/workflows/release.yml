@@ -2,7 +2,7 @@ name: Release
 
 # Push a version tag (e.g. `git tag v0.2.0 && git push --tags`) to cut a
 # GitHub release. Distribution is the public repo itself — users install with
-# `/plugin marketplace add suntay44/buildable-plugin-skills`, which is free and
+# `codex plugin marketplace add suntay44/buildable-plugin-skills`, which is free and
 # scales on GitHub's infrastructure. No npm publish, no secrets, no server.
 on:
   push:
@@ -16,10 +16,10 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
 
       - name: Verify manifests, config, and tests
         run: |
@@ -39,6 +39,6 @@ jobs:
           fi
 
       - name: Create GitHub release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           generate_release_notes: true

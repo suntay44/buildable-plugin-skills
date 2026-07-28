@@ -4,10 +4,10 @@ Buildable's north star: the best **local-first product-intelligence layer** for 
 
 This roadmap is honest about what works today and what's next. Priorities are **usage-driven**: real prompts from real users decide what gets promoted next, not guesses.
 
-## Today (v0.3.x)
+## Today (v1.0.x)
 
 - **15 runnable, build-verified starters** (12 web, 3 mobile) — CI builds and type-checks every one.
-- **55 archetypes** recognized and planned — the long tail still emits a full app spec + implementation plan.
+- **61 archetypes** recognized and planned — the long tail still emits a full app spec + implementation plan.
 - **Micro-block layer** — 8 reusable UI/product blocks (web + mobile), each a full pack (data shape, states, a11y, responsive, code sketch, adaptation checklist, anti-patterns), loaded only when a plan selects them.
 - **Design quality as a gate** — token-usage check + surface-specific rubrics + dark-mode token sets.
 - **Local-first seams** — persistence ladder and auth-as-a-shape, both vendor-neutral; `review` emits an advisory "what's left to productionize" readiness section.
@@ -16,7 +16,7 @@ This roadmap is honest about what works today and what's next. Priorities are **
 
 ## Next (close the depth gap — usage-driven)
 
-Runnable coverage grows release over release (9 → 15 in v0.3). The next promotions, ordered by how often they're actually requested:
+Runnable coverage has grown from 5 at launch to 15 in v1.0. The next promotions, ordered by how often they're actually requested:
 
 - **More runnable mobile starters** — the thinnest area today (3). Likely next: expense-tracker, fitness-tracker, chat-app (knowledge + blocks already exist).
 - **Promote high-demand web archetypes** planned → runnable, driven by what users ask for.

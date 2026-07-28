@@ -2,7 +2,9 @@
   "mcpServers": {
     "buildable": {
       "command": "node",
-      "args": ["./bin/buildable-mcp.mjs"]
+      "args": [
+        "./bin/buildable-mcp.mjs"
+      ]
     }
   }
 }

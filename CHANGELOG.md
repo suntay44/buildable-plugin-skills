@@ -12,13 +12,19 @@ Unreleased section here and syncs the version across every plugin manifest.
 ### Added
 
 - `buildable status` and `buildable_status` MCP tool: a read-only workspace inspector that reports the current Buildable workflow stage and recommends the next command.
+- Canonical Codex marketplace metadata at `.agents/plugins/marketplace.json`, richer current-schema plugin metadata, and up-to-date skill interface definitions.
+- Skill-activation eval coverage for direct, indirect, incomplete, negative, and edge prompts, including explicit checks that unrelated work activates no Buildable skill.
+- Dependabot coverage for the root package and all web/mobile starter workspaces, plus a production dependency audit gate for generated starters.
 - TOON handoff files are now built into the normal workflow beyond planning: `buildable design --write` writes `.buildable/design-brief.toon`, and `buildable review` writes `.buildable/review-report.toon`.
 - Six planned template packs and matching archetypes: web `ecommerce-storefront`, web `report-builder`, mobile `shopping-list`, mobile `mood-journal`, mobile `medication-reminder`, and mobile `property-inspection`.
 - Four focused UI/UX playbooks: commerce, reporting workspaces, mobile health utilities, and mobile field operations.
 
 ### Changed
 
-- Updated the README proof strip to match the current 77-test suite.
+- Updated the Codex plugin and MCP server to the current plugin manifest and MCP 2025-11-25 contracts, including lifecycle enforcement, structured output schemas, tool annotations, and input validation.
+- Refreshed the supported runtime to Node.js 22.13+, CI to the current Node.js 24 LTS line with current checkout/setup/release actions, web starters to Next.js 16/React 19/Tailwind CSS 4, and mobile starters to Expo 57/React Native 0.86.
+- Reworked the README and installation docs with answer-first project copy, exact Codex marketplace commands, a focused FAQ, current counts, and clearer local-first answers for search and answer engines.
+- Updated the README proof strip to match the current 79-test suite.
 - README and CLI docs now present TOON as an automatic compact handoff from plain `buildable plan`, not as a separate command users need to remember.
 - The MCP `buildable_plan` `toon: true` argument remains supported as a stable compatibility alias, even though the main docs now prefer automatic `.toon` handoff files.
 - Template coverage is now 15 runnable starters plus 16 planned packs across 61 recognized archetypes.

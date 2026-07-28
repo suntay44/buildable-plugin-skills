@@ -4,7 +4,7 @@ Use Buildable when the user asks for a local app prototype or prompt-to-app gene
 
 ## Local Context
 
-Buildable is local repository context, not a hosted builder. Prefer `buildable plan "<prompt>" --write` when a concrete phase plan/app spec would help, then read only the relevant local files named by the spec.
+Buildable is local repository context, not a hosted builder. Prefer `buildable plan "<prompt>"` when a concrete phase plan/app spec would help, then read only the relevant local files named by the spec.
 
 ## Workflow
 

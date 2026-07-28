@@ -8,6 +8,7 @@ import { spawnSync } from "node:child_process";
 const root = new URL("..", import.meta.url).pathname;
 const cli = join(root, "bin/buildable.mjs");
 const mcp = join(root, "bin/buildable-mcp.mjs");
+const packageJson = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
 
 function run(args, options = {}) {
   const commandArgs = [...args];
@@ -662,9 +663,14 @@ test("mcp server exposes Buildable commands as tools", () => {
 
   const messages = result.stdout.trim().split("\n").map((line) => JSON.parse(line));
   assert.equal(messages.find((message) => message.id === 1)?.result.serverInfo.name, "buildable");
-  assert.ok(messages.find((message) => message.id === 2)?.result.tools.some((tool) => tool.name === "buildable_plan"));
-  assert.ok(messages.find((message) => message.id === 2)?.result.tools.some((tool) => tool.name === "buildable_design"));
-  assert.ok(messages.find((message) => message.id === 2)?.result.tools.some((tool) => tool.name === "buildable_status"));
+  const listedTools = messages.find((message) => message.id === 2)?.result.tools;
+  assert.ok(listedTools.some((tool) => tool.name === "buildable_plan"));
+  assert.ok(listedTools.some((tool) => tool.name === "buildable_design"));
+  assert.ok(listedTools.some((tool) => tool.name === "buildable_status"));
+  assert.ok(listedTools.every((tool) => tool.title && tool.outputSchema?.type === "object"));
+  assert.ok(listedTools.every((tool) => typeof tool.annotations?.readOnlyHint === "boolean"));
+  assert.equal(listedTools.find((tool) => tool.name === "buildable_status").annotations.readOnlyHint, true);
+  assert.equal(listedTools.find((tool) => tool.name === "buildable_generate").annotations.destructiveHint, true);
 
   const call = messages.find((message) => message.id === 3);
   assert.equal(call.result.isError, false);
@@ -677,6 +683,36 @@ test("mcp server exposes Buildable commands as tools", () => {
   assert.equal(statusCall.result.isError, false);
   assert.equal(statusCall.result.structuredContent.result.stage, "planned");
   assert.equal(statusCall.result.structuredContent.result.next.command, "buildable design --write");
+});
+
+test("mcp negotiates supported protocol versions and enforces lifecycle", () => {
+  const input = [
+    JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list", params: {} }),
+    JSON.stringify({
+      jsonrpc: "2.0",
+      id: 2,
+      method: "initialize",
+      params: { protocolVersion: "2099-01-01", capabilities: {}, clientInfo: { name: "future-test", version: "0" } }
+    }),
+    JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized", params: {} }),
+    JSON.stringify({
+      jsonrpc: "2.0",
+      id: 3,
+      method: "tools/call",
+      params: { name: "buildable_plan", arguments: { prompt: 42 } }
+    })
+  ].join("\n") + "\n";
+
+  const result = spawnSync(process.execPath, [mcp], { cwd: root, encoding: "utf8", input });
+  assert.equal(result.status, 0, result.stderr);
+  const messages = result.stdout.trim().split("\n").map((line) => JSON.parse(line));
+
+  assert.equal(messages.find((message) => message.id === 1).error.code, -32002);
+  assert.equal(messages.find((message) => message.id === 2).result.protocolVersion, "2025-11-25");
+  assert.equal(messages.find((message) => message.id === 2).result.capabilities.tools.listChanged, false);
+  assert.match(messages.find((message) => message.id === 2).result.instructions, /appSpec\.references/);
+  assert.equal(messages.find((message) => message.id === 3).error.code, -32602);
+  assert.match(messages.find((message) => message.id === 3).error.message, /must be a string/);
 });
 
 test("generate brands a runnable starter via --name", () => {
@@ -1141,10 +1177,19 @@ test("review --strict scans beyond starter-sized apps and includes jsx/html", ()
   assert.ok(report.issues.some((issue) => issue.includes("stripe") && issue.includes("late-drift.html")));
 });
 
-test("codex manifest exposes reference roots and docs explain available vs loaded", () => {
+test("codex manifest uses current plugin-root component paths", () => {
   const plugin = JSON.parse(readFileSync(join(root, ".codex-plugin/plugin.json"), "utf8"));
-  assert.ok(plugin.resources.includes("../knowledge"));
-  assert.ok(plugin.resources.includes("../templates"));
+  assert.equal(plugin.skills, "./skills/");
+  assert.equal(plugin.mcpServers, "./.mcp.json");
+  assert.equal(plugin.version, packageJson.version);
+  assert.equal(typeof plugin.author, "object");
+  assert.equal(plugin.schema_version, undefined);
+  assert.equal(plugin.resources, undefined);
+  assert.ok(plugin.interface.defaultPrompt.length > 0);
+
+  const mcp = JSON.parse(readFileSync(join(root, ".mcp.json"), "utf8"));
+  assert.equal(mcp.mcpServers.buildable.command, "node");
+  assert.deepEqual(mcp.mcpServers.buildable.args, ["./bin/buildable-mcp.mjs"]);
 
   // The CLI docs must explain that exposing a dir is availability, not agent loading,
   // so the "scoped vs broad resources" drift can't silently return.
@@ -1297,6 +1342,16 @@ test("eval passes all fixtures and reports context-load efficiency", () => {
   assert.ok(payload.specQuality.avgScore >= 0.8, `avg spec quality ${payload.specQuality.avgScore}`);
   assert.ok(payload.specQuality.minScore >= 0.6, `min spec quality ${payload.specQuality.minScore}`);
   assert.ok(payload.results.every((result) => typeof result.specQuality === "number"));
+  assert.equal(payload.skillActivation.failed, 0);
+  assert.ok(payload.skillActivation.fixtures >= 20);
+  assert.deepEqual(
+    Object.keys(payload.skillActivation.categoryCounts).sort(),
+    ["direct", "edge", "incomplete", "indirect", "negative"]
+  );
+  assert.ok(payload.skillActivation.skillCounts.none >= 5);
+  for (const skill of ["buildable-planner", "buildable-web-builder", "buildable-mobile-builder", "buildable-reviewer"]) {
+    assert.ok(payload.skillActivation.skillCounts[skill] >= 4, `${skill} activation coverage`);
+  }
   // Default eval output stays free of the comparison block.
   assert.equal(payload.comparison, undefined);
 });
@@ -1312,16 +1367,16 @@ test("eval --compare quantifies guidance added over a raw prompt", () => {
   assert.ok(payload.comparison.guidanceAddedPerPrompt > 0);
 });
 
-test("docs and plugin resources keep low-token scope explicit", () => {
+test("docs and npm package keep low-token reference roots available", () => {
   const readme = readFileSync(join(root, "README.md"), "utf8");
   assert.doesNotMatch(readme, /\/Users\/christianpatricksuntay\/Projects\/Buildable/);
   assert.match(readme, /\[docs\/install\.md\]\(docs\/install\.md\)/);
   assert.match(readme, /runnable starters/);
 
-  const plugin = JSON.parse(readFileSync(join(root, ".codex-plugin/plugin.json"), "utf8"));
-  // The manifest must expose the dirs that appSpec.references resolve from, so plans never
-  // point at files the plugin did not ship. Low-token discipline is the runtime contract.
-  assert.ok(plugin.resources.includes("../knowledge"));
-  assert.ok(plugin.resources.includes("../templates"));
-  assert.ok(plugin.resources.includes("../core/reference-loading-contract.md"));
+  // Buildable references are package content, while appSpec.references still controls
+  // what an agent loads for any one plan.
+  assert.ok(packageJson.files.includes("knowledge/"));
+  assert.ok(packageJson.files.includes("templates/"));
+  assert.ok(packageJson.files.includes("core/"));
+  assert.ok(packageJson.files.includes(".agents/plugins/marketplace.json"));
 });

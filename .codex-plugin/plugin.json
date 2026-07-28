@@ -1,52 +1,38 @@
 {
-  "schema_version": "1.0",
   "name": "buildable",
-  "display_name": "Buildable",
   "version": "1.0.1",
-  "description": "Local-first AI app builder brain with archetypes, design-system guidance, templates, skills, and review rubrics for generating polished prototypes.",
-  "author": "Buildable contributors",
+  "description": "Plan, generate, and review polished local-first web and mobile prototypes.",
+  "author": {
+    "name": "Buildable contributors",
+    "url": "https://github.com/suntay44"
+  },
+  "homepage": "https://github.com/suntay44/buildable-plugin-skills#readme",
+  "repository": "https://github.com/suntay44/buildable-plugin-skills",
   "license": "MIT",
-  "skills": [
-    {
-      "name": "buildable-planner",
-      "path": "../skills/planner/SKILL.md"
-    },
-    {
-      "name": "buildable-web-builder",
-      "path": "../skills/web-builder/SKILL.md"
-    },
-    {
-      "name": "buildable-mobile-builder",
-      "path": "../skills/mobile-builder/SKILL.md"
-    },
-    {
-      "name": "buildable-reviewer",
-      "path": "../skills/reviewer/SKILL.md"
-    }
+  "keywords": [
+    "app-builder",
+    "local-first",
+    "prototype",
+    "nextjs",
+    "expo"
   ],
-  "resources": [
-    "../bin/buildable.mjs",
-    "../bin/buildable-mcp.mjs",
-    "../.mcp.json",
-    "../cli/README.md",
-    "../docs/install.md",
-    "../core/app-spec-schema.md",
-    "../core/ask-vs-build-policy.md",
-    "../core/build-workflow.md",
-    "../core/classifier.md",
-    "../core/template-spec-schema.md",
-    "../core/archetype-registry.json",
-    "../core/design-system-registry.json",
-    "../core/activation-policy.md",
-    "../core/reference-inputs.mjs",
-    "../core/reference-loading-contract.md",
-    "../core/schemas/app-spec.schema.json",
-    "../core/schemas/archetype-registry.schema.json",
-    "../core/schemas/template-spec.schema.json",
-    "../blocks",
-    "../knowledge",
-    "../templates",
-    "../evals/rubric.md",
-    "../evals/prompts.md"
-  ]
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Buildable",
+    "shortDescription": "Plan, build, and review local-first prototypes.",
+    "longDescription": "Turn a product prompt into a concrete app spec, a runnable local-first Next.js or Expo prototype, and an evidence-based quality review.",
+    "developerName": "Buildable contributors",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/suntay44/buildable-plugin-skills",
+    "defaultPrompt": [
+      "Use Buildable to plan and generate a polished local-first prototype.",
+      "Use Buildable to review this prototype and prioritize the highest-impact fixes."
+    ],
+    "brandColor": "#2563EB"
+  }
 }

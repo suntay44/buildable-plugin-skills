@@ -1,4 +1,4 @@
-display_name: Buildable Mobile Builder
-short_description: Builds local-first Expo prototypes from Buildable specs and templates.
-default_prompt: Generate a polished local mobile prototype from this Buildable app spec.
-
+interface:
+  display_name: "Buildable Mobile Builder"
+  short_description: "Build local-first Expo prototypes from app specs."
+  default_prompt: "Use $buildable-mobile-builder to generate a polished local mobile prototype from this app spec."

@@ -14,10 +14,10 @@ jobs:
     name: Test, check, eval
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
       # The CLI and tests are dependency-free, so no install step is needed.
       - run: npm test
       - run: npm run check
@@ -45,15 +45,17 @@ jobs:
           - { name: job-board, prompt: "Build me a job board with apply forms" }
           - { name: inventory-manager, prompt: "Build me an inventory manager with low-stock alerts" }
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
       - name: Generate runnable starter
         run: node ./bin/buildable.mjs generate "${{ matrix.prompt }}" --out ./.ci-app --json
       - name: Install starter dependencies
         working-directory: ./.ci-app
-        run: npm install --no-audit --no-fund
+        run: npm install --no-fund
+      - name: Audit production dependencies
+        run: npm run audit:starter -- ./.ci-app
       - name: Typecheck
         working-directory: ./.ci-app
         run: npm run typecheck
@@ -74,15 +76,17 @@ jobs:
           - { name: booking, prompt: "Build me a mobile booking app for appointments" }
           - { name: task-manager, prompt: "Build me a mobile task manager" }
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
       - name: Generate Expo starter
         run: node ./bin/buildable.mjs generate "${{ matrix.prompt }}" --out ./.ci-mobile --json
       - name: Install starter dependencies
         working-directory: ./.ci-mobile
-        run: npm install --no-audit --no-fund
+        run: npm install --no-fund
+      - name: Audit production dependencies
+        run: npm run audit:starter -- ./.ci-mobile
       # Native build needs an Expo toolchain/simulator; typecheck is the CI-safe gate.
       - name: Typecheck
         working-directory: ./.ci-mobile

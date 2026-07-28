@@ -1,4 +1,4 @@
-display_name: Buildable Planner
-short_description: Classifies app prompts and creates local-first Buildable app specs.
-default_prompt: Plan a local-first app prototype from my prompt using Buildable.
-
+interface:
+  display_name: "Buildable Planner"
+  short_description: "Classify prompts and create local-first app specs."
+  default_prompt: "Use $buildable-planner to plan a local-first app prototype from my prompt."

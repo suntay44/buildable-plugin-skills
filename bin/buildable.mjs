@@ -1619,6 +1619,7 @@ function check() {
     ".cursor/commands/buildable-design.md",
     ".cursor/commands/buildable-status.md",
     ".codex-plugin/plugin.json",
+    ".agents/plugins/marketplace.json",
     ".claude-plugin/plugin.json",
     ".claude-plugin/marketplace.json",
     "commands/buildable-plan.md",
@@ -1628,7 +1629,8 @@ function check() {
     "commands/buildable-init.md",
     "commands/buildable-preview.md",
     "commands/buildable-status.md",
-    "evals/fixtures.json"
+    "evals/fixtures.json",
+    "evals/skill-activation.json"
   ];
   const missing = required.filter((path) => !existsSync(join(root, path)));
   const templateIssues = [];
@@ -1658,32 +1660,69 @@ function check() {
     : null;
   const pluginIssues = [];
   if (plugin) {
-    for (const skill of plugin.skills ?? []) {
-      const skillPath = relative(root, join(root, ".codex-plugin", skill.path));
-      if (!existsSync(join(root, skillPath))) {
-        pluginIssues.push(`missing skill ${skill.name}: ${skill.path}`);
+    if (plugin.name !== "buildable") pluginIssues.push("plugin name must be buildable");
+    if (plugin.version !== packageJson.version) {
+      pluginIssues.push(`plugin version ${plugin.version ?? "(missing)"} does not match package ${packageJson.version}`);
+    }
+    if (typeof plugin.author !== "object" || !plugin.author?.name) {
+      pluginIssues.push("plugin author must be an object with a name");
+    }
+    if (plugin.schema_version !== undefined || plugin.display_name !== undefined || plugin.resources !== undefined) {
+      pluginIssues.push("plugin manifest contains retired schema fields");
+    }
+    const manifestPath = (value, field) => {
+      if (typeof value !== "string" || !value.startsWith("./")) {
+        pluginIssues.push(`${field} must be a plugin-root path beginning with ./`);
+        return null;
+      }
+      const resolved = join(root, value.slice(2));
+      if (!existsSync(resolved)) pluginIssues.push(`${field} path does not exist: ${value}`);
+      return resolved;
+    };
+    const skillsRoot = manifestPath(plugin.skills, "skills");
+    if (skillsRoot) {
+      for (const skill of ["planner", "web-builder", "mobile-builder", "reviewer"]) {
+        if (!existsSync(join(skillsRoot, skill, "SKILL.md"))) {
+          pluginIssues.push(`missing bundled skill ${skill}`);
+        }
       }
     }
-    const resourceRoots = (plugin.resources ?? []).map((resource) => relative(root, join(root, ".codex-plugin", resource)));
-    for (const resource of plugin.resources ?? []) {
-      if (!existsSync(join(root, relative(root, join(root, ".codex-plugin", resource))))) {
-        pluginIssues.push(`missing resource ${resource}`);
+    const mcpPath = manifestPath(plugin.mcpServers, "mcpServers");
+    if (mcpPath && existsSync(mcpPath)) {
+      const mcpConfig = JSON.parse(readFileSync(mcpPath, "utf8"));
+      const servers = mcpConfig.mcpServers ?? mcpConfig.mcp_servers ?? mcpConfig;
+      if (!servers.buildable || typeof servers.buildable.command !== "string") {
+        pluginIssues.push("bundled MCP config is missing the buildable stdio server");
       }
     }
-    // The manifest must expose every file a plan can reference (loading discipline is
-    // enforced at runtime by appSpec.referenceLoadingContract, not by withholding files).
-    const covered = (reference) => resourceRoots.some((res) => reference === res || reference.startsWith(`${res}/`));
-    const planReferences = new Set();
-    for (const template of templates) {
-      for (const reference of readJson(template.path).references ?? []) planReferences.add(reference);
+    const installSurface = plugin.interface;
+    for (const field of ["displayName", "shortDescription", "longDescription", "developerName", "category"]) {
+      if (typeof installSurface?.[field] !== "string" || !installSurface[field].trim()) {
+        pluginIssues.push(`interface.${field} must be a non-empty string`);
+      }
     }
-    for (const entry of archetypeRegistry.archetypes) planReferences.add(`knowledge/archetypes/${entry.id}.md`);
-    for (const block of blockRegistry.blocks ?? []) {
-      for (const reference of block.references ?? []) planReferences.add(reference);
+    if (!Array.isArray(installSurface?.capabilities) || installSurface.capabilities.length === 0) {
+      pluginIssues.push("interface.capabilities must be a non-empty array");
     }
-    planReferences.add("knowledge/design-playbooks/design-system-selection.md");
-    for (const reference of planReferences) {
-      if (!covered(reference)) pluginIssues.push(`codex resources do not expose ${reference}`);
+    if (!Array.isArray(installSurface?.defaultPrompt) || installSurface.defaultPrompt.length === 0) {
+      pluginIssues.push("interface.defaultPrompt must contain at least one starter prompt");
+    }
+  }
+
+  const codexMarketplaceIssues = [];
+  if (existsSync(join(root, ".agents/plugins/marketplace.json"))) {
+    const marketplace = readJson(".agents/plugins/marketplace.json");
+    if (!marketplace.name || !marketplace.interface?.displayName) {
+      codexMarketplaceIssues.push("marketplace requires name and interface.displayName");
+    }
+    for (const entry of marketplace.plugins ?? []) {
+      const source = typeof entry.source === "string" ? entry.source : entry.source?.path;
+      if (typeof source !== "string" || !source.startsWith("./") || !existsSync(join(root, source))) {
+        codexMarketplaceIssues.push(`marketplace plugin ${entry.name}: invalid local source ${source ?? "(missing)"}`);
+      }
+      if (!entry.policy?.installation || !entry.policy?.authentication || !entry.category) {
+        codexMarketplaceIssues.push(`marketplace plugin ${entry.name}: missing install policy or category`);
+      }
     }
   }
 
@@ -1718,6 +1757,7 @@ function check() {
     blockIssues.length === 0 &&
     templateIssues.length === 0 &&
     pluginIssues.length === 0 &&
+    codexMarketplaceIssues.length === 0 &&
     claudePluginIssues.length === 0;
   const payload = {
     ok,
@@ -1730,6 +1770,7 @@ function check() {
       runnableTemplates: templateStatusCounts.runnable ?? 0,
       plannedTemplates: templateStatusCounts.planned ?? 0,
       codexPlugin: Boolean(plugin),
+      codexMarketplace: existsSync(join(root, ".agents/plugins/marketplace.json")),
       claudePlugin: existsSync(join(root, ".claude-plugin/plugin.json"))
     },
     missing,
@@ -1738,6 +1779,7 @@ function check() {
     blockIssues,
     templateIssues,
     pluginIssues,
+    codexMarketplaceIssues,
     claudePluginIssues
   };
 
@@ -1766,6 +1808,7 @@ function check() {
     for (const issue of blockIssues) console.error(`  blocks: ${issue}`);
     for (const issue of templateIssues) console.error(`  template: ${issue}`);
     for (const issue of pluginIssues) console.error(`  plugin: ${issue}`);
+    for (const issue of codexMarketplaceIssues) console.error(`  codex-marketplace: ${issue}`);
     for (const issue of claudePluginIssues) console.error(`  claude-plugin: ${issue}`);
   }
 
@@ -1822,15 +1865,53 @@ function specQualityScore(appSpec) {
   return { score: Number(score.toFixed(3)), components };
 }
 
+function classifySkillActivation(prompt) {
+  const normalized = String(prompt ?? "").trim().toLowerCase();
+  if (!normalized) return null;
+
+  const explicitSkills = [
+    ["buildable-planner", /\$?buildable[- ]planner/],
+    ["buildable-web-builder", /\$?buildable[- ]web[- ]builder/],
+    ["buildable-mobile-builder", /\$?buildable[- ]mobile[- ]builder/],
+    ["buildable-reviewer", /\$?buildable[- ]reviewer/]
+  ];
+  for (const [skill, pattern] of explicitSkills) {
+    if (pattern.test(normalized)) return skill;
+  }
+
+  const buildableContext = /\bbuildable\b|\.buildable\/|app spec|phase-plan\.(json|toon)|local-first (app|prototype)/.test(normalized);
+  const reviewIntent = /\b(review|audit|check|assess|validate)\b/.test(normalized);
+  const reviewScope = /\b(prototype|app|workflow|state coverage|accessibility|responsiveness|quality rubric|local-first)\b/.test(normalized);
+  if (buildableContext && reviewIntent && reviewScope) return "buildable-reviewer";
+
+  const buildIntent = /\b(build|generate|implement|adapt|create)\b/.test(normalized);
+  const mobileTarget = /\b(mobile|expo|react native|touch-first)\b/.test(normalized);
+  const webTarget = /\b(web|next\.?js|dashboard|responsive)\b/.test(normalized);
+  if (buildableContext && buildIntent && mobileTarget) return "buildable-mobile-builder";
+  if (buildableContext && buildIntent && webTarget) return "buildable-web-builder";
+
+  const planningIntent = /\b(plan|planning|classify|classification|archetype|app spec|phase plan|product idea)\b/.test(normalized);
+  const appIdea = /\b(app|prototype|product idea)\b/.test(normalized);
+  const targetIsUnclear = /\b(do not know|not sure|unsure|whether)\b.*\b(web|mobile)\b/.test(normalized);
+  if ((planningIntent && appIdea) || targetIsUnclear || (buildIntent && appIdea && !mobileTarget && !webTarget)) {
+    return "buildable-planner";
+  }
+
+  return null;
+}
+
 function runEval() {
   const fixturesPath = join(root, "evals/fixtures.json");
-  if (!existsSync(fixturesPath)) {
-    console.error("Missing evals/fixtures.json");
+  const activationPath = join(root, "evals/skill-activation.json");
+  if (!existsSync(fixturesPath) || !existsSync(activationPath)) {
+    if (!existsSync(fixturesPath)) console.error("Missing evals/fixtures.json");
+    if (!existsSync(activationPath)) console.error("Missing evals/skill-activation.json");
     process.exitCode = 1;
     return;
   }
 
   const fixtures = JSON.parse(readFileSync(fixturesPath, "utf8")).fixtures ?? [];
+  const activationCases = JSON.parse(readFileSync(activationPath, "utf8")).cases ?? [];
   const totalCorpus = corpusBytes();
   const results = [];
 
@@ -1877,8 +1958,26 @@ function runEval() {
   const avgReferences = results.length ? results.reduce((sum, r) => sum + r.references, 0) / results.length : 0;
   const avgRatio = results.length ? results.reduce((sum, r) => sum + r.contextLoadRatio, 0) / results.length : 0;
   const avgQuality = results.length ? results.reduce((sum, r) => sum + r.specQuality, 0) / results.length : 0;
+  const activationResults = activationCases.map((fixture) => {
+    const actualSkill = classifySkillActivation(fixture.prompt);
+    return {
+      ...fixture,
+      actualSkill,
+      ok: actualSkill === fixture.expectedSkill
+    };
+  });
+  const activationPassed = activationResults.filter((result) => result.ok).length;
+  const activationCategoryCounts = activationResults.reduce((counts, result) => {
+    counts[result.category] = (counts[result.category] ?? 0) + 1;
+    return counts;
+  }, {});
+  const activationSkillCounts = activationResults.reduce((counts, result) => {
+    const skill = result.expectedSkill ?? "none";
+    counts[skill] = (counts[skill] ?? 0) + 1;
+    return counts;
+  }, {});
   const payload = {
-    ok: passed === results.length,
+    ok: passed === results.length && activationPassed === activationResults.length,
     fixtures: results.length,
     passed,
     failed: results.length - passed,
@@ -1891,6 +1990,14 @@ function runEval() {
     specQuality: {
       avgScore: Number(avgQuality.toFixed(3)),
       minScore: results.length ? Number(Math.min(...results.map((r) => r.specQuality)).toFixed(3)) : 0
+    },
+    skillActivation: {
+      fixtures: activationResults.length,
+      passed: activationPassed,
+      failed: activationResults.length - activationPassed,
+      categoryCounts: activationCategoryCounts,
+      skillCounts: activationSkillCounts,
+      results: activationResults
     },
     results
   };
@@ -1929,6 +2036,11 @@ function runEval() {
     console.log(`Avg references loaded per plan: ${payload.efficiency.avgReferencesLoaded}`);
     console.log(`Avg bundled-brain bytes loaded: ${(payload.efficiency.avgContextLoadRatio * 100).toFixed(1)}% (${payload.efficiency.avgContextSavedPercent}% less than loading the whole brain)`);
     console.log(`Avg spec quality: ${payload.specQuality.avgScore} (min ${payload.specQuality.minScore})`);
+    console.log(`Skill activation: ${activationPassed}/${activationResults.length} fixtures passed`);
+    for (const result of activationResults.filter((entry) => !entry.ok)) {
+      console.log(`  [FAIL] ${result.prompt}`);
+      console.log(`         expected ${result.expectedSkill ?? "none"}, got ${result.actualSkill ?? "none"}`);
+    }
 
     if (payload.comparison) {
       const { buildable } = payload.comparison.perPromptAverage;

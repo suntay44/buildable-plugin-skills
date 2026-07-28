@@ -1,0 +1,19 @@
+version: 2
+
+updates:
+  - package-ecosystem: "npm"
+    directories:
+      - "/"
+      - "/templates/web/*/starter"
+      - "/templates/mobile/*/starter"
+    schedule:
+      interval: "weekly"
+    groups:
+      starter-dependencies:
+        group-by: "dependency-name"
+    open-pull-requests-limit: 10
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"

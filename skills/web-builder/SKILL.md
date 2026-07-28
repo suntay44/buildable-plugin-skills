@@ -1,6 +1,6 @@
 ---
 name: buildable-web-builder
-description: Use when generating or adapting local-first web app prototypes from Buildable app specs, archetypes, UI patterns, design playbooks, and golden templates.
+description: Generate or adapt a local-first Buildable web prototype from an app spec, archetype, UI pattern, design playbook, or golden template. Use for Buildable web/Next.js implementation; do not use for ordinary frontend debugging or unrelated website edits.
 ---
 
 # Buildable Web Builder Skill
@@ -8,10 +8,6 @@ description: Use when generating or adapting local-first web app prototypes from
 Use this skill to generate or adapt local web prototypes.
 
 Resolve all referenced paths from the Buildable plugin or repository root.
-
-## Activation
-
-Use only when the user is building or adapting a web app/prototype. Do not activate for unrelated frontend debugging unless the user asks for Buildable guidance.
 
 ## Reference Loading Contract
 

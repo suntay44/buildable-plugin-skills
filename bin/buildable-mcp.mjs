@@ -8,8 +8,10 @@ import { createInterface } from "node:readline";
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const cli = join(root, "bin", "buildable.mjs");
 const packageJson = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
+const SUPPORTED_PROTOCOL_VERSIONS = ["2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05"];
+const LATEST_PROTOCOL_VERSION = SUPPORTED_PROTOCOL_VERSIONS[0];
 
-const tools = [
+const toolDefinitions = [
   {
     name: "buildable_plan",
     description: "Classify an app idea and return a local-first Buildable phase plan/app spec with exact references to load.",
@@ -143,6 +145,68 @@ const tools = [
   }
 ];
 
+const outputSchema = {
+  type: "object",
+  properties: {
+    ok: { type: "boolean" },
+    exitCode: { anyOf: [{ type: "integer" }, { type: "null" }] },
+    workspace: { type: "string" },
+    result: {},
+    stderr: { type: "string" }
+  },
+  required: ["ok", "exitCode", "workspace", "result", "stderr"],
+  additionalProperties: false
+};
+
+const toolMetadata = {
+  buildable_plan: {
+    title: "Plan a Buildable Prototype",
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false }
+  },
+  buildable_generate: {
+    title: "Generate a Buildable Prototype",
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: false }
+  },
+  buildable_design: {
+    title: "Create a Buildable Design Brief",
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false }
+  },
+  buildable_review: {
+    title: "Review a Buildable Prototype",
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false }
+  },
+  buildable_init: {
+    title: "Initialize a Buildable Workspace",
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false }
+  },
+  buildable_status: {
+    title: "Inspect Buildable Workflow Status",
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false }
+  },
+  buildable_list: {
+    title: "List Buildable Templates",
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false }
+  },
+  buildable_check: {
+    title: "Check the Buildable Installation",
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false }
+  },
+  buildable_eval: {
+    title: "Evaluate Buildable Routing",
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false }
+  },
+  buildable_preview: {
+    title: "Preview a Buildable Web App",
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false }
+  }
+};
+
+const tools = toolDefinitions.map((tool) => ({
+  ...tool,
+  ...toolMetadata[tool.name],
+  outputSchema
+}));
+
 function workspaceFor(args = {}) {
   const value = args.workspace ?? process.env.BUILDABLE_WORKSPACE ?? process.cwd();
   return isAbsolute(value) ? value : join(process.cwd(), value);
@@ -248,8 +312,10 @@ function response(id, result) {
   process.stdout.write(`${JSON.stringify({ jsonrpc: "2.0", id, result })}\n`);
 }
 
-function errorResponse(id, code, message) {
-  process.stdout.write(`${JSON.stringify({ jsonrpc: "2.0", id, error: { code, message } })}\n`);
+function errorResponse(id, code, message, data) {
+  const error = { code, message };
+  if (data !== undefined) error.data = data;
+  process.stdout.write(`${JSON.stringify({ jsonrpc: "2.0", id, error })}\n`);
 }
 
 function toolResult(payload) {
@@ -265,6 +331,35 @@ function toolResult(payload) {
   };
 }
 
+function validateToolArguments(tool, args) {
+  if (!args || typeof args !== "object" || Array.isArray(args)) {
+    throw new TypeError("Tool arguments must be an object.");
+  }
+  const schema = tool.inputSchema;
+  for (const field of schema.required ?? []) {
+    if (args[field] === undefined) throw new TypeError(`Missing required tool argument: ${field}`);
+  }
+  if (schema.additionalProperties === false) {
+    for (const field of Object.keys(args)) {
+      if (!schema.properties?.[field]) throw new TypeError(`Unknown tool argument: ${field}`);
+    }
+  }
+  for (const [field, value] of Object.entries(args)) {
+    const property = schema.properties?.[field];
+    if (!property || value === undefined) continue;
+    if (property.type === "array") {
+      if (!Array.isArray(value) || (property.items?.type === "string" && value.some((entry) => typeof entry !== "string"))) {
+        throw new TypeError(`Tool argument ${field} must be an array of strings.`);
+      }
+    } else if (property.type && typeof value !== property.type) {
+      throw new TypeError(`Tool argument ${field} must be a ${property.type}.`);
+    }
+  }
+}
+
+let initializeResponded = false;
+let clientReady = false;
+
 async function handle(message) {
   if (!message || typeof message !== "object") return;
   const { id, method, params = {} } = message;
@@ -272,10 +367,30 @@ async function handle(message) {
 
   try {
     if (method === "initialize") {
+      if (initializeResponded) {
+        errorResponse(id, -32600, "Initialize may only be requested once.");
+        return;
+      }
+      if (typeof params.protocolVersion !== "string") {
+        errorResponse(id, -32602, "initialize requires params.protocolVersion.");
+        return;
+      }
+      const protocolVersion = SUPPORTED_PROTOCOL_VERSIONS.includes(params.protocolVersion)
+        ? params.protocolVersion
+        : LATEST_PROTOCOL_VERSION;
+      initializeResponded = true;
       response(id, {
-        protocolVersion: params.protocolVersion ?? "2024-11-05",
-        serverInfo: { name: "buildable", version: packageJson.version },
-        capabilities: { tools: {} }
+        protocolVersion,
+        serverInfo: {
+          name: "buildable",
+          title: "Buildable Local App Builder",
+          version: packageJson.version,
+          description: "Plan, generate, inspect, and review local-first web and mobile prototypes.",
+          websiteUrl: "https://github.com/suntay44/buildable-plugin-skills"
+        },
+        capabilities: { tools: { listChanged: false } },
+        instructions:
+          "Use buildable_plan before generation, load only appSpec.references, and use buildable_review after implementation."
       });
       return;
     }
@@ -283,14 +398,31 @@ async function handle(message) {
       if (!isNotification) response(id, {});
       return;
     }
-    if (method === "notifications/initialized") return;
+    if (method === "notifications/initialized") {
+      if (initializeResponded) clientReady = true;
+      return;
+    }
+    if (method === "notifications/cancelled") return;
+    if (!clientReady) {
+      if (!isNotification) errorResponse(id, -32002, "Server is not initialized.");
+      return;
+    }
     if (method === "tools/list") {
       response(id, { tools });
       return;
     }
     if (method === "tools/call") {
       const tool = tools.find((entry) => entry.name === params.name);
-      if (!tool) throw new Error(`Unknown tool: ${params.name}`);
+      if (!tool) {
+        errorResponse(id, -32602, `Unknown tool: ${params.name}`);
+        return;
+      }
+      try {
+        validateToolArguments(tool, params.arguments ?? {});
+      } catch (error) {
+        errorResponse(id, -32602, error instanceof Error ? error.message : String(error));
+        return;
+      }
       response(id, toolResult(runBuildable(params.name, params.arguments ?? {})));
       return;
     }

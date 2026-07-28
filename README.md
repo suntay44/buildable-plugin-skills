@@ -1,5 +1,9 @@
+# Buildable
+
+Buildable is an open-source, local-first app-builder plugin and skills pack for Codex, Claude Code, and Cursor. It turns a product idea into a scoped app spec, a runnable Next.js or Expo prototype, and a quality review without requiring a hosted platform, backend, or API key.
+
 <div align="center">
-<img width="1927" height="816" alt="ChatGPT Image Jun 3, 2026, 03_08_16 AM" src="https://github.com/user-attachments/assets/3d356b2e-6c44-4c99-bbc7-7c6f488c0c01" />
+<img width="1927" height="816" alt="Buildable local-first AI app builder generating a polished web application" src="https://github.com/user-attachments/assets/3d356b2e-6c44-4c99-bbc7-7c6f488c0c01" />
 
 ### ⭐ Stars are appreciated!
 
@@ -36,6 +40,7 @@ It does **not** replace your agent or run as a hosted platform. It is a file-bas
 - [How much it guides](#how-much-it-guides)
 - [Token efficiency](#token-efficiency)
 - [Supported app types](#supported-app-types)
+- [FAQ](#faq)
 - [Non-goals](#non-goals)
 - [Stability](#stability)
 - [Roadmap](ROADMAP.md)
@@ -74,7 +79,7 @@ Buildable is a **product-structure compiler, compact UI/UX brain, and quality ga
 - **Use it when** you want consistent, real prototypes for common app types — fast, in your own stack, no lock-in.
 - **Skip it when** you need a one-off component or throwaway script; a raw agent is enough.
 
-**Proof it's real, not a prompt wrapper:** every one of the 15 starters is built and type-checked in CI, the CLI is covered by 77 tests with zero runtime dependencies, and each plan loads only ~10% of the bundled brain. See it yourself — `buildable eval --compare` prints the numbers, and the [generated screenshots](#what-it-generates) are unedited single-prompt output.
+**Proof it's real, not a prompt wrapper:** every one of the 15 starters is built and type-checked in CI, the CLI is covered by 79 tests with zero runtime dependencies, and each plan loads only ~10% of the bundled brain. See it yourself — `buildable eval --compare` prints the numbers, and the [generated screenshots](#what-it-generates) are unedited single-prompt output.
 
 ## Example workflows
 
@@ -190,7 +195,14 @@ Use the slash commands in `.cursor/commands/` plus the rule at `.cursor/rules/bu
 
 ### Codex
 
-Load `.codex-plugin/plugin.json` when your Codex surface supports local plugins/skills. For desktop or tool clients that cannot run project slash commands directly, register the MCP bridge shown below.
+Add the repository as a Codex marketplace source:
+
+```bash
+codex plugin marketplace add suntay44/buildable-plugin-skills
+codex plugin marketplace list
+```
+
+Then select that marketplace in the ChatGPT desktop app and install **Buildable**. The repository includes the current `.codex-plugin/plugin.json`, canonical `.agents/plugins/marketplace.json`, four auto-discovered skills, and a bundled MCP server. For clients that cannot install plugins, use the MCP bridge shown below.
 
 ## CLI commands
 
@@ -390,6 +402,32 @@ buildable eval --compare
 
 **15 generate runnable, build-verified code today** — task managers, CRMs, dashboards, marketplaces, notes, ecommerce admin, landing pages, portfolios, blogs, recipe apps, job boards, inventory, plus mobile habit-tracker / booking / task-manager. On top of that, **61 archetypes are recognized and planned** (tag-matched via `core/archetype-registry.json`): the long tail still gets a full app spec + implementation plan, not a blank slate. See the full list and runnable status in **[CONTRIBUTING.md](CONTRIBUTING.md)**.
 
+## FAQ
+
+### What is Buildable?
+
+Buildable is a local plugin, skills pack, and CLI that gives coding agents reusable product structure: app archetypes, scoped references, design guidance, runnable starters, and a review gate.
+
+### What does Buildable generate?
+
+It generates local-first Next.js web prototypes and Expo/React Native mobile prototypes from a saved app spec. Fifteen archetypes have runnable starters today; the full catalog of 61 archetypes can still produce a scoped plan and implementation pack.
+
+### Does Buildable require a cloud service, backend, or API key?
+
+No. Planning, generation, evaluation, and review run locally. Buildable uses mock or local data by default and adds an external service only when the user explicitly requests one.
+
+### How does Buildable keep agent context small?
+
+The planner writes exact file paths to `appSpec.references`. Builder and reviewer skills load only those selected references and the chosen starter instead of reading every template and knowledge file.
+
+### Does Buildable deploy apps?
+
+No. Deployment, hosted previews, managed databases, billing, and telemetry are intentionally outside the plugin’s default scope. The generated code remains in your workspace.
+
+### How do I install Buildable in Codex or ChatGPT?
+
+Run `codex plugin marketplace add suntay44/buildable-plugin-skills`, confirm the source with `codex plugin marketplace list`, then install Buildable from that marketplace in the ChatGPT desktop app. See [the complete local installation guide](docs/install.md) for Codex, Claude Code, Cursor, CLI, and MCP setup.
+
 ## Non-goals
 
 **Buildable is and will remain a local plugin/skills layer for coding agents — not a hosted product.** It does **not** include billing, accounts, cloud previews, managed databases, hosted deployments, telemetry, or a central template service, and it never sends your code anywhere. A user who names their own backend or auth provider is supported — but always behind a swappable local seam, never as a platform dependency. See [Explicitly out of scope](ROADMAP.md) in the roadmap.
@@ -416,7 +454,8 @@ skills/         Agent skills: planner, web-builder, mobile-builder, reviewer
 commands/       Claude Code slash commands
 adapters/       Codex, Claude, Cursor integration notes
 bin/            Dependency-free CLI entrypoint
-scripts/        Maintenance scripts (starter config sync)
+scripts/        Maintenance scripts (starter sync and dependency audit)
+.agents/        Codex marketplace metadata
 .claude-plugin/ Claude Code plugin manifest + local marketplace
 .codex-plugin/  Codex Desktop plugin manifest
 .cursor/        Cursor rule and slash commands

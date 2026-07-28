@@ -1,0 +1,140 @@
+{
+  "description": "Deterministic activation-contract fixtures for Buildable skills. Positive, indirect, incomplete, negative, and edge prompts keep the four skills useful without activating them for unrelated work.",
+  "cases": [
+    {
+      "prompt": "Use $buildable-planner to plan a local-first CRM for a small sales team.",
+      "expectedSkill": "buildable-planner",
+      "category": "direct"
+    },
+    {
+      "prompt": "Buildable Planner: classify my meal-planning app and create the app spec.",
+      "expectedSkill": "buildable-planner",
+      "category": "direct"
+    },
+    {
+      "prompt": "I want to build a habit tracker but I do not know whether it should be web or mobile.",
+      "expectedSkill": "buildable-planner",
+      "category": "indirect"
+    },
+    {
+      "prompt": "Turn this product idea into an archetype and phased prototype plan: a volunteer shift scheduler.",
+      "expectedSkill": "buildable-planner",
+      "category": "indirect"
+    },
+    {
+      "prompt": "Build me a local-first app for tracking subscriptions.",
+      "expectedSkill": "buildable-planner",
+      "category": "incomplete"
+    },
+    {
+      "prompt": "Use $buildable-web-builder to implement the saved app spec.",
+      "expectedSkill": "buildable-web-builder",
+      "category": "direct"
+    },
+    {
+      "prompt": "Buildable Web Builder: generate the selected CRM starter.",
+      "expectedSkill": "buildable-web-builder",
+      "category": "direct"
+    },
+    {
+      "prompt": "The Buildable plan is approved. Implement it as a local-first Next.js prototype.",
+      "expectedSkill": "buildable-web-builder",
+      "category": "indirect"
+    },
+    {
+      "prompt": "Adapt this Buildable web app spec into a responsive dashboard prototype.",
+      "expectedSkill": "buildable-web-builder",
+      "category": "indirect"
+    },
+    {
+      "prompt": "Generate the web prototype from .buildable/phase-plan.json.",
+      "expectedSkill": "buildable-web-builder",
+      "category": "edge"
+    },
+    {
+      "prompt": "Use $buildable-mobile-builder to implement this Expo app spec.",
+      "expectedSkill": "buildable-mobile-builder",
+      "category": "direct"
+    },
+    {
+      "prompt": "Buildable Mobile Builder: generate the selected habit-tracker starter.",
+      "expectedSkill": "buildable-mobile-builder",
+      "category": "direct"
+    },
+    {
+      "prompt": "The Buildable plan is approved. Build the local-first React Native prototype.",
+      "expectedSkill": "buildable-mobile-builder",
+      "category": "indirect"
+    },
+    {
+      "prompt": "Adapt the saved app spec into a touch-first Expo app.",
+      "expectedSkill": "buildable-mobile-builder",
+      "category": "indirect"
+    },
+    {
+      "prompt": "Generate the mobile prototype from .buildable/phase-plan.toon.",
+      "expectedSkill": "buildable-mobile-builder",
+      "category": "edge"
+    },
+    {
+      "prompt": "Use $buildable-reviewer to audit this prototype against its app spec.",
+      "expectedSkill": "buildable-reviewer",
+      "category": "direct"
+    },
+    {
+      "prompt": "Buildable Reviewer: check state coverage, accessibility, and responsiveness.",
+      "expectedSkill": "buildable-reviewer",
+      "category": "direct"
+    },
+    {
+      "prompt": "Review the generated Buildable app against the local-first quality rubric.",
+      "expectedSkill": "buildable-reviewer",
+      "category": "indirect"
+    },
+    {
+      "prompt": "Audit our Buildable Next.js prototype for missing workflows and UI states.",
+      "expectedSkill": "buildable-reviewer",
+      "category": "edge"
+    },
+    {
+      "prompt": "Can you help?",
+      "expectedSkill": null,
+      "category": "incomplete"
+    },
+    {
+      "prompt": "Make it better.",
+      "expectedSkill": null,
+      "category": "incomplete"
+    },
+    {
+      "prompt": "Fix this TypeScript type error in my API client.",
+      "expectedSkill": null,
+      "category": "negative"
+    },
+    {
+      "prompt": "Debug a React Native crash when opening the settings screen.",
+      "expectedSkill": null,
+      "category": "negative"
+    },
+    {
+      "prompt": "Review this pull request for race conditions.",
+      "expectedSkill": null,
+      "category": "negative"
+    },
+    {
+      "prompt": "Create a project plan for migrating our Kubernetes cluster.",
+      "expectedSkill": null,
+      "category": "negative"
+    },
+    {
+      "prompt": "Change the button color in this Next.js component.",
+      "expectedSkill": null,
+      "category": "negative"
+    },
+    {
+      "prompt": "Audit the repository dependencies and update the README.",
+      "expectedSkill": null,
+      "category": "edge"
+    }
+  ]
+}

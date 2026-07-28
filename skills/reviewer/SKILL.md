@@ -1,6 +1,6 @@
 ---
 name: buildable-reviewer
-description: Use when reviewing generated Buildable prototypes for build correctness, UI completeness, state coverage, accessibility, responsiveness, and local-first discipline.
+description: Review a Buildable prototype against its app spec and quality rubric for build correctness, workflow completeness, state coverage, accessibility, responsiveness, and local-first discipline. Do not use for ordinary code review, pull-request review, or unrelated repository audits.
 ---
 
 # Buildable Reviewer Skill
@@ -10,10 +10,6 @@ Use this skill to review generated prototypes against the app spec and quality r
 Resolve all referenced paths from the Buildable plugin or repository root.
 
 `buildable review` is a static/local quality gate. Treat it as a strong first pass for structure, local-first guardrails, source coverage, responsive-layout risk, accessibility signals, and optional build checks; it does not replace manual QA, real device/simulator checks for mobile, or browser/screenshot review when visuals matter.
-
-## Activation
-
-Use only when reviewing an app/prototype against Buildable specs or rubrics. Do not activate globally for ordinary code review.
 
 ## Reference Loading Contract
 

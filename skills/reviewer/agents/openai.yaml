@@ -1,4 +1,4 @@
-display_name: Buildable Reviewer
-short_description: Reviews generated prototypes for completeness, quality, and local-first discipline.
-default_prompt: Review this Buildable prototype against its spec and rubric.
-
+interface:
+  display_name: "Buildable Reviewer"
+  short_description: "Review prototypes for quality and local-first discipline."
+  default_prompt: "Use $buildable-reviewer to review this prototype against its app spec and rubric."
