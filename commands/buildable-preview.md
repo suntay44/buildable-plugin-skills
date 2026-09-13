@@ -11,7 +11,11 @@ Visually verify the prototype at: **${ARGUMENTS:-.}**
 2. Render and capture it:
 
    ```bash
-   buildable preview "${ARGUMENTS:-.}" --url http://localhost:3000 2>/dev/null || node "${CLAUDE_PLUGIN_ROOT:-.}/bin/buildable.mjs" preview "${ARGUMENTS:-.}" --url http://localhost:3000
+   if command -v buildable >/dev/null 2>&1; then
+     buildable preview "${ARGUMENTS:-.}" --url http://localhost:3000
+   else
+     node "${CLAUDE_PLUGIN_ROOT:-.}/bin/buildable.mjs" preview "${ARGUMENTS:-.}" --url http://localhost:3000
+   fi
    ```
 
    - This needs Playwright. If preview reports it is skipped, install it once: `npm i -D playwright && npx playwright install chromium`. If you have your own preview/screenshot tool, use that instead.

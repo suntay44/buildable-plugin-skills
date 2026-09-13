@@ -17,7 +17,7 @@
     "expo"
   ],
   "skills": "./skills/",
-  "mcpServers": "./.mcp.json",
+  "mcpServers": "./.codex-plugin/mcp.json",
   "interface": {
     "displayName": "Buildable",
     "shortDescription": "Plan, build, and review local-first prototypes.",

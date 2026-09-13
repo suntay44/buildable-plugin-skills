@@ -3,7 +3,7 @@
     "buildable": {
       "command": "node",
       "args": [
-        "./bin/buildable-mcp.mjs"
+        "${CLAUDE_PLUGIN_ROOT}/bin/buildable-mcp.mjs"
       ]
     }
   }

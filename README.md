@@ -20,7 +20,7 @@ It does **not** replace your agent or run as a hosted platform. It is a file-bas
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Works with Claude Code](https://img.shields.io/badge/Claude%20Code-Plugin-darkorange)](https://claude.ai/code)
 [![Works with Codex](https://img.shields.io/badge/Codex-Plugin-blue)](https://chatgpt.com/codex)
-[![Works with Cursor](https://img.shields.io/badge/Cursor-Plugin-black)](https://cursor.sh)
+[![Works with Cursor](https://img.shields.io/badge/Cursor-Rules%20%26%20MCP-black)](https://cursor.sh)
 [![Expo React Native](https://img.shields.io/badge/Target-Expo%20React%20Native-4630EB)](https://expo.dev)
 
 <br />
@@ -79,7 +79,7 @@ Buildable is a **product-structure compiler, compact UI/UX brain, and quality ga
 - **Use it when** you want consistent, real prototypes for common app types — fast, in your own stack, no lock-in.
 - **Skip it when** you need a one-off component or throwaway script; a raw agent is enough.
 
-**Proof it's real, not a prompt wrapper:** every one of the 15 starters is built and type-checked in CI, the CLI is covered by 79 tests with zero runtime dependencies, and each plan loads only ~10% of the bundled brain. See it yourself — `buildable eval --compare` prints the numbers, and the [generated screenshots](#what-it-generates) are unedited single-prompt output.
+**Proof it's real, not a prompt wrapper:** every one of the 15 starters is built and type-checked in CI, the CLI has a regression test suite and zero runtime dependencies, and each plan loads only ~10% of the bundled brain. See it yourself — `buildable eval --compare` prints the numbers, and the [generated screenshots](#what-it-generates) are unedited single-prompt output.
 
 ## Example workflows
 
@@ -104,6 +104,8 @@ What happens:
 - `review` audits the generated app against the saved spec, local-first rules, UI completeness, accessibility signals, responsive layout, and optional build output.
 
 Behind the scenes this distinction is explicit: `plan` outputs a `buildable-phase-plan` with `workflowStage: decision`; `generate` writes a `buildable-generated-project` config with `workflowStage: generated-files` and `sourcePlan` set to either `saved-phase-plan` or `inline-prompt-plan`.
+
+Use `plan --compact` for agent handoffs, then read the saved TOON summary and only the selected references. Plans flag missing explicit files; saved-plan reuse warns when bundled guidance or input metadata changes while retaining your decisions. See [planning improvements and validation](docs/planning-improvements.md) for the limits and remaining work.
 
 ### Existing app
 
@@ -137,8 +139,11 @@ The recommended flow is **Plan > Design > Generate > Review**, but the commands 
 
 ## Quick start
 
+Requires Node.js 22.13+ and Git. Start from the public repository in a new directory:
+
 ```bash
-npm install
+git clone https://github.com/suntay44/buildable-plugin-skills.git
+cd buildable-plugin-skills
 npm link
 buildable check
 buildable plan "Build me a task manager"
@@ -157,7 +162,7 @@ buildable design --write
 buildable generate "Use this screenshot for a CRM"
 ```
 
-Prefer not to link a global command? Run through Node:
+Prefer not to link a global command? From the checkout, run through Node (use the absolute script path from other workspaces):
 
 ```bash
 node ./bin/buildable.mjs check
@@ -177,21 +182,21 @@ Buildable ships a plugin manifest (`.claude-plugin/plugin.json`) and a local mar
 /plugin install buildable@buildable
 ```
 
-This auto-discovers the planner, web-builder, mobile-builder, and reviewer skills and registers these slash commands:
+This installs for your user by default. For project scope use `/plugin install buildable@buildable --scope project`; use `--scope local` for private project settings. Restart Claude Code after installation. Run `claude plugin details buildable@buildable` to inspect discovered components. Plugin commands are namespaced:
 
 | Command | What it does |
 | --- | --- |
-| `/buildable-plan` | Create or revise the audit-first phase plan, app spec, selected references, and prompt-refinement questions |
-| `/buildable-design` | Create a UI/UX-only brief from the prompt, saved plan, or current app spec |
-| `/buildable-generate` | Create local project files from the saved plan: copy a runnable starter, write an augment pack, or write a planned-template pack |
-| `/buildable-status` | Inspect the current workspace and suggest the next safe command |
-| `/buildable-review` | Audit a prototype against the saved app spec (`--build` runs typecheck/build) |
-| `/buildable-preview` | Optional: render the running app, screenshot it, catch runtime errors |
-| `/buildable-init` | Make the current workspace Buildable-aware |
+| `/buildable:buildable-plan` | Create or revise the audit-first phase plan, app spec, selected references, and prompt-refinement questions |
+| `/buildable:buildable-design` | Create a UI/UX-only brief from the prompt, saved plan, or current app spec |
+| `/buildable:buildable-generate` | Create local project files from the saved plan: copy a runnable starter, write an augment pack, or write a planned-template pack |
+| `/buildable:buildable-status` | Inspect the current workspace and suggest the next safe command |
+| `/buildable:buildable-review` | Audit a prototype against the saved app spec (`--build` runs typecheck/build) |
+| `/buildable:buildable-preview` | Optional: render the running app, screenshot it, catch runtime errors |
+| `/buildable:buildable-init` | Make the current workspace Buildable-aware |
 
 ### Cursor
 
-Use the slash commands in `.cursor/commands/` plus the rule at `.cursor/rules/buildable.mdc`.
+Use the commands in `.cursor/commands/` plus `.cursor/rules/buildable.mdc`, or the MCP configuration below. This repository does **not** ship a Cursor-native plugin manifest. See the [safe project/global setup](docs/install.md#cursor-rules-and-commands) before copying files into an existing workspace.
 
 ### Codex
 
@@ -200,9 +205,13 @@ Add the repository as a Codex marketplace source:
 ```bash
 codex plugin marketplace add suntay44/buildable-plugin-skills
 codex plugin marketplace list
+codex plugin add buildable@buildable
+codex plugin list --marketplace buildable
 ```
 
-Then select that marketplace in the ChatGPT desktop app and install **Buildable**. The repository includes the current `.codex-plugin/plugin.json`, canonical `.agents/plugins/marketplace.json`, four auto-discovered skills, and a bundled MCP server. For clients that cannot install plugins, use the MCP bridge shown below.
+These commands are verified with Codex CLI 0.153.4. Adding a marketplace alone does not install its plugins. If your CLI lacks `plugin add`, use that marketplace in the desktop Plugins directory. Start a new task after installation. The package includes `.codex-plugin/plugin.json`, `.agents/plugins/marketplace.json`, four skills, and MCP tools. Bundled Codex MCP calls require an absolute `workspace` argument so app files go into your project. For clients without plugin support, configure the absolute-path MCP bridge below.
+
+A GitHub source ZIP must be extracted first; it is not an individual skill upload or a verified UI plugin ZIP. See [archive formats, updates, and uninstall](docs/install.md#archives-and-skill-uploads).
 
 ## CLI commands
 
@@ -242,7 +251,7 @@ Design quality is graded against surface-specific rubrics, not taste: every plan
 Buildable is command-first. Use the lightest integration your agent surface supports:
 
 - **Terminal / CLI:** run `buildable plan`, `buildable design`, `buildable generate`, `buildable status`, `buildable review`, and the other commands above.
-- **Project slash commands/rules:** Claude Code uses `/buildable-*`; Cursor uses `.cursor/commands/` and `.cursor/rules/buildable.mdc`; Codex can load the plugin manifest when local plugins are supported.
+- **Project slash commands/rules:** Claude Code plugin installs use `/buildable:buildable-*` (standalone project command copies use `/buildable-*`); Cursor uses `.cursor/commands/` and `.cursor/rules/buildable.mdc`; Codex can load the plugin manifest when local plugins are supported.
 - **MCP bridge:** use `buildable mcp` only for desktop or agent tool clients that cannot run those project commands directly. The client sees local tools named `buildable_plan`, `buildable_design`, `buildable_generate`, `buildable_status`, `buildable_review`, `buildable_init`, `buildable_list`, `buildable_check`, `buildable_eval`, and `buildable_preview`.
 
 MCP does not load the whole Buildable brain. Each tool calls the same CLI engine, which returns a compact plan/spec and the exact `appSpec.references` the agent should inspect. Keep `BUILDABLE_WORKSPACE` pointed at the app folder you want the desktop client to work in.
@@ -426,7 +435,7 @@ No. Deployment, hosted previews, managed databases, billing, and telemetry are i
 
 ### How do I install Buildable in Codex or ChatGPT?
 
-Run `codex plugin marketplace add suntay44/buildable-plugin-skills`, confirm the source with `codex plugin marketplace list`, then install Buildable from that marketplace in the ChatGPT desktop app. See [the complete local installation guide](docs/install.md) for Codex, Claude Code, Cursor, CLI, and MCP setup.
+Run `codex plugin marketplace add suntay44/buildable-plugin-skills`, then `codex plugin add buildable@buildable`. A local Codex installation is not a ChatGPT web skill upload; availability differs by surface. See [the complete local installation guide](docs/install.md) for Codex, Claude Code, Cursor, CLI, and MCP setup.
 
 ## Non-goals
 

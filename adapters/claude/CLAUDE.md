@@ -18,3 +18,5 @@ Buildable is local repository context, not a hosted builder. Prefer `buildable p
 ## Guardrail
 
 Buildable V1 is not a hosted platform. Do not add builder accounts, billing, cloud previews, managed databases, telemetry, hosted deployments, central template services, or deployment features unless the user explicitly asks.
+
+Resolve bundled `core/`, `knowledge/`, `templates/`, and skill paths from the full Buildable checkout (record its absolute path when copying these instructions). They are not relative to the app. Prefer the CLI result and its selected references rather than repeating classification.

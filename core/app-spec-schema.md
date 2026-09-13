@@ -2,6 +2,8 @@
 
 The app spec is the build contract between planner, builder, reviewer, and fixer.
 
+The enclosing phase-plan object may also contain `provenance` (`version`, `guidanceHash`, `inputs`). It is optional for legacy plans and is separate from `appSpec`. Input entries record absolute path, existence, and, when present, size and modification time; they contain no attachment contents. Saved-plan reuse reports changed provenance through advisory `appSpec.planAudit.checks` entries, without replacing accepted app-spec decisions.
+
 ## Schema
 
 ```json

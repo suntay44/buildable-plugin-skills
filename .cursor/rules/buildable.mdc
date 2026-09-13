@@ -17,3 +17,5 @@ When the user asks to generate a local app prototype, use Buildable's workflow f
 6. Review against `knowledge/quality-rubrics/`.
 
 Do not add billing, accounts, cloud previews, managed databases, telemetry, hosted deployment, or central template services unless explicitly requested.
+
+Resolve bundled `core/`, `knowledge/`, `templates/`, and skill paths from the full Buildable checkout (record its absolute path when copying these instructions). They are not relative to the app. Prefer the CLI result and its selected references rather than repeating classification.

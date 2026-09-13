@@ -10,6 +10,9 @@ const cli = join(root, "bin", "buildable.mjs");
 const packageJson = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
 const SUPPORTED_PROTOCOL_VERSIONS = ["2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05"];
 const LATEST_PROTOCOL_VERSION = SUPPORTED_PROTOCOL_VERSIONS[0];
+// Codex starts its bundled server from the plugin root to resolve its script.
+// Require an explicit project in that mode instead of writing into the cache.
+const requireWorkspace = process.env.BUILDABLE_REQUIRE_WORKSPACE === "1";
 
 const toolDefinitions = [
   {
@@ -203,11 +206,27 @@ const toolMetadata = {
 
 const tools = toolDefinitions.map((tool) => ({
   ...tool,
+  ...(requireWorkspace && tool.inputSchema.properties.workspace ? {
+    inputSchema: {
+      ...tool.inputSchema,
+      properties: {
+        ...tool.inputSchema.properties,
+        workspace: { type: "string", description: "Absolute path to the app workspace, outside the installed Buildable plugin. Required unless BUILDABLE_WORKSPACE is configured." }
+      },
+      required: [...(tool.inputSchema.required ?? []), ...(process.env.BUILDABLE_WORKSPACE ? [] : ["workspace"])]
+    }
+  } : {}),
   ...toolMetadata[tool.name],
   outputSchema
 }));
 
 function workspaceFor(args = {}) {
+  if (requireWorkspace) {
+    const workspace = args.workspace ?? process.env.BUILDABLE_WORKSPACE;
+    if (!workspace || !isAbsolute(workspace)) {
+      throw new Error("Provide workspace as an absolute app folder, or set BUILDABLE_WORKSPACE. The bundled server starts in the plugin directory.");
+    }
+  }
   const value = args.workspace ?? process.env.BUILDABLE_WORKSPACE ?? process.cwd();
   return isAbsolute(value) ? value : join(process.cwd(), value);
 }

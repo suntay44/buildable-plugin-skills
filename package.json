@@ -40,6 +40,8 @@
     ".mcp.json",
     ".agents/plugins/marketplace.json",
     "docs/install.md",
+    "docs/installation-audit.md",
+    "docs/planning-improvements.md",
     "bin/",
     "cli/",
     "scripts/",

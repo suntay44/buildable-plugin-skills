@@ -5,11 +5,11 @@ The Codex adapter packages Buildable as a local plugin with bundled skills, temp
 ## Local Setup
 
 1. Add this repository as a marketplace source with `codex plugin marketplace add suntay44/buildable-plugin-skills`.
-2. Confirm it appears with `codex plugin marketplace list`, then install **Buildable** from that marketplace in the ChatGPT desktop app.
+2. Run `codex plugin add buildable@buildable`, then `codex plugin list --marketplace buildable`. For older clients without `plugin add`, install from the desktop Plugins directory.
 3. Run `buildable check` from the repository root to verify the marketplace, plugin, skills, and MCP paths.
 4. Ask Codex to use Buildable when planning or generating local app prototypes.
 
-Codex should read from this checkout and generate into the user's local workspace. Buildable does not require a hosted template registry, telemetry endpoint, cloud preview service, or managed database.
+Codex reads resources from the installed plugin. Pass an absolute `workspace` to bundled app-specific MCP tools; the server starts from the plugin directory only to resolve its script. See [installation and lifecycle details](../../docs/install.md#codex). Buildable does not require a hosted template registry, telemetry endpoint, cloud preview service, or managed database.
 
 ## Desktop / MCP Setup
 

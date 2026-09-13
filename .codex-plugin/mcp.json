@@ -1,0 +1,10 @@
+{
+  "buildable": {
+    "command": "node",
+    "args": ["./bin/buildable-mcp.mjs"],
+    "cwd": ".",
+    "env": {
+      "BUILDABLE_REQUIRE_WORKSPACE": "1"
+    }
+  }
+}

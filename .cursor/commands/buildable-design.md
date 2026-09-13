@@ -5,7 +5,11 @@ Create a UI/UX design brief from a prompt or the current Buildable app spec.
 Run:
 
 ```bash
-buildable design "<prompt>" 2>/dev/null || node "${BUILDABLE_ROOT:?Set BUILDABLE_ROOT to your Buildable checkout}/bin/buildable.mjs" design "<prompt>"
+if command -v buildable >/dev/null 2>&1; then
+  buildable design "<prompt>"
+else
+  node "${BUILDABLE_ROOT:?Set BUILDABLE_ROOT to your Buildable checkout}/bin/buildable.mjs" design "<prompt>"
+fi
 ```
 
 Use `--page "login"` or similar for a specific surface. Add `--dark` (or say "dark mode" in the prompt) to make the dark palette the active theme. Add `--write` only when the user wants `.buildable/design-brief.json` and `.buildable/design-brief.md` saved into the workspace.

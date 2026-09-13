@@ -9,7 +9,11 @@ Generate a Buildable prototype for: **$ARGUMENTS**
 1. Plan first, then generate. If `.buildable/phase-plan.json` exists and the prompt matches, generation reuses that saved audit-first plan. For runnable templates this copies a polished starter; for planned templates add `--plan-pack`:
 
    ```bash
-   buildable generate "$ARGUMENTS" 2>/dev/null || node "${CLAUDE_PLUGIN_ROOT:-.}/bin/buildable.mjs" generate "$ARGUMENTS"
+   if command -v buildable >/dev/null 2>&1; then
+     buildable generate "$ARGUMENTS"
+   else
+     node "${CLAUDE_PLUGIN_ROOT:-.}/bin/buildable.mjs" generate "$ARGUMENTS"
+   fi
    ```
 
    - If the CLI reports the prompt has architecture-changing choices, ask the user those questions, then rerun with `--force` only if the prompt already answers them.
@@ -22,4 +26,4 @@ Generate a Buildable prototype for: **$ARGUMENTS**
 
 3. Adapt the starter (or implement the plan pack) to the user's specific request. Keep data local/mock by default. Do not add auth, billing, databases, telemetry, or deployment unless explicitly requested.
 
-4. When code exists, verify it builds, then run `/buildable-review` on the output directory and fix blocking issues before handoff.
+4. When code exists, verify it builds, then run `/buildable:buildable-review` on the output directory and fix blocking issues before handoff.

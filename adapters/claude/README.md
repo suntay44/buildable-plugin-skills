@@ -11,7 +11,7 @@ Buildable ships a plugin manifest at `.claude-plugin/plugin.json` and a marketpl
 /plugin install buildable@buildable
 ```
 
-This registers the slash commands — `/buildable-plan`, `/buildable-design`, `/buildable-generate`, `/buildable-review`, `/buildable-preview`, `/buildable-init` — and auto-discovers the planner, web-builder, mobile-builder, and reviewer skills from `skills/*/SKILL.md`.
+This registers the slash commands — `/buildable:buildable-plan`, `/buildable:buildable-design`, `/buildable:buildable-generate`, `/buildable:buildable-review`, `/buildable:buildable-preview`, `/buildable:buildable-init` — and auto-discovers the planner, web-builder, mobile-builder, and reviewer skills from `skills/*/SKILL.md`.
 
 ## Claude Desktop / MCP Setup
 
@@ -37,10 +37,12 @@ Claude Desktop will expose `buildable_plan`, `buildable_design`, `buildable_gene
 
 If you prefer plain project instructions instead of installing the plugin:
 
-1. Copy or symlink `adapters/claude/CLAUDE.md` into the Claude Code project instructions you want to use.
+1. Merge the instructions in `adapters/claude/CLAUDE.md` into your existing project context; do not replace or symlink over a user-owned `CLAUDE.md`. Record the absolute Buildable checkout path.
 2. Keep this Buildable repository available locally so Claude can read `core/`, `knowledge/`, `templates/`, `skills/`, and `evals/`.
 3. Run `buildable check` from this repository before relying on the adapter.
 4. Optionally run `buildable plan "<prompt>"` and give Claude the generated phase plan/spec before code generation.
+
+See [scope, update, uninstall, and archive guidance](../../docs/install.md).
 
 ## Included Behavior
 

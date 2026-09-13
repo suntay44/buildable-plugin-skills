@@ -5,6 +5,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { createRequire } from "node:module";
 import { spawnSync } from "node:child_process";
 import { referenceInputsFromArgs as buildReferenceInputsFromArgs } from "../core/reference-inputs.mjs";
+import { planProvenance, provenanceWarnings } from "../core/plan-provenance.mjs";
 
 // Never surface a raw Node stack trace to users. Set DEBUG=1 to see the full trace.
 function reportFatal(error) {
@@ -195,6 +196,11 @@ function referenceInputsFromArgs(args = parsedArgs, cwd = process.cwd()) {
 
 const authIntentCue = /\b(auth|authentication|login|log in|sign in|sign-in|signin|sign up|sign-up|signup|user management|user accounts?|member accounts?|client accounts?|protected route|protected routes|session|sessions)\b/i;
 const authProviderCue = /\b(clerk|auth0|next-auth|nextauth|better-auth|lucia|supabase auth|firebase auth)\b/i;
+const authTerm = `(?:${authProviderCue.source}|${authIntentCue.source})`;
+const negatedAuth = new RegExp(`\\b(?:no|without|skip|exclude|omit|(?:do not|don't) (?:add|include|need|want))\\s+${authTerm}(?:\\s*(?:,|or|and)\\s*${authTerm})*`, "gi");
+function affirmativeAuthText(prompt) {
+  return prompt.replace(negatedAuth, "");
+}
 const authProviderFlags = [
   ["--with-clerk", "clerk"],
   ["--with-auth0", "auth0"],
@@ -217,7 +223,8 @@ function authIntentFor(prompt, args = parsedArgs) {
   const providerFlag = normalizedAuthProvider(args.values?.["with-auth-provider"]);
   if (args.flags?.has("--with-auth") || args.flags?.has("--with-local-auth") || providerFlag) return true;
   if (authProviderFlags.some(([flag]) => args.flags?.has(flag))) return true;
-  return authIntentCue.test(prompt) || authProviderCue.test(prompt);
+  const affirmative = affirmativeAuthText(prompt);
+  return authIntentCue.test(affirmative) || authProviderCue.test(affirmative);
 }
 
 function classify(prompt) {
@@ -236,7 +243,7 @@ function classify(prompt) {
   const target = explicitTarget ? (requestedMobile ? "mobile" : "web") : selected.defaultTarget;
 
   const architectureQuestions = askFirstRules
-    .filter((rule) => rule.pattern.test(normalized))
+    .filter((rule) => rule.pattern.test(rule.kind === "auth" ? affirmativeAuthText(normalized) : normalized))
     .filter((rule) => !(rule.kind === "auth" && authIntentFor(normalized)))
     .map((rule) => rule.question);
   const directionQuestions = ambiguousIntentRules
@@ -252,7 +259,10 @@ function classify(prompt) {
     questionsNeeded: questions.length > 0,
     questions,
     clarificationNeeded: directionQuestions.length > 0,
-    confidence: scored[0]?.score > 0 ? "high" : "medium"
+    confidence: scored[0]?.score > 0 && scored[0].score > (scored[1]?.score ?? 0) ? "high" : "medium",
+    reason: scored[0]?.score > 0
+      ? `Matched ${selected.tags.filter(tag => hasTagPhrase(normalized, tag)).join(", ")}.${scored[0].score === scored[1]?.score ? " Tied score; using registry order." : ""}`
+      : "No archetype tags matched; using the task-manager fallback."
   };
 }
 
@@ -742,6 +752,7 @@ function promptRefinementFor(prompt, classification, defaults, appSpec) {
 }
 
 function planAuditFor(appSpec) {
+  const missingInputs = (appSpec.referenceInputs ?? []).filter(input => !input.exists);
   const checks = [
     {
       id: "scope",
@@ -755,8 +766,10 @@ function planAuditFor(appSpec) {
     },
     {
       id: "references",
-      status: "ready",
-      gate: "Load only appSpec.references and explicit appSpec.referenceInputs."
+      status: missingInputs.length ? "warning" : "ready",
+      gate: missingInputs.length
+        ? `Missing explicit references: ${missingInputs.map(input => input.path).join(", ")}. Restore or correct these paths before relying on them; do not invent their contents.`
+        : "Load only appSpec.references and explicit appSpec.referenceInputs."
     },
     {
       id: "mock-data",
@@ -972,6 +985,8 @@ function planToonFor(plan) {
     `    name: ${toonValue(spec.name)}`,
     `    target: ${toonValue(spec.target)}`,
     `    archetype: ${toonValue(spec.archetype)}`,
+    `    confidence: ${toonValue(plan.classification.confidence)}`,
+    ...(plan.classification.reason ? [`    routeReason: ${toonValue(plan.classification.reason)}`] : []),
     `    template: ${toonValue(spec.template)}`,
     `    templateStatus: ${toonValue(spec.templateStatus)}`,
     `    generationMode: ${toonValue(spec.generationMode)}`,
@@ -1000,8 +1015,23 @@ function planToonFor(plan) {
     toonTable("entities", ["name", "minimumRecords", "fields"], spec.mockData.entities.map((entity) => ({ name: entity.name, minimumRecords: entity.minimumRecords, fields: (entity.fieldsToPopulate ?? []).join("|") })), "    "),
     toonList("requiredStates", spec.mockData.requiredStates, "    "),
     "  questions:",
+    `    questionsNeeded: ${spec.questionsNeeded}`,
     toonList("blocking", spec.questions, "    "),
     toonTable("optional", ["id", "question", "defaultAnswer"], spec.promptRefinement.optionalQuestions, "    "),
+    toonTable("phases", ["id", "status"], plan.phasePlan ?? phasePlanFor(plan), "  "),
+    ...(spec.auth?.requested ? [
+      "  auth:",
+      `    defaultMode: ${toonValue(spec.auth.defaultMode)}`,
+      `    userNamedProvider: ${toonValue(spec.auth.userNamedProvider)}`,
+      `    rule: ${toonValue(spec.auth.rule)}`,
+      toonList("states", spec.auth.states, "    ")
+    ] : []),
+    ...(spec.persistence?.requested ? [
+      "  persistence:",
+      `    defaultLayer: ${toonValue(spec.persistence.defaultLayer)}`,
+      `    userNamedBackend: ${toonValue(spec.persistence.userNamedBackend)}`,
+      `    rule: ${toonValue(spec.persistence.rule)}`
+    ] : []),
     "  loading:",
     toonList("references", spec.references, "    "),
     toonTable("referenceInputs", ["kind", "path", "exists"], spec.referenceInputs, "    "),
@@ -1091,6 +1121,7 @@ function persistenceFor(prompt) {
 }
 
 function authFor(prompt, args = parsedArgs) {
+  prompt = affirmativeAuthText(prompt);
   const providerFromFlag = normalizedAuthProvider(args.values?.["with-auth-provider"]);
   const providerFromBooleanFlag = authProviderFlags.find(([flag]) => args.flags?.has(flag))?.[1] ?? null;
   const providerFromPrompt = authProviderCue.exec(prompt)?.[1] ?? null;
@@ -1237,6 +1268,7 @@ function specFor(prompt, options = {}) {
     workflowStage: "decision",
     commandRole: "plan",
     planContractVersion: "audit-first-v1",
+    provenance: planProvenance(root, packageJson.version, appSpec),
     prompt,
     classification,
     enhancedPrompt: enhancedPromptFor(prompt, appSpec),
@@ -1927,6 +1959,12 @@ function runEval() {
     }
     if (fixture.target && appSpec.target !== fixture.target) {
       failures.push(`target ${appSpec.target} != ${fixture.target}`);
+    }
+    for (const key of ["questionsNeeded", "clarificationNeeded", "confidence"]) {
+      if (fixture[key] !== undefined && classification[key] !== fixture[key]) failures.push(`${key} ${classification[key]} != ${fixture[key]}`);
+    }
+    if (fixture.authRequested !== undefined && Boolean(appSpec.auth?.requested) !== fixture.authRequested) {
+      failures.push(`authRequested ${Boolean(appSpec.auth?.requested)} != ${fixture.authRequested}`);
     }
     if (specIssues.length > 0) failures.push(`spec: ${specIssues.join("; ")}`);
     if (missingReferences.length > 0) failures.push(`missing references: ${missingReferences.join(", ")}`);
@@ -3100,11 +3138,28 @@ function savedPhasePlanForPrompt(prompt, workspace = process.cwd()) {
       }
     }
     if (!plan.appSpec.planAudit) plan.appSpec.planAudit = planAuditFor(plan.appSpec);
+    const warnings = [];
+    try {
+      const current = planProvenance(root, packageJson.version, plan.appSpec);
+      warnings.push(...provenanceWarnings(plan.provenance, current));
+      for (const [index, input] of (plan.appSpec.referenceInputs ?? []).entries()) {
+        input.exists = current.inputs[index].exists;
+        input.sizeBytes = current.inputs[index].exists ? current.inputs[index].size : null;
+      }
+    } catch (error) {
+      // Optional verification must never silently discard accepted decisions.
+      warnings.push(`Could not verify saved-plan context: ${error.message}.`);
+    }
+    const checks = plan.appSpec.planAudit.checks.filter(check => check.id !== "saved-plan");
+    const referenceCheck = checks.find(check => check.id === "references");
+    if (referenceCheck) Object.assign(referenceCheck, planAuditFor(plan.appSpec).checks.find(check => check.id === "references"));
+    if (warnings.length) checks.push({ id: "saved-plan", status: "warning", gate: `${warnings.join(" ")} Review the saved decisions; they have been retained.` });
+    plan.appSpec.planAudit.checks = checks;
     if (!plan.appSpec.promptRefinement) {
       plan.appSpec.promptRefinement = promptRefinementFor(plan.prompt, plan.classification, defaultsFor(plan.appSpec.archetype), plan.appSpec);
     }
     if (!plan.phasePlan) plan.phasePlan = phasePlanFor(plan);
-    if (!plan.planMarkdown) plan.planMarkdown = planMarkdownFor(plan);
+    plan.planMarkdown = planMarkdownFor(plan);
     return plan;
   } catch {
     return null;
@@ -3162,6 +3217,7 @@ function generate() {
   const savedPlan = canReuseSavedPlan ? savedPhasePlanForPrompt(input) : null;
   const planSource = savedPlan ? "saved-phase-plan" : "inline-prompt-plan";
   const plan = savedPlan || specFor(input, { referenceInputs });
+  for (const check of plan.appSpec.planAudit.checks.filter(check => check.status === "warning")) console.error(`buildable: warning: ${check.gate}`);
   if (plan.classification.questionsNeeded && !flags.has("--force")) {
     console.error("This prompt includes architecture-changing choices. Answer these before generation:");
     for (const question of plan.classification.questions) console.error(`- ${question}`);

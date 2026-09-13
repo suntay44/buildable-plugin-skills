@@ -269,12 +269,47 @@ test("plan --compact shrinks output while plain plan writes TOON handoff", () =>
   assert.equal(compactJson.planMarkdown, undefined);
   assert.equal(compactJson.planMarkdownFile, ".buildable/phase-plan.md");
   assert.equal(compactJson.appSpec.archetype, "crm");
+  const { planMarkdown, ...structuredPlan } = JSON.parse(full);
+  const { planMarkdownFile, ...compactStructuredPlan } = compactJson;
+  assert.deepEqual(compactStructuredPlan, structuredPlan, "compact output preserves every structured field");
   assert.ok(compact.length < full.length);
 
   // TOON is built into the normal planning workflow as a compact handoff file.
   assert.match(toon, /^buildable_plan:/);
   assert.match(toon, /format: toon-style-v1/);
   assert.ok(toon.length < full.length / 3);
+});
+
+test("TOON handoff preserves blockers, phase status, and requested auth/persistence choices", () => {
+  for (const args of [
+    ["Build me a CRM"],
+    ["I have a restaurant"],
+    ["Build a mobile expense tracker"],
+    ["Build a CRM with login and save records"],
+    ["Build a CRM and persist records in Supabase", "--with-auth-provider", "clerk"]
+  ]) {
+    const full = jsonFrom(run(["plan", ...args]));
+    const output = run(["plan", ...args, "--toon"]);
+    assert.equal(output.status, 0, output.stderr);
+    const toon = output.stdout;
+    assert.ok(toon.includes(`questionsNeeded: ${full.appSpec.questionsNeeded}`));
+    const phaseRows = toon.split(/\r?\n/).filter((line) => /^    [\w-]+,[\w-]+$/.test(line));
+    for (const phase of full.phasePlan) {
+      assert.ok(phaseRows.includes(`    ${phase.id},${phase.status}`), `preserve ${phase.id} status`);
+    }
+    for (const [field, providerKey] of [["auth", "userNamedProvider"], ["persistence", "userNamedBackend"]]) {
+      const choice = full.appSpec[field];
+      if (choice?.requested) {
+        assert.ok(toon.includes(`  ${field}:\n`));
+        // TOON v1 uses semicolons inside values to reserve commas for columns.
+        assert.ok(toon.includes(choice.rule.replaceAll(",", ";")));
+        if (choice[providerKey]) assert.ok(toon.includes(`${providerKey}: ${choice[providerKey]}`));
+      } else {
+        assert.ok(!toon.includes(`  ${field}:\n`), `omit unrequested ${field}`);
+      }
+    }
+    assert.ok(toon.length < JSON.stringify(full, null, 2).length / 3);
+  }
 });
 
 test("mcp buildable_plan returns compact by default, full with verbose, and TOON via stable alias", () => {
@@ -602,6 +637,90 @@ test("generate reuses the saved audit-first phase plan when the prompt matches",
   assert.ok(existsSync(join(out, ".buildable/phase-plan.toon")));
   assert.match(page, /SavedFlow/);
   assert.doesNotMatch(page, /TaskFlow/);
+});
+
+test("missing explicit references are advisory and remain visible in compact plans", t => {
+  const workspace = mkdtempSync(join(tmpdir(), "buildable missing refs "));
+  t.after(() => rmSync(workspace, { recursive: true, force: true }));
+  const args = ["plan", "Build a CRM without login", "--file", "missing mockup.png", "--no-write"];
+  const plan = jsonFrom(run([...args, "--compact"], { cwd: workspace }));
+  assert.equal(plan.appSpec.auth, null);
+  assert.equal(plan.appSpec.questionsNeeded, false);
+  assert.equal(plan.appSpec.referenceInputs[0].exists, false);
+  assert.equal(plan.appSpec.planAudit.checks.find(check => check.id === "references").status, "warning");
+  const toon = run([...args, "--toon"], { cwd: workspace });
+  assert.equal(toon.status, 0, toon.stderr);
+  assert.match(toon.stdout, /Missing explicit references: missing mockup.png/);
+  assert.equal(jsonFrom(run(["plan", "Build a CRM"])).appSpec.planAudit.checks.find(check => check.id === "references").status, "ready");
+});
+
+test("saved plans warn on changed inputs and guidance while preserving accepted decisions", t => {
+  const workspace = mkdtempSync(join(tmpdir(), "buildable stale plan "));
+  t.after(() => rmSync(workspace, { recursive: true, force: true }));
+  const prompt = "Build a task manager";
+  const input = join(workspace, "brief.md");
+  writeFileSync(input, "Original brief");
+  const planned = jsonFrom(run(["plan", prompt, "--file", input], { cwd: workspace }));
+  planned.appSpec.name = "AcceptedName";
+  planned.provenance.version = "0.0.0-test";
+  planned.provenance.guidanceHash = "old-guidance";
+  writeFileSync(join(workspace, ".buildable/phase-plan.json"), JSON.stringify(planned));
+  writeFileSync(input, "Updated brief, with new requirements");
+  const out = join(workspace, "generated");
+  const generated = run(["generate", prompt, "--out", out, "--json"], { cwd: workspace });
+  assert.equal(jsonFrom(generated).sourcePlan, "saved-phase-plan");
+  assert.match(generated.stderr, /Reference changed/);
+  assert.match(generated.stderr, /Buildable changed/);
+  assert.match(generated.stderr, /bundled guidance changed/);
+  const saved = JSON.parse(readFileSync(join(out, ".buildable/phase-plan.json")));
+  assert.equal(saved.appSpec.name, "AcceptedName");
+  assert.equal(saved.provenance.version, "0.0.0-test");
+  assert.match(readFileSync(join(out, ".buildable/phase-plan.toon"), "utf8"), /saved-plan,warning/);
+  rmSync(input);
+  const missingOut = join(workspace, "missing-input");
+  const missing = run(["generate", prompt, "--out", missingOut, "--json"], { cwd: workspace });
+  assert.equal(missing.status, 0, missing.stderr);
+  assert.match(missing.stderr, /Missing explicit references/);
+  assert.equal(JSON.parse(readFileSync(join(missingOut, "buildable-app-spec.json"))).referenceInputs[0].exists, false);
+});
+
+test("legacy saved plans remain reusable without provenance warnings", t => {
+  const workspace = mkdtempSync(join(tmpdir(), "buildable legacy plan "));
+  t.after(() => rmSync(workspace, { recursive: true, force: true }));
+  const prompt = "Build a task manager";
+  const planned = jsonFrom(run(["plan", prompt], { cwd: workspace }));
+  delete planned.provenance;
+  planned.appSpec.name = "LegacyName";
+  writeFileSync(join(workspace, ".buildable/phase-plan.json"), JSON.stringify(planned));
+  const generated = run(["generate", prompt, "--out", join(workspace, "app"), "--json"], { cwd: workspace });
+  assert.equal(jsonFrom(generated).appName, "LegacyName");
+  assert.doesNotMatch(generated.stderr, /warning/);
+});
+
+test("unreadable provenance inputs do not discard saved decisions", t => {
+  const workspace = mkdtempSync(join(tmpdir(), "buildable unverifiable plan "));
+  t.after(() => rmSync(workspace, { recursive: true, force: true }));
+  const prompt = "Build a task manager";
+  const planned = jsonFrom(run(["plan", prompt], { cwd: workspace }));
+  planned.appSpec.name = "PreservedName";
+  planned.appSpec.references.push("core"); // A directory cannot be hashed as a file.
+  writeFileSync(join(workspace, ".buildable/phase-plan.json"), JSON.stringify(planned));
+  const generated = run(["generate", prompt, "--out", join(workspace, "app"), "--json"], { cwd: workspace });
+  assert.equal(jsonFrom(generated).appName, "PreservedName");
+  assert.match(generated.stderr, /Could not verify saved-plan context/);
+});
+
+test("auth negation leaves affirmative clauses and explicit flags authoritative", () => {
+  for (const phrase of ["without login or sign up", "no authentication", "don't add login", "omit Clerk"]) {
+    const plan = jsonFrom(run(["plan", `Build a CRM, ${phrase}`]));
+    assert.equal(plan.appSpec.auth, null, phrase);
+    assert.equal(plan.classification.questionsNeeded, false, phrase);
+  }
+  const mixed = jsonFrom(run(["plan", "Build a CRM without Clerk, but with local login"]));
+  assert.equal(mixed.appSpec.auth.requested, true);
+  assert.equal(mixed.appSpec.auth.userNamedProvider, null);
+  const flag = jsonFrom(run(["plan", "CRM without login", "--with-clerk"]));
+  assert.equal(flag.appSpec.auth.userNamedProvider, "clerk");
 });
 
 test("review defaults to the current app workspace", () => {
@@ -1180,7 +1299,7 @@ test("review --strict scans beyond starter-sized apps and includes jsx/html", ()
 test("codex manifest uses current plugin-root component paths", () => {
   const plugin = JSON.parse(readFileSync(join(root, ".codex-plugin/plugin.json"), "utf8"));
   assert.equal(plugin.skills, "./skills/");
-  assert.equal(plugin.mcpServers, "./.mcp.json");
+  assert.equal(plugin.mcpServers, "./.codex-plugin/mcp.json");
   assert.equal(plugin.version, packageJson.version);
   assert.equal(typeof plugin.author, "object");
   assert.equal(plugin.schema_version, undefined);
@@ -1189,7 +1308,7 @@ test("codex manifest uses current plugin-root component paths", () => {
 
   const mcp = JSON.parse(readFileSync(join(root, ".mcp.json"), "utf8"));
   assert.equal(mcp.mcpServers.buildable.command, "node");
-  assert.deepEqual(mcp.mcpServers.buildable.args, ["./bin/buildable-mcp.mjs"]);
+  assert.deepEqual(mcp.mcpServers.buildable.args, ["${CLAUDE_PLUGIN_ROOT}/bin/buildable-mcp.mjs"]);
 
   // The CLI docs must explain that exposing a dir is availability, not agent loading,
   // so the "scoped vs broad resources" drift can't silently return.

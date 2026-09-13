@@ -13,7 +13,7 @@ Resolve all referenced paths from the Buildable plugin or repository root.
 
 Mandatory order:
 
-1. Read the saved planner output first: `.buildable/phase-plan.json` when present, otherwise `buildable-app-spec.json`. Use `.buildable/phase-plan.toon` when present as the compact agent-facing build contract.
+1. Read `.buildable/phase-plan.toon` first when present. It is a summary: retrieve omitted details (such as full design rules or expected files) from the authoritative `.buildable/phase-plan.json` as needed. Without a saved plan, read `buildable-app-spec.json`. Reuse the plan for unchanged requirements rather than re-planning or reading all formats.
 2. Load only `appSpec.references`.
 3. Load current project files only as needed for the requested change.
 4. Do not load all templates.

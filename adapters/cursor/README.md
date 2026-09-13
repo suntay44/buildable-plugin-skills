@@ -4,7 +4,7 @@ The Cursor adapter exposes Buildable as Cursor rules, prompts, and local templat
 
 ## Local Setup
 
-1. Open this repository in Cursor, or copy `.cursor/rules/buildable.mdc` into another workspace that should use Buildable.
+1. Open this repository in Cursor, or copy selected `.cursor/commands/` files and `.cursor/rules/buildable.mdc` into your app without overwriting existing files. See [safe copying and lifecycle instructions](../../docs/install.md#cursor-rules-and-commands). This is a rules/commands adapter, not a Cursor-native plugin package.
 2. Keep this checkout available so Cursor can read the local `core/`, `knowledge/`, `templates/`, `skills/`, and `evals/` files.
 3. Run `buildable check` from this repository root.
 4. Use `buildable plan "<prompt>"` when Cursor needs a concrete phase plan before generation.

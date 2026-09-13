@@ -1,0 +1,49 @@
+name: Native installation smoke (opt-in)
+on:
+  workflow_dispatch:
+    inputs:
+      codex_version:
+        description: Exact public @openai/codex version
+        required: true
+        default: '0.153.4'
+      claude_version:
+        description: Exact public @anthropic-ai/claude-code version
+        required: true
+        default: '2.1.224'
+permissions:
+  contents: read
+jobs:
+  native-install:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        client: [codex, claude]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install explicitly versioned client in disposable prefix
+        env:
+          CLIENT: ${{ matrix.client }}
+          CODEX_VERSION: ${{ inputs.codex_version }}
+          CLAUDE_VERSION: ${{ inputs.claude_version }}
+        run: |
+          if [ "$CLIENT" = codex ]; then
+            package="@openai/codex"
+            version="$CODEX_VERSION"
+          else
+            package="@anthropic-ai/claude-code"
+            version="$CLAUDE_VERSION"
+          fi
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 1
+          npm install --global --prefix "$RUNNER_TEMP/native-client" "$package@$version" --no-audit --no-fund
+          echo "$RUNNER_TEMP/native-client/bin" >> "$GITHUB_PATH"
+      - name: Test native installation and installed resources without credentials
+        env:
+          CLIENT: ${{ matrix.client }}
+        run: node scripts/smoke-native-install.mjs "$CLIENT"

@@ -110,6 +110,56 @@
       "prompt": "Build a mobile property inspection checklist",
       "archetype": "property-inspection",
       "target": "mobile"
+    },
+    {
+      "prompt": "Build something useful",
+      "archetype": "task-manager",
+      "target": "web",
+      "confidence": "medium"
+    },
+    {
+      "prompt": "Build a restaurant",
+      "archetype": "restaurant",
+      "target": "web",
+      "clarificationNeeded": true,
+      "questionsNeeded": true
+    },
+    {
+      "prompt": "Build a booking inventory app",
+      "archetype": "booking",
+      "target": "mobile",
+      "confidence": "medium"
+    },
+    {
+      "prompt": "Build a CRM without login",
+      "archetype": "crm",
+      "target": "web",
+      "authRequested": false,
+      "questionsNeeded": false
+    },
+    {
+      "prompt": "Build a CRM without login or sign up",
+      "archetype": "crm",
+      "authRequested": false,
+      "questionsNeeded": false
+    },
+    {
+      "prompt": "Build a CRM with login",
+      "archetype": "crm",
+      "authRequested": true,
+      "questionsNeeded": false
+    },
+    {
+      "prompt": "Build a CRM without Clerk, but with local login",
+      "archetype": "crm",
+      "authRequested": true,
+      "questionsNeeded": false
+    },
+    {
+      "prompt": "Build a mobile task manager",
+      "archetype": "task-manager",
+      "target": "mobile",
+      "questionsNeeded": false
     }
   ]
 }

@@ -9,7 +9,11 @@ Create a Buildable design brief for: **$ARGUMENTS**
 1. Run the design command:
 
    ```bash
-   buildable design "$ARGUMENTS" 2>/dev/null || node "${CLAUDE_PLUGIN_ROOT:-.}/bin/buildable.mjs" design "$ARGUMENTS"
+   if command -v buildable >/dev/null 2>&1; then
+     buildable design "$ARGUMENTS"
+   else
+     node "${CLAUDE_PLUGIN_ROOT:-.}/bin/buildable.mjs" design "$ARGUMENTS"
+   fi
    ```
 
    Use `--page "login"` or similar when the user asks for a specific page/component. Add `--dark` (or say "dark mode" in the prompt) to make the dark palette the active theme. Add `--write` only when the user wants the brief saved into the current app workspace.

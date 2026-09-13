@@ -5,80 +5,30 @@ description: Plan or classify a Buildable app idea into an archetype, ask-vs-bui
 
 # Buildable Planner Skill
 
-Use this skill to classify prompts, choose an archetype, decide whether questions are needed, and produce a top-down phase plan plus app spec.
+Produce a local-first app spec and phase plan from the user's prompt, explicit reference files, and relevant existing-project context. Resolve bundled paths from the Buildable plugin or repository root.
 
-## Inputs
+## CLI Workflow
 
-- user prompt
-- optional user-provided screenshots, documents, or source files
-- optional existing repository context
-- optional local preferences
+1. Run `buildable plan "<prompt>" --compact`. This retains the structured spec and phases while omitting the duplicate Markdown render; full `.buildable/phase-plan.json`, `.md`, and compact `.toon` files are still saved. Use `--no-write` only for terminal-only inspection. For MCP, use `buildable_plan` with its compact default.
+2. Pass explicit user files with `--file <path>`, `--reference <path>`, or `--screenshot <path>`; inspect `appSpec.referenceInputs` without pasting file contents into the prompt. For requested auth use `--with-auth`; record a named provider with `--with-auth-provider <provider>`. Keep auth local/mock behind a seam unless a provider is named.
+3. Use the returned classification, `appSpec`, and `phasePlan` as the planning result. Do not repeat classification or reopen registries/policies already applied by the CLI. Load only needed files from `appSpec.references`; load selected starter source only when generating or editing it. Never scan whole knowledge/template directories or unselected templates.
+4. Check `appSpec.planAudit` gates and ask blocking `appSpec.questions` when `questionsNeeded` is true before design or generation. Otherwise ask at most one or two `promptRefinement.optionalQuestions` only when the answer materially changes the plan; use defaults when the user wants to proceed.
+5. Summarize the plan once using the output guidance below. Keep implementation within the user's request; a planning-only request does not start app code. The included design system is sufficient to proceed; run `buildable design` only when a deeper UI/UX brief is useful.
 
-Resolve all referenced paths from the Buildable plugin or repository root.
+## CLI-Unavailable Fallback
 
-## Reference Loading Contract
+Only when the CLI is unavailable, build the spec manually:
 
-Mandatory order:
+- Match `core/archetype-registry.json` tags, then apply `core/ask-vs-build-policy.md` and `core/activation-policy.md`. Use `knowledge/INDEX.md` and `templates/INDEX.md` only for discovery.
+- Load the selected archetype, matching data-model/screen-graph files when present, and the best target-specific template spec. Preserve runnable versus plan-only status.
+- Select design guidance from `core/design-system-registry.json` and compatible micro-blocks from `blocks/registry.json`; include only selected references.
+- Follow `core/app-spec-schema.md`: include realistic `mockData` and state coverage, explicit `referenceInputs`, `promptRefinement` assumptions/questions/defaults, `planAudit` gates, and requested auth/persistence seams. Keep data local/mock and state non-goals explicitly.
+- Include clarify, plan, mock-data, design, build, and review phases with blockers and completion criteria tied to the selected screens, features, and acceptance criteria.
 
-1. Run `buildable plan "<prompt>"` when available. Use `--file <path>`, `--reference <path>`, or `--screenshot <path>` for explicit user-provided files. It saves `.buildable/phase-plan.md/json/toon` by default; use `--no-write` only for terminal-only inspection.
-2. Load only `appSpec.references`.
-3. Inspect only explicit `appSpec.referenceInputs` supplied by the user.
-4. Do not load all templates.
-5. Do not load whole `knowledge/` or `templates/` directories.
-6. Load starter source only for the selected template and only when generating or editing it.
+## Output And Handoff
 
-Use `knowledge/INDEX.md` and `templates/INDEX.md` only for discovery when the CLI is unavailable.
+Give a short decision summary: app direction, target/stack, screens and key behavior, non-goals, design/mock-data approach, blockers or important assumptions, and the next actionable phase. Link the saved plan instead of repeating the full app spec, audit checks, reference list, and phase plan in chat; expand those details when requested. On revisions, retain the accepted direction and constraints, update the saved plan, and summarize what changed.
 
-## Workflow
+For planning-only requests, end with one satisfaction checkpoint: revise in Buildable Planner if needed, or continue with Buildable Web Builder/Mobile Builder for the selected target. If the user already asked to build and there are no blockers, continue to that builder without another approval checkpoint.
 
-0. Prefer `buildable plan "<prompt>"` when the CLI is available.
-1. Use `core/archetype-registry.json` tags for lightweight matching before opening archetype docs.
-2. Apply `core/ask-vs-build-policy.md`.
-3. Apply `core/activation-policy.md`.
-4. Load the selected `knowledge/archetypes/<archetype>.md`.
-5. Load matching files from `knowledge/data-models/` and `knowledge/screen-graphs/` when they exist.
-6. Select the best `templates/<target>/<archetype>/template-spec.json`.
-7. Select compact UI/UX direction from `core/design-system-registry.json` and include it as `appSpec.designSystem`.
-8. Select compatible micro-blocks from `blocks/registry.json` and include them as `appSpec.blocks`; append only selected block references to `appSpec.references`.
-9. Include `appSpec.mockData` with realistic local seed-data guidance and state coverage.
-10. Include `appSpec.referenceInputs` when users attach screenshots/files; preserve paths and inspection instructions without pasting file contents into the prompt.
-11. Include `appSpec.promptRefinement` with assumptions, optional sharpening questions, and default answers.
-12. Include `appSpec.planAudit` with audit-first gates for scope, template status, references, mock data, UI/UX, local-first rules, auth/persistence, and review.
-13. Produce an app spec using `core/app-spec-schema.md`.
-14. Include a phase plan: clarify if needed, plan, mock data, design, build, review.
-15. Include explicit non-goals to prevent hosted feature drift.
-16. Ask questions with restraint:
-   - Ask blocking `appSpec.questions` first when `questionsNeeded` is true.
-   - When there are no blockers, ask at most one or two `promptRefinement.optionalQuestions` only if they would materially improve the result.
-   - If the user wants to proceed, use `promptRefinement` defaults instead of continuing to interrogate.
-17. End with a short satisfaction checkpoint:
-   - If the user is not satisfied, ask them to stay in Buildable Planner and revise the saved plan with a prompt such as "Buildable Planner: keep this direction, but make the reminder features stronger."
-   - If the user is satisfied, suggest the correct next skill for the target: Buildable Web Builder for web or Buildable Mobile Builder for mobile. The builder must read the saved `.buildable/phase-plan.json` or `.buildable/phase-plan.toon` compact contract, then load only `appSpec.references` and the selected starter source.
-18. When the user asks for login, auth, accounts, protected routes, or an explicit auth flag, include `appSpec.auth` and the auth references. Default to local/mock auth behind an auth seam; do not choose a hosted provider unless the user names one.
-
-## Reference Selection
-
-Load only what the selected app needs. Do not browse all archetype files. For a todo prompt, prefer:
-
-- `knowledge/archetypes/task-manager.md`
-- `knowledge/data-models/task-manager.md`
-- `knowledge/screen-graphs/task-manager.md`
-- `templates/web/task-manager/template-spec.json`
-- `templates/web/task-manager/TEMPLATE_PLAN.md`
-
-## Output
-
-Return:
-
-- classification
-- app spec
-- phase plan
-- selected `appSpec.designSystem`
-- selected `appSpec.blocks` reusable guidance
-- selected `appSpec.mockData`
-- `appSpec.planAudit` audit gates
-- `appSpec.promptRefinement` assumptions and optional questions with defaults
-- references the builder should load next
-- explicit `appSpec.referenceInputs` the builder should inspect
-- blocking questions only if required by policy or vague product direction
-- one short next-step question: "Are you satisfied with this plan? If not, continue with Buildable Planner to revise it. If yes, continue with Buildable Web Builder/Mobile Builder using the saved plan."
+The builder should read `.buildable/phase-plan.toon` first for compact context, then retrieve omitted details from `.buildable/phase-plan.json` as needed (for example, full design rules or expected files). TOON is a summary; JSON remains the source of truth. Reuse the saved plan rather than re-planning unchanged requirements, and load only selected `appSpec.references`, explicit user reference inputs, and necessary starter/project source.
