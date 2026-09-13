@@ -4,28 +4,25 @@ import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 
 const starter = resolve(process.argv[2] ?? ".");
-const packageJson = JSON.parse(readFileSync(resolve(starter, "package.json"), "utf8"));
+// Require a package in this directory so npm cannot audit an ancestor project.
+try {
+  JSON.parse(readFileSync(resolve(starter, "package.json"), "utf8"));
+} catch (error) {
+  console.error(`Cannot audit starter at ${starter}: ${error.message}`);
+  process.exit(1);
+}
 const severityRank = { info: 0, low: 1, moderate: 2, high: 3, critical: 4 };
-
-// Next 16.2.12 currently bundles PostCSS 8.4.31 and installs Sharp 0.34.x.
-// Stable Next has no patched release yet, so keep this narrow, time-bounded
-// exception visible while failing every other high/critical production finding.
-const nextStableException = {
-  next: "16.2.12",
-  expires: "2026-10-31",
-  packages: new Set(["next", "postcss", "sharp"]),
-  advisories: new Set([
-    "https://github.com/advisories/GHSA-qx2v-qp2m-jg93",
-    "https://github.com/advisories/GHSA-6g55-p6wh-862q",
-    "https://github.com/advisories/GHSA-r28c-9q8g-f849",
-    "https://github.com/advisories/GHSA-f88m-g3jw-g9cj"
-  ])
-};
 
 const result = spawnSync("npm", ["audit", "--omit=dev", "--json"], {
   cwd: starter,
-  encoding: "utf8"
+  encoding: "utf8",
+  timeout: 60000
 });
+
+if (result.error || ![0, 1].includes(result.status)) {
+  console.error(`npm audit could not complete: ${result.error?.message || result.stderr || `exit ${result.status}`}`);
+  process.exit(1);
+}
 
 let report;
 try {
@@ -35,7 +32,11 @@ try {
   process.exit(1);
 }
 
-const vulnerabilities = report.vulnerabilities ?? {};
+if (report?.error || !report?.vulnerabilities || typeof report.vulnerabilities !== "object" || Array.isArray(report.vulnerabilities)) {
+  console.error(`npm audit did not return a vulnerability report: ${report?.error?.summary || report?.error?.code || result.stderr || "missing vulnerabilities object"}`);
+  process.exit(1);
+}
+const vulnerabilities = report.vulnerabilities;
 
 function resolveAdvisories(packageName, seen = new Set()) {
   if (seen.has(packageName)) return [];
@@ -81,37 +82,12 @@ for (const [packageName, vulnerability] of Object.entries(vulnerabilities)) {
   }
 }
 
-const hasPinnedNext = packageJson.dependencies?.next === nextStableException.next;
-const exceptionCurrent = new Date() <= new Date(`${nextStableException.expires}T23:59:59Z`);
-const allowed = [];
-const blocked = [];
-
-for (const finding of findings) {
-  if (
-    hasPinnedNext &&
-    exceptionCurrent &&
-    nextStableException.packages.has(finding.package) &&
-    nextStableException.advisories.has(finding.url)
-  ) {
-    allowed.push(finding);
-  } else {
-    blocked.push(finding);
-  }
-}
-
-if (blocked.length > 0) {
-  console.error(`Starter production audit failed with ${blocked.length} unexpected high/critical advisory finding(s):`);
-  for (const finding of blocked) {
+if (findings.length > 0) {
+  console.error(`Starter production audit failed with ${findings.length} high/critical advisory finding(s):`);
+  for (const finding of findings) {
     console.error(`  - [${finding.severity}] ${finding.package}: ${finding.title} (${finding.url})`);
   }
   process.exit(1);
 }
 
-if (allowed.length > 0) {
-  console.warn(
-    `Starter production audit passed with ${allowed.length} reviewed Next ${nextStableException.next} advisory exception(s); ` +
-      `exception expires ${nextStableException.expires}.`
-  );
-} else {
-  console.log("Starter production audit passed with no high or critical advisories.");
-}
+console.log("Starter production audit passed with no high or critical advisories.");

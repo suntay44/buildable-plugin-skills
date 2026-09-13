@@ -9,6 +9,11 @@ Unreleased section here and syncs the version across every plugin manifest.
 
 ## [Unreleased]
 
+### Fixed
+
+- Updated all 12 web starters from Next.js/ESLint config 16.2.12 to 16.3.5 after production dependency audits began rejecting critical Next.js and high-severity Sharp advisories. React and the starter workflows remain unchanged.
+- Removed the obsolete Next.js audit exceptions now that patched dependencies are available. Production audits still reject every high/critical finding and now also fail when npm returns an error or an incomplete report.
+
 ### Added
 
 - `buildable status` and `buildable_status` MCP tool: a read-only workspace inspector that reports the current Buildable workflow stage and recommends the next command.
